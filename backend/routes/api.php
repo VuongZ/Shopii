@@ -1,8 +1,10 @@
 <?php
-
-use Illuminate\Http\Request;
+use App\Http\Controllers\AuthController; // <-- Phải có dòng này ở trên cùng
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 
+Route::post('/register', [AuthController::class, 'register']); // <-- Phải có dòng này
+Route::post('/login', [AuthController::class, 'login']);
 /*
 |--------------------------------------------------------------------------
 | API Routes

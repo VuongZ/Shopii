@@ -19,6 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
+    // Quan trọng: Cho phép tất cả các nguồn truy cập
     'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
@@ -29,6 +30,7 @@ return [
 
     'max_age' => 0,
 
+    // Quan trọng: Phải là false nếu dùng allowed_origins là '*'
     'supports_credentials' => false,
 
 ];
