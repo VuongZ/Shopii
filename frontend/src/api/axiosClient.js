@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: "http://127.0.0.1:8000/api", // Đường dẫn đến Backend Laravel của bạn
+  baseURL: "https://shopii-backend-latest.onrender.com", //backend
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
