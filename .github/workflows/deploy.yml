@@ -2,10 +2,9 @@ name: Deploy Backend to Docker Hub & Render
 
 on:
   push:
-    branches: ["master"]
-    paths:
-      - "backend/**"
-
+    # Tự động chạy khi push vào main hoặc master
+    branches: ["master", "main"]
+  workflow_dispatch:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
