@@ -2,9 +2,9 @@ name: Deploy Backend to Docker Hub & Render
 
 on:
   push:
-    # Tự động chạy khi push vào main hoặc master
     branches: ["master", "main"]
   workflow_dispatch:
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -21,10 +21,9 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./backend # Quan trọng: Chỉ định thư mục backend
+          context: ./backend
           file: ./backend/Dockerfile
           push: true
-          # Sửa 'tên-user-của-bạn' thành tên thật trên Docker Hub
           tags: ${{ secrets.DOCKER_USERNAME }}/shopii-backend:latest
 
   deploy-to-render:
@@ -32,6 +31,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Render Deploy
-        # Sau này sẽ điền cái Hook URL vào đây
+
+        env:
+          # Gán secret vào biến môi trường tên là DEPLOY_URL
+          DEPLOY_URL: ${{ secrets.RENDER_DEPLOY_HOOK }}
         run: |
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+          # Kiểm tra xem link có bị rỗng không
+          if [ -z "$DEPLOY_URL" ]; then
+            echo " Error: RENDER_DEPLOY_HOOK chưa được cài đặt hoặc bị rỗng!"
+            exit 1
+          fi
+
+          # Chạy lệnh curl gọi đến Render
+          curl -X POST "$DEPLOY_URL"
+          echo "Đã gửi lệnh Deploy thành công!"
