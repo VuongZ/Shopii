@@ -1,0 +1,38 @@
+name: Deploy Backend to Docker Hub & Render
+
+on:
+  push:
+    branches: ["master"]
+    paths:
+      - "backend/**"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend # Quan trọng: Chỉ định thư mục backend
+          file: ./backend/Dockerfile
+          push: true
+          # Sửa 'tên-user-của-bạn' thành tên thật trên Docker Hub
+          tags: ${{ secrets.DOCKER_USERNAME }}/shopii-backend:latest
+
+  deploy-to-render:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deploy
+        # Sau này sẽ điền cái Hook URL vào đây
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
