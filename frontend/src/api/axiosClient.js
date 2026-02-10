@@ -1,7 +1,6 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  // Nếu tìm thấy biến môi trường thì dùng, không thì dùng localhost
   baseURL: "https://shopii-backend-latest.onrender.com/api",
   headers: {
     "Content-Type": "application/json",
