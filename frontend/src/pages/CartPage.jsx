@@ -71,6 +71,7 @@ const CartPage = () => {
       fetchCartData();
       setSelectedItems((prev) => prev.filter((itemId) => itemId !== id));
     } catch (error) {
+      console.log(error);
       alert("Xóa thất bại!");
     }
   };
