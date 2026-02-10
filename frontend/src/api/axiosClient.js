@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: "https://shopii-backend-latest.onrender.com", //backend
+  // Nếu tìm thấy biến môi trường thì dùng, không thì dùng localhost
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
