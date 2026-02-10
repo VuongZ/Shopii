@@ -1,6 +1,19 @@
 <?php
 
 use Illuminate\Contracts\Http\Kernel;
+
+
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Origin, Content-Type, Accept, Authorization, X-Request-With');
+
+// Nếu là request kiểm tra (OPTIONS), trả về OK và dừng luôn, không cho Laravel xử lý tiếp
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    header("HTTP/1.1 200 OK");
+    die();
+}
+// ------------------------------------
+
 use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
