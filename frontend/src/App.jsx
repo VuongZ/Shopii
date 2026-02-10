@@ -1,50 +1,72 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import React from 'react';
+import { Routes, Route, Link } from "react-router-dom";
 import Login from "./pages/Login";
-import Register from "./pages/Register"; // <--- Import thêm cái này
+import Register from "./pages/Register";
+import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
+import './App.css'; // 👈 QUAN TRỌNG: Nhớ import file CSS vừa tạo
+
+// Nếu bạn chưa cài icon thì dùng chữ thường, không sao cả
+// import { ShoppingCart, Home, User } from 'lucide-react'; 
 
 function App() {
   return (
-    <BrowserRouter>
-      <nav style={{ padding: 10, background: "#f0f0f0", marginBottom: 20 }}>
-        <Link to="/" style={{ marginRight: 10 }}>
-          Trang chủ
-        </Link>
-        <Link to="/login" style={{ marginRight: 10 }}>
-          Đăng nhập
-        </Link>
-        <Link to="/register">Đăng ký</Link>
-      </nav>
+    <div className="app-container">
+      {/* HEADER MÀU CAM */}
+      <header className="shopee-header">
+        <div className="header-content">
+          {/* Logo bên trái */}
+          <Link to="/" className="logo">
+             Shopii
+          </Link>
 
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />{" "}
-        {/* <--- Thêm dòng này */}
-        <Route path="/" element={<Home />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Menu bên phải */}
+          <nav className="nav-menu">
+            <Link to="/" className="nav-link">Trang chủ</Link>
+            <Link to="/cart" className="nav-link">🛒 Giỏ hàng</Link>
+            <span>|</span>
+            <Link to="/login" className="nav-link">Đăng nhập</Link>
+            <Link to="/register" className="nav-link">Đăng ký</Link>
+          </nav>
+        </div>
+      </header>
+
+      {/* NỘI DUNG CHÍNH */}
+      <div className="main-content">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+        </Routes>
+      </div>
+    </div>
   );
 }
 
-// Tạo tạm component Home ở đây cho gọn
+// Trang chủ đơn giản
 function Home() {
+  const isLogin = localStorage.getItem("ACCESS_TOKEN");
   const logout = () => {
     localStorage.removeItem("ACCESS_TOKEN");
     window.location.reload();
   };
 
-  // Kiểm tra xem đã đăng nhập chưa
-  const isLogin = localStorage.getItem("ACCESS_TOKEN");
-
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Trang Chủ Shopii</h1>
+    <div className="welcome-card">
+      <h1 style={{ color: '#ee4d2d' }}>Chào mừng đến với Shopii 🎉</h1>
+      <p>Nền tảng thương mại điện tử yêu thích của bạn.</p>
+      
       {isLogin ? (
-        <div>
-          <p style={{ color: "green" }}>Bạn đã đăng nhập thành công!</p>
-          <button onClick={logout}>Đăng xuất</button>
+        <div style={{ marginTop: 20 }}>
+          <span style={{ color: 'green', fontWeight: 'bold' }}>✅ Đã đăng nhập</span>
+          <button onClick={logout} className="btn-logout">Đăng xuất</button>
         </div>
       ) : (
-        <p>Bạn chưa đăng nhập. Vui lòng đăng nhập để mua hàng.</p>
+        <div style={{ marginTop: 20 }}>
+          <p>Bạn chưa đăng nhập.</p>
+        </div>
       )}
     </div>
   );

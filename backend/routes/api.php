@@ -2,7 +2,8 @@
 use App\Http\Controllers\AuthController; // <-- Phải có dòng này ở trên cùng
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderController;
 Route::post('/register', [AuthController::class, 'register']); // <-- Phải có dòng này
 Route::post('/login', [AuthController::class, 'login']);
 /*
@@ -16,6 +17,13 @@ Route::post('/login', [AuthController::class, 'login']);
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware('auth:sanctum')->group(function () {
+    
+    // Giỏ hàng
+    Route::post('/cart/add', [CartController::class, 'addToCart']); // Thêm vào giỏ
+    Route::get('/cart', [CartController::class, 'getCart']);       // Xem giỏ
+    Route::delete('/cart/{id}', [CartController::class, 'removeItem']); // Xóa item
+    Route::put('/cart/update', [CartController::class, 'updateCart']);
+    // Thanh toán
+    Route::post('/checkout', [OrderController::class, 'checkout']); // Đặt hàng
 });
