@@ -23,6 +23,7 @@ function App() {
           {/* Menu bên phải */}
           <nav className="nav-menu">
             <Link to="/" className="nav-link">Trang chủ</Link>
+              <Link to="/reviews" className="nav-link">Đánh Giá</Link>
             <Link to="/cart" className="nav-link">🛒 Giỏ hàng</Link>
             <span>|</span>
             <Link to="/login" className="nav-link">Đăng nhập</Link>
