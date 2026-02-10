@@ -14,20 +14,21 @@ RUN a2enmod rewrite
 # Thiết lập thư mục làm việc
 WORKDIR /var/www/html
 
-# Copy toàn bộ code từ máy bạn vào server (bao gồm cả file cacert.pem)
+# Copy toàn bộ code từ máy bạn vào server
 COPY . .
 
-# Cài đặt Composer (Công cụ quản lý thư viện PHP)
+# Cài đặt Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
-# Phân quyền cho thư mục storage (để Laravel ghi được log, cache)
+# Phân quyền
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Cấu hình cổng chạy web
+# Cấu hình cổng
 ENV PORT=8080
 RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!/var/www/html/public!g' /etc/apache2/apache2.conf
 
-# Lệnh chạy server
-CMD php artisan config:cache && php artisan route:cache && apache2-foreground
+# --- QUAN TRỌNG: SỬA DÒNG CUỐI CÙNG ---
+# Xóa cache config cũ để nhận cấu hình CORS mới
+CMD php artisan optimize:clear && apache2-foreground
