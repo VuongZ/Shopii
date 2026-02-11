@@ -12,76 +12,100 @@ use App\Models\OrderItem;
 class OrderController extends Controller
 {
     public function checkout(Request $request) {
-        // Validate dữ liệu bắt buộc phải có
+        // 1. Validate dữ liệu
         $request->validate([
-            'cart_item_ids' => 'required|array', // Mảng các ID trong giỏ hàng muốn mua
+            'cart_item_ids' => 'required|array',
             'address_id' => 'required|exists:user_addresses,id',
             'payment_method_id' => 'required|exists:payment_methods,id',
+            'shipping_method_id' => 'required|exists:shipping_methods,id', // Nhớ thêm cái này nếu bảng orders yêu cầu
         ]);
 
-        DB::beginTransaction(); // Bắt đầu transaction
+        DB::beginTransaction();
         try {
             $user = Auth::user();
             
-            // Lấy các item user tick chọn mua (Dùng whereIn)
+            // 2. Lấy sản phẩm từ giỏ
             $items = CartItem::with('sku.product')
                         ->whereIn('id', $request->cart_item_ids)
+                        ->whereHas('cart', function($q) use ($user) {
+                            $q->where('user_id', $user->id);
+                        })
                         ->get();
 
             if ($items->isEmpty()) {
-                return response()->json(['message' => 'Vui lòng chọn sản phẩm để thanh toán'], 400);
+                return response()->json(['message' => 'Vui lòng chọn sản phẩm hợp lệ'], 400);
             }
 
-            // Gom nhóm theo Shop ID (Logic tách đơn)
+            // 3. Gom nhóm theo Shop
             $itemsByShop = $items->groupBy(function($item) {
                 return $item->sku->product->shop_id;
             });
 
+            $createdOrderIds = []; // Mảng chứa ID các đơn hàng vừa tạo
+            $grandTotal = 0; // Tổng tiền tất cả các đơn (để thanh toán VNPay 1 lần)
+
             foreach ($itemsByShop as $shopId => $shopItems) {
-                $total = 0;
+                $shopTotal = 0;
+                
+                // Tính tiền hàng và check tồn kho
                 foreach ($shopItems as $item) {
-                    $total += $item->sku->price * $item->quantity;
+                    $shopTotal += $item->sku->price * $item->quantity;
                     
-                    // Kiểm tra tồn kho ở đây nếu cần
                     if ($item->sku->stock < $item->quantity) {
                          throw new \Exception("Sản phẩm " . $item->sku->product->name . " không đủ hàng.");
                     }
                 }
 
-                // Tạo đơn hàng cho từng Shop
+                $shippingFee = 30000; // Phí ship cứng (hoặc tính động tùy bạn)
+                $finalTotal = $shopTotal + $shippingFee;
+                $grandTotal += $finalTotal; // Cộng dồn vào tổng thanh toán
+
+                // 4. Tạo Order
                 $order = Order::create([
                     'user_id' => $user->id,
                     'shop_id' => $shopId,
-                    'total_product_price' => $total,
-                    'final_total' => $total + 30000, // Cộng phí ship cứng (demo)
+                    'total_product_price' => $shopTotal,
+                    'shipping_fee' => $shippingFee,
+                    'final_total' => $finalTotal,
                     'user_address_id' => $request->address_id,
                     'payment_method_id' => $request->payment_method_id,
-                    'status' => 'pending'
+                    'shipping_method_id' => $request->shipping_method_id ?? 1, // Default nếu ko truyền
+                    'status' => 'pending',
+                    'payment_status' => 'unpaid' // Mặc định là chưa thanh toán
                 ]);
 
-                // Lưu chi tiết đơn hàng (Order Items)
+                $createdOrderIds[] = $order->id;
+
+                // 5. Lưu Order Items và Trừ kho
                 foreach ($shopItems as $item) {
                     OrderItem::create([
                         'order_id' => $order->id,
                         'product_sku_id' => $item->product_sku_id,
                         'quantity' => $item->quantity,
-                        'price' => $item->sku->price // Lưu giá tại thời điểm mua (quan trọng)
+                        'price' => $item->sku->price
                     ]);
                     
-                    // Trừ tồn kho
                     $item->sku->decrement('stock', $item->quantity);
-                    
-                    // Xóa khỏi giỏ hàng sau khi mua xong
-                    $item->delete(); 
+                    $item->delete(); // Xóa khỏi giỏ
                 }
             }
             
-            DB::commit(); // Lưu vào DB
-            return response()->json(['message' => 'Đặt hàng thành công!']);
+            DB::commit();
+
+            // 6. Xử lý logic trả về cho Frontend
+            // Nếu là COD (ID=1) -> Xong luôn
+            // Nếu là VNPay (ID=2) -> Trả về thông tin để Frontend gọi tiếp API tạo link
+            
+            return response()->json([
+                'message' => 'Tạo đơn hàng thành công!',
+                'order_ids' => $createdOrderIds, // Trả về mảng các ID đơn hàng
+                'total_amount' => $grandTotal, // Tổng tiền cần thanh toán VNPay
+                'payment_method_id' => $request->payment_method_id
+            ]);
             
         } catch (\Exception $e) {
-            DB::rollBack(); // Hoàn tác nếu có lỗi
-            return response()->json(['error' => $e->getMessage()], 500);
+            DB::rollBack();
+            return response()->json(['message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
 }
