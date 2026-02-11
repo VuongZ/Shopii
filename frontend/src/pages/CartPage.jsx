@@ -36,28 +36,35 @@ const CartPage = () => {
     }
   };
 
-  const handleCheck = (id) => {
-    setSelectedItems((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
-    );
+  const handleCheck = (ids) => {
+    const targetIds = Array.isArray(ids) ? ids : [ids];
+
+    setSelectedItems((prev) => {
+      const isAllSelected = targetIds.every((id) => prev.includes(id));
+
+      if (isAllSelected) {
+        return prev.filter((id) => !targetIds.includes(id));
+      } else {
+        const newItems = targetIds.filter((id) => !prev.includes(id));
+        return [...prev, ...newItems];
+      }
+    });
   };
 
-  const handleUpdateQuantity = async (itemId, newQuantity) => {
+  const handleUpdateQuantity = async (item, newQuantity) => {
     if (newQuantity < 1) return;
-
     setCartGroups((prevGroups) => {
       const newGroups = { ...prevGroups };
       Object.keys(newGroups).forEach((shop) => {
-        newGroups[shop] = newGroups[shop].map((item) =>
-          item.id === itemId ? { ...item, quantity: newQuantity } : item,
+        newGroups[shop] = newGroups[shop].map((i) =>
+          i.id === item.id ? { ...i, quantity: newQuantity } : i,
         );
       });
       return newGroups;
     });
-
     try {
       await cartApi.addToCart({
-        product_sku_id: itemId,
+        product_sku_id: item.product_sku_id,
         quantity: newQuantity,
       });
     } catch (error) {
@@ -66,6 +73,7 @@ const CartPage = () => {
         "Không thể cập nhật: " +
           (error.response?.data?.message || "Lỗi server"),
       );
+      fetchCartData();
     }
   };
 
@@ -127,7 +135,8 @@ const CartPage = () => {
                   shopName={shopName}
                   items={items}
                   selectedItems={selectedItems}
-                  onCheck={handleCheck}
+                  onCheckShop={() => handleCheck(items.map((i) => i.id))}
+                  onCheckItem={(id) => handleCheck(id)}
                   onUpdateQty={handleUpdateQuantity}
                   onDelete={handleDelete}
                 />
