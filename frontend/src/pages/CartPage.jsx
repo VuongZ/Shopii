@@ -145,11 +145,7 @@ const CartPage = () => {
       </div>
 
       <CartFooter
-        totalItems={
-          Object.values(cartGroups)
-            .flat()
-            .filter((i) => i).length
-        }
+        totalItems={selectedItems.length}
         totalPrice={totalAmount}
         onBuy={() =>
           navigate("/checkout", { state: { selectedItems: selectedItems } })
