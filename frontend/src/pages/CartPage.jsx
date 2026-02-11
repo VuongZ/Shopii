@@ -45,7 +45,6 @@ const CartPage = () => {
   const handleUpdateQuantity = async (itemId, newQuantity) => {
     if (newQuantity < 1) return;
 
-    // Cập nhật giao diện tạm thời (Optimistic UI)
     setCartGroups((prevGroups) => {
       const newGroups = { ...prevGroups };
       Object.keys(newGroups).forEach((shop) => {
@@ -57,10 +56,16 @@ const CartPage = () => {
     });
 
     try {
-      await cartApi.addToCart({ product_id: itemId, quantity: newQuantity });
+      await cartApi.addToCart({
+        product_sku_id: itemId,
+        quantity: newQuantity,
+      });
     } catch (error) {
-      console.error(error);
-      fetchCartData();
+      console.error("Lỗi cập nhật số lượng:", error.response?.data);
+      alert(
+        "Không thể cập nhật: " +
+          (error.response?.data?.message || "Lỗi server"),
+      );
     }
   };
 
@@ -138,7 +143,9 @@ const CartPage = () => {
             .filter((i) => i).length
         }
         totalPrice={totalAmount}
-        onBuy={() => navigate("/checkout", { state: { selectedItems } })}
+        onBuy={() =>
+          navigate("/checkout", { state: { selectedItems: selectedItems } })
+        }
       />
     </div>
   );

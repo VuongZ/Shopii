@@ -16,16 +16,27 @@ const CheckoutPage = () => {
     const fetchSelectedData = async () => {
       try {
         const response = await cartApi.getCart();
-        const allItems = Object.values(response.data || {}).flat();
-        const filtered = allItems.filter((item) =>
-          selectedItems.includes(item.id),
-        );
+        const data = response.data || {};
+
+        const allItems = Object.values(data).flat();
+
+        const filtered = allItems.filter((item) => {
+          return selectedItems.some(
+            (selectedId) => String(selectedId) === String(item.id),
+          );
+        });
         setCartItems(filtered);
+        // Kiểm tra trong Console
+        console.log("Dữ liệu gốc từ DB:", data);
+        console.log("Mảng ID chọn từ Giỏ hàng:", selectedItems);
+        console.log("Kết quả sau khi lọc:", filtered);
       } catch (err) {
-        console.error("Không thể lấy thông tin sản phẩm", err);
+        console.error("Lỗi lấy dữ liệu Checkout:", err);
       }
     };
-    if (selectedItems.length > 0) fetchSelectedData();
+    if (selectedItems && selectedItems.length > 0) {
+      fetchSelectedData();
+    }
   }, [selectedItems]);
 
   const totalProductPrice = cartItems.reduce(
