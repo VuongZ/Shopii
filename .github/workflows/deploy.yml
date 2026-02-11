@@ -24,6 +24,7 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
+          # Lưu ý: tags nên dùng đúng format username/repository
           tags: ${{ secrets.DOCKER_USERNAME }}/shopii-backend:latest
 
   deploy-to-render:
@@ -31,17 +32,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Render Deploy
-
-        env:
-          # Gán secret vào biến môi trường tên là DEPLOY_URL
-          DEPLOY_URL: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        shell: bash
         run: |
-          # Kiểm tra xem link có bị rỗng không
-          if [ -z "$DEPLOY_URL" ]; then
-            echo " Error: RENDER_DEPLOY_HOOK chưa được cài đặt hoặc bị rỗng!"
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
+            echo "Error: RENDER_DEPLOY_HOOK chưa được cài đặt!"
             exit 1
           fi
-
-          # Chạy lệnh curl gọi đến Render
-          curl -X POST "$DEPLOY_URL"
+          # Sử dụng curl trực tiếp với secret để đảm bảo an toàn
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
           echo "Đã gửi lệnh Deploy thành công!"
