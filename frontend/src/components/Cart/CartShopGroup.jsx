@@ -29,7 +29,7 @@ const CartShopGroup = ({
           item={item}
           isSelected={selectedItems.includes(item.id)}
           onCheck={() => onCheckItem(item.id)}
-          onUpdateQty={(newQty) => onUpdateQty(item, newQty)}
+          onUpdateQty={(targetItem, newQty) => onUpdateQty(targetItem, newQty)}
           onDelete={onDelete}
         />
       ))}

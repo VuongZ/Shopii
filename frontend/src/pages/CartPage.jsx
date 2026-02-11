@@ -53,7 +53,7 @@ const CartPage = () => {
 
   const handleUpdateQuantity = async (item, newQuantity) => {
     if (newQuantity < 1) return;
-
+    console.log("Đang gửi cập nhật:", { cart_item_id: item.id, quantity: newQuantity });
     setCartGroups((prevGroups) => {
       const newGroups = { ...prevGroups };
       Object.keys(newGroups).forEach((shop) => {
