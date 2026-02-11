@@ -53,6 +53,7 @@ const CartPage = () => {
 
   const handleUpdateQuantity = async (item, newQuantity) => {
     if (newQuantity < 1) return;
+
     setCartGroups((prevGroups) => {
       const newGroups = { ...prevGroups };
       Object.keys(newGroups).forEach((shop) => {
@@ -62,17 +63,15 @@ const CartPage = () => {
       });
       return newGroups;
     });
+
     try {
-      await cartApi.addToCart({
-        product_sku_id: item.product_sku_id,
+      await cartApi.update({
+        cart_item_id: item.id,
         quantity: newQuantity,
       });
     } catch (error) {
-      console.error("Lỗi cập nhật số lượng:", error.response?.data);
-      alert(
-        "Không thể cập nhật: " +
-          (error.response?.data?.message || "Lỗi server"),
-      );
+      console.error("Lỗi cập nhật:", error.response?.data);
+      alert("Không thể cập nhật số lượng!");
       fetchCartData();
     }
   };

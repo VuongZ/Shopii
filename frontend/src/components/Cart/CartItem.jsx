@@ -1,20 +1,20 @@
-import React from 'react';
+import React from "react";
 
 const CartItem = ({ item, isSelected, onCheck, onUpdateQty, onDelete }) => {
   return (
     <div className="cart-item-row">
       {/* Checkbox & Ảnh & Tên */}
       <div className="col-product flex-start">
-        <input 
-          type="checkbox" 
+        <input
+          type="checkbox"
           checked={isSelected}
           onChange={() => onCheck(item.id)}
           className="item-checkbox"
         />
-        <img 
-            src={item.image || "https://placehold.co/80"} 
-            alt={item.product_name} 
-            className="item-img" 
+        <img
+          src={item.image || "https://placehold.co/80"}
+          alt={item.product_name}
+          className="item-img"
         />
         <div className="item-info">
           <p className="item-name">{item.product_name}</p>
@@ -28,9 +28,13 @@ const CartItem = ({ item, isSelected, onCheck, onUpdateQty, onDelete }) => {
       {/* Số lượng */}
       <div className="col-qty">
         <div className="qty-control">
-          <button onClick={() => onUpdateQty(item.id, item.quantity - 1)}>-</button>
+          <button onClick={() => onUpdateQty(item, item.quantity - 1)}>
+            -
+          </button>
           <input type="text" value={item.quantity} readOnly />
-          <button onClick={() => onUpdateQty(item.id, item.quantity + 1)}>+</button>
+          <button onClick={() => onUpdateQty(item, item.quantity + 1)}>
+            +
+          </button>
         </div>
       </div>
 
@@ -41,7 +45,9 @@ const CartItem = ({ item, isSelected, onCheck, onUpdateQty, onDelete }) => {
 
       {/* Xóa */}
       <div className="col-action">
-        <button className="btn-delete" onClick={() => onDelete(item.id)}>Xóa</button>
+        <button className="btn-delete" onClick={() => onDelete(item.id)}>
+          Xóa
+        </button>
       </div>
     </div>
   );
