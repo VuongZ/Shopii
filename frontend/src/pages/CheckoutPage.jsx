@@ -9,7 +9,7 @@ const CheckoutPage = () => {
 
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState(1); // 1: COD, 2: VNPay
+  const [paymentMethod, setPaymentMethod] = useState(1);
   const [loading, setLoading] = useState(false);
   const [cartItems, setCartItems] = useState([]);
 
@@ -18,21 +18,17 @@ const CheckoutPage = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [showCouponModal, setShowCouponModal] = useState(false);
+  const [manualCode, setManualCode] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Gọi API song song: Giỏ hàng, Địa chỉ, Coupon
         const [cartRes, addrRes, couponRes] = await Promise.all([
           cartApi.getCart(),
-          cartApi.getAddresses().catch((err) => {
-            console.log("Chưa có API địa chỉ, dùng mảng rỗng"+err);
-            return { data: [] };
-          }),
-          cartApi.getCoupons().catch(() => ({ data: [] })), // Lấy coupon
+          cartApi.getAddresses().catch(() => ({ data: [] })),
+          cartApi.getCoupons().catch(() => ({ data: [] })),
         ]);
 
-        // 1. Xử lý Giỏ hàng
         const data = cartRes.data || {};
         const allItems = Object.values(data).flat();
         const filtered = allItems.filter((item) =>
@@ -40,7 +36,6 @@ const CheckoutPage = () => {
         );
         setCartItems(filtered);
 
-        // 2. Xử lý Địa chỉ
         const addrList = addrRes.data || [];
         setAddresses(addrList);
         if (addrList.length > 0) {
@@ -48,7 +43,6 @@ const CheckoutPage = () => {
           setSelectedAddress(defaultAddr);
         }
 
-        // 3. Xử lý Coupon
         setCoupons(couponRes.data || []);
       } catch (err) {
         console.error("Lỗi tải trang Checkout:", err);
@@ -65,11 +59,13 @@ const CheckoutPage = () => {
     0,
   );
   const shippingFee = 30000;
-
-  // Tổng thanh toán cuối cùng (đã trừ giảm giá)
   const finalTotal = totalProductPrice + shippingFee - discountAmount;
 
-  // --- Xử lý Áp dụng Coupon ---
+  const handleManualApply = () => {
+    if (!manualCode.trim()) return alert("Vui lòng nhập mã giảm giá!");
+    handleApplyCoupon(manualCode.trim().toUpperCase());
+  };
+
   const handleApplyCoupon = async (code) => {
     try {
       const res = await cartApi.applyCoupon({
@@ -87,22 +83,18 @@ const CheckoutPage = () => {
       alert(
         err.response?.data?.message || "Mã không hợp lệ hoặc chưa đủ điều kiện",
       );
-      // Nếu lỗi thì không reset coupon cũ (hoặc reset tùy logic bạn muốn)
     }
   };
 
-  // --- Xử lý Đặt hàng ---
   const handlePlaceOrder = async () => {
     if (!selectedAddress) return alert("Vui lòng thêm địa chỉ nhận hàng!");
     setLoading(true);
     try {
-      // Gửi thêm coupon_code hoặc discount_amount nếu backend cần lưu
       const orderResponse = await cartApi.checkout({
         cart_item_ids: selectedItems,
         address_id: selectedAddress.id,
         payment_method_id: paymentMethod,
         shipping_method_id: 1,
-        // Gửi thêm thông tin giảm giá (tùy backend của bạn có nhận không)
         coupon_code: appliedCoupon?.code,
         discount_amount: discountAmount,
       });
@@ -110,16 +102,14 @@ const CheckoutPage = () => {
       const { order_ids, total_amount, message } = orderResponse.data;
 
       if (paymentMethod === 2) {
-        // VNPay
         const vnpayResponse = await cartApi.createPaymentUrl({
           orderId: order_ids[0],
-          amount: total_amount, // Backend nên tính lại amount này để bảo mật
+          amount: total_amount,
         });
         if (vnpayResponse.data.paymentUrl) {
           window.location.href = vnpayResponse.data.paymentUrl;
         }
       } else {
-        // COD
         alert(`🎉 ${message}`);
         navigate("/orders");
       }
@@ -172,7 +162,7 @@ const CheckoutPage = () => {
       </div>
 
       <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "0 15px" }}>
-        {/* 1. ĐỊA CHỈ */}
+        {/* ĐỊA CHỈ */}
         <div
           style={{
             backgroundColor: "white",
@@ -232,7 +222,7 @@ const CheckoutPage = () => {
           </div>
         </div>
 
-        {/* 2. SẢN PHẨM */}
+        {/* SẢN PHẨM */}
         <div
           style={{
             backgroundColor: "white",
@@ -275,7 +265,7 @@ const CheckoutPage = () => {
           ))}
         </div>
 
-        {/* 3. PHƯƠNG THỨC THANH TOÁN */}
+        {/* PHƯƠNG THỨC THANH TOÁN */}
         <div
           style={{
             backgroundColor: "white",
@@ -325,13 +315,13 @@ const CheckoutPage = () => {
                 src="https://sandbox.vnpayment.vn/paymentv2/images/logo-vnpay.svg"
                 alt="VNPay"
                 style={{ height: "20px" }}
-              />
+              />{" "}
               Ví VNPay
             </button>
           </div>
         </div>
 
-        {/* 4. COUPON & TỔNG TIỀN */}
+        {/* TỔNG TIỀN */}
         <div
           style={{
             backgroundColor: "#fffefb",
@@ -339,12 +329,8 @@ const CheckoutPage = () => {
             borderTop: "1px solid #ddd",
           }}
         >
-          {/* Nút chọn Coupon */}
           <div
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
               marginBottom: "20px",
               paddingBottom: "20px",
               borderBottom: "1px dashed #eee",
@@ -353,37 +339,74 @@ const CheckoutPage = () => {
             <div
               style={{
                 display: "flex",
+                justifyContent: "space-between",
                 alignItems: "center",
-                gap: "10px",
-                color: "#ee4d2d",
+                marginBottom: "15px",
               }}
             >
-              <span>🎟️ Shopii Voucher</span>
-              {appliedCoupon && (
-                <span
-                  style={{
-                    border: "1px solid #ee4d2d",
-                    padding: "2px 5px",
-                    fontSize: "12px",
-                    background: "#fff5f5",
-                  }}
-                >
-                  Đã dùng: {appliedCoupon.code}
-                </span>
-              )}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  color: "#ee4d2d",
+                }}
+              >
+                <span>🎟️ Shopii Voucher</span>
+                {appliedCoupon && (
+                  <span
+                    style={{
+                      border: "1px solid #ee4d2d",
+                      padding: "2px 5px",
+                      fontSize: "12px",
+                      background: "#fff5f5",
+                    }}
+                  >
+                    Đã dùng: {appliedCoupon.code}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setShowCouponModal(true)}
+                style={{
+                  color: "#05a",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                }}
+              >
+                Chọn Voucher có sẵn
+              </button>
             </div>
-            <button
-              onClick={() => setShowCouponModal(true)}
-              style={{
-                color: "#05a",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "14px",
-              }}
-            >
-              Chọn Voucher
-            </button>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <input
+                type="text"
+                placeholder="Nhập mã giảm giá"
+                value={manualCode}
+                onChange={(e) => setManualCode(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  borderRadius: "2px",
+                  outline: "none",
+                }}
+              />
+              <button
+                onClick={handleManualApply}
+                style={{
+                  backgroundColor: "#333",
+                  color: "white",
+                  border: "none",
+                  padding: "0 20px",
+                  cursor: "pointer",
+                  borderRadius: "2px",
+                }}
+              >
+                Áp dụng
+              </button>
+            </div>
           </div>
 
           <div style={{ textAlign: "right" }}>
@@ -393,14 +416,11 @@ const CheckoutPage = () => {
             <div style={{ marginBottom: "10px" }}>
               Phí vận chuyển: ₫{shippingFee.toLocaleString()}
             </div>
-
-            {/* Hiển thị dòng giảm giá nếu có */}
             {discountAmount > 0 && (
               <div style={{ marginBottom: "10px", color: "#ee4d2d" }}>
                 Voucher giảm giá: -₫{discountAmount.toLocaleString()}
               </div>
             )}
-
             <div
               style={{
                 fontSize: "24px",
@@ -412,7 +432,6 @@ const CheckoutPage = () => {
             >
               Tổng thanh toán: ₫{finalTotal.toLocaleString()}
             </div>
-
             <button
               onClick={handlePlaceOrder}
               disabled={loading}
@@ -433,7 +452,7 @@ const CheckoutPage = () => {
         </div>
       </div>
 
-      {/* --- MODAL DANH SÁCH COUPON --- */}
+      {/* --- MODAL DANH SÁCH COUPON (UPDATED) --- */}
       {showCouponModal && (
         <div
           style={{
@@ -478,13 +497,54 @@ const CheckoutPage = () => {
                     justifyContent: "space-between",
                     alignItems: "center",
                     backgroundColor: "#fcfcfc",
+                    opacity: coupon.usage_limit > 0 ? 1 : 0.6, // Mờ đi nếu hết lượt
                   }}
                 >
                   <div>
-                    <div style={{ fontWeight: "bold", color: "#333" }}>
+                    <div
+                      style={{
+                        fontWeight: "bold",
+                        color: "#333",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                      }}
+                    >
                       {coupon.code}
+                      {/* Hiển thị số lượt còn lại */}
+                      {coupon.usage_limit > 0 ? (
+                        <span
+                          style={{
+                            fontSize: "10px",
+                            backgroundColor: "#e8f5e9",
+                            color: "green",
+                            padding: "2px 6px",
+                            borderRadius: "10px",
+                          }}
+                        >
+                          Còn {coupon.usage_limit} lượt
+                        </span>
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: "10px",
+                            backgroundColor: "#ffebee",
+                            color: "red",
+                            padding: "2px 6px",
+                            borderRadius: "10px",
+                          }}
+                        >
+                          Hết lượt
+                        </span>
+                      )}
                     </div>
-                    <div style={{ fontSize: "13px", color: "#555" }}>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        color: "#555",
+                        marginTop: "5px",
+                      }}
+                    >
                       Giảm{" "}
                       {coupon.discount_type === "percent"
                         ? `${coupon.discount_value}%`
@@ -497,16 +557,19 @@ const CheckoutPage = () => {
                   </div>
                   <button
                     onClick={() => handleApplyCoupon(coupon.code)}
+                    disabled={coupon.usage_limit <= 0} // Vô hiệu hóa nếu hết lượt
                     style={{
-                      backgroundColor: "#ee4d2d",
+                      backgroundColor:
+                        coupon.usage_limit > 0 ? "#ee4d2d" : "#ccc",
                       color: "white",
                       border: "none",
                       padding: "8px 15px",
-                      cursor: "pointer",
+                      cursor:
+                        coupon.usage_limit > 0 ? "pointer" : "not-allowed",
                       borderRadius: "2px",
                     }}
                   >
-                    Dùng ngay
+                    {coupon.usage_limit > 0 ? "Dùng ngay" : "Hết mã"}
                   </button>
                 </div>
               ))
