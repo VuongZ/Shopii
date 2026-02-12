@@ -26,7 +26,7 @@ function App() {
               <Link to="/reviews" className="nav-link">Đánh Giá</Link>
             <Link to="/cart" className="nav-link">🛒 Giỏ hàng</Link>
             <span>|</span>
-            <Link to="/login" className="nav-link">Đăng nhậpp</Link>
+            <Link to="/login" className="nav-link">Đăng nhập</Link>
             <Link to="/register" className="nav-link">Đăng ký</Link>
           </nav>
         </div>
@@ -56,7 +56,7 @@ function Home() {
 
   return (
     <div className="welcome-card">
-      <h1 style={{ color: '#ee4d2d' }}>Chào mừng đến với Shopii 🎉</h1>
+      <h1 style={{ color: '#ee4d2d' }}>Chào mừng đến với Shopii </h1>
       <p>Nền tảng thương mại điện tử yêu thích của bạn.</p>
       
       {isLogin ? (

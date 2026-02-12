@@ -405,7 +405,7 @@ body {
   }
 
   .col-total {
-    display: none;  */
+    display: none;
   }
 
   /* Nút Xóa: Đưa lên góc trên cùng bên phải */
@@ -448,5 +448,4 @@ body {
     padding: 8px 20px;
     font-size: 14px;
   }
-}
 }
