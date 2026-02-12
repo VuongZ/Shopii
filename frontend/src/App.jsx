@@ -5,7 +5,8 @@ import Register from "./pages/Register";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import PaymentResult from "./pages/PaymentResult";
-import "./App.css"; 
+import "./App.css";
+import logoShopii from "../public/logoShopii.png";
 //import { ShoppingCart, Home, User } from 'lucide-react';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <div className="header-content">
           {/* Logo bên trái */}
           <Link to="/" className="logo">
+            <img src={logoShopii} alt="Shopii Logo" />
             Shopii
           </Link>
 
@@ -30,7 +32,7 @@ function App() {
             <Link to="/cart" className="nav-link">
               🛒 Giỏ hàng
             </Link>
-            <span>|</span>
+            <span></span>
             <Link to="/login" className="nav-link">
               Đăng nhập
             </Link>
@@ -66,7 +68,7 @@ function Home() {
 
   return (
     <div className="welcome-card">
-      <h1 style={{ color: "#ee4d2d" }}>Chào mừng đến với Shopii 🎉</h1>
+      <h1 className="home-title">Chào mừng đến với Shopii 🎉</h1>
       <p>Nền tảng thương mại điện tử yêu thích của bạn.</p>
 
       {isLogin ? (

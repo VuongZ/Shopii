@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import cartApi from "../api/cartApi";
-
+import logoVnPay from "../assets/logoVnPay.jpg";
 const CheckoutPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -311,12 +311,7 @@ const CheckoutPage = () => {
                 gap: "8px",
               }}
             >
-              <img
-                src="https://sandbox.vnpayment.vn/paymentv2/images/logo-vnpay.svg"
-                alt="VNPay"
-                style={{ height: "20px" }}
-              />{" "}
-              Ví VNPay
+              <img src={logoVnPay} style={{ height: "20px" }} /> Ví VNPay
             </button>
           </div>
         </div>
@@ -581,6 +576,7 @@ const CheckoutPage = () => {
                 marginTop: "15px",
                 width: "100%",
                 padding: "10px",
+                color: "#333",
                 border: "1px solid #ddd",
                 background: "white",
                 cursor: "pointer",
