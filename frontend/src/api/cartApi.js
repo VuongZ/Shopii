@@ -18,7 +18,7 @@ const cartApi = {
     return axiosClient.post("/payment/vnpay", data);
   },
   vnpayReturn(params) {
-      return axiosClient.get(`/payment/vnpay-callback${params}`);
+    return axiosClient.get(`/payment/vnpay-callback${params}`);
   },
   // Xóa sản phẩm khỏi giỏ
   remove(id) {
@@ -26,18 +26,26 @@ const cartApi = {
   },
   //giảm giá
   getCoupons(shopId = null) {
-        const params = shopId ? { shop_id: shopId } : {};
-        return axiosClient.get('/coupons', { params });
-    },
-    applyCoupon(data) {
-        return axiosClient.post('/coupons/apply', data);
-    },
+    const params = shopId ? { shop_id: shopId } : {};
+    return axiosClient.get("/coupons", { params });
+  },
+  applyCoupon(data) {
+    return axiosClient.post("/coupons/apply", data);
+  },
   // Thanh toán
   checkout(data) {
     return axiosClient.post("/checkout", data);
   },
   getAddresses() {
-      return axiosClient.get('/user/addresses'); 
+    return axiosClient.get("/user/addresses");
+  },
+  getMyOrders() {
+    return axiosClient.get("/orders");
+  },
+
+  // Lấy chi tiết đơn hàng
+  getOrderDetail(id) {
+    return axiosClient.get(`/orders/${id}`);
   },
 };
 

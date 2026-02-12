@@ -7,6 +7,7 @@ import CheckoutPage from "./pages/CheckoutPage";
 import PaymentResult from "./pages/PaymentResult";
 import "./App.css";
 import logoShopii from "../public/logoShopii.png";
+import OrderHistoryPage from "./pages/OrderHistoryPage";
 //import { ShoppingCart, Home, User } from 'lucide-react';
 
 function App() {
@@ -32,6 +33,9 @@ function App() {
             <Link to="/cart" className="nav-link">
               🛒 Giỏ hàng
             </Link>
+            <Link to="/orders" className="nav-link">
+              📦 Đơn mua
+            </Link>
             <span></span>
             <Link to="/login" className="nav-link">
               Đăng nhập
@@ -52,6 +56,7 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/payment-result" element={<PaymentResult />} />
+          <Route path="/orders" element={<OrderHistoryPage />} />
         </Routes>
       </div>
     </div>

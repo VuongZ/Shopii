@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import cartApi from "../api/cartApi";
 import CartShopGroup from "../components/Cart/CartShopGroup";
 import CartFooter from "../components/Cart/CartFooter";
-
+import QuantitySelector from "../components/Button/QuantitySelector";
 const CartPage = () => {
   const [cartGroups, setCartGroups] = useState({});
   const [selectedItems, setSelectedItems] = useState([]);
