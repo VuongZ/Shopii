@@ -5,23 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Review extends Model
+class UserAddress extends Model
 {
     use HasFactory;
     protected $guarded = [];
-
+    // Khai báo mối quan hệ ngược lại với User
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
-    public function Order()
-    {
-        return $this->belongsTo(Order::class);
-    }
-
 }
-?>

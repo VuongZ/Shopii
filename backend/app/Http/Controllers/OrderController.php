@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Coupon; // <--- Nhớ import Model Coupon
+use Carbon\Carbon;
 
 class OrderController extends Controller
 {
@@ -17,7 +19,7 @@ class OrderController extends Controller
             'cart_item_ids' => 'required|array',
             'address_id' => 'required|exists:user_addresses,id',
             'payment_method_id' => 'required|exists:payment_methods,id',
-            'shipping_method_id' => 'required|exists:shipping_methods,id', // Nhớ thêm cái này nếu bảng orders yêu cầu
+            'coupon_code' => 'nullable|string|exists:coupons,code',
         ]);
 
         DB::beginTransaction();
@@ -36,13 +38,30 @@ class OrderController extends Controller
                 return response()->json(['message' => 'Vui lòng chọn sản phẩm hợp lệ'], 400);
             }
 
+            // --- LOGIC COUPON (MỚI) ---
+            $coupon = null;
+            if ($request->has('coupon_code')) {
+                $coupon = Coupon::where('code', $request->coupon_code)
+                    ->where('start_date', '<=', Carbon::now())
+                    ->where('end_date', '>=', Carbon::now())
+                    ->where('usage_limit', '>', 0)
+                    ->first();
+                
+                if (!$coupon) {
+                    
+                }
+            }
+
             // 3. Gom nhóm theo Shop
             $itemsByShop = $items->groupBy(function($item) {
                 return $item->sku->product->shop_id;
             });
 
-            $createdOrderIds = []; // Mảng chứa ID các đơn hàng vừa tạo
-            $grandTotal = 0; // Tổng tiền tất cả các đơn (để thanh toán VNPay 1 lần)
+            $createdOrderIds = []; 
+            $grandTotal = 0; 
+            
+            // Biến cờ để đảm bảo mã giảm giá chỉ áp dụng 1 lần (nếu là mã toàn sàn)
+            $couponApplied = false; 
 
             foreach ($itemsByShop as $shopId => $shopItems) {
                 $shopTotal = 0;
@@ -56,9 +75,39 @@ class OrderController extends Controller
                     }
                 }
 
-                $shippingFee = 30000; // Phí ship cứng (hoặc tính động tùy bạn)
-                $finalTotal = $shopTotal + $shippingFee;
-                $grandTotal += $finalTotal; // Cộng dồn vào tổng thanh toán
+                // --- TÍNH GIẢM GIÁ CHO ĐƠN HÀNG NÀY ---
+                $discountAmount = 0;
+                if ($coupon && !$couponApplied) {
+                    // Logic: 
+                    // 1. Nếu Coupon của Shop (shop_id trùng khớp) -> Áp dụng
+                    // 2. Nếu Coupon sàn (shop_id null) -> Áp dụng cho đơn đầu tiên hoặc chia đều (ở đây mình làm đơn giản là áp dụng cho đơn đầu tiên thỏa mãn)
+                    
+                    $isValidShop = ($coupon->shop_id === null) || ($coupon->shop_id == $shopId);
+                    $isMinOrderReached = $shopTotal >= $coupon->min_order_value;
+
+                    if ($isValidShop && $isMinOrderReached) {
+                        if ($coupon->discount_type == 'fixed') {
+                            $discountAmount = $coupon->discount_value;
+                        } else {
+                            $discountAmount = ($shopTotal * $coupon->discount_value) / 100;
+                            if ($coupon->max_discount_value && $discountAmount > $coupon->max_discount_value) {
+                                $discountAmount = $coupon->max_discount_value;
+                            }
+                        }
+                        
+                        // Đảm bảo không giảm âm tiền
+                        if ($discountAmount > $shopTotal) $discountAmount = $shopTotal;
+                        
+                        $couponApplied = true; // Đánh dấu đã dùng mã
+                    }
+                }
+                // ---------------------------------------
+
+                $shippingFee = 30000; 
+                $finalTotal = $shopTotal + $shippingFee - $discountAmount; // Trừ giảm giá
+                if ($finalTotal < 0) $finalTotal = 0;
+
+                $grandTotal += $finalTotal;
 
                 // 4. Tạo Order
                 $order = Order::create([
@@ -66,12 +115,13 @@ class OrderController extends Controller
                     'shop_id' => $shopId,
                     'total_product_price' => $shopTotal,
                     'shipping_fee' => $shippingFee,
+                    'discount_amount' => $discountAmount, // <--- Lưu số tiền giảm
                     'final_total' => $finalTotal,
                     'user_address_id' => $request->address_id,
                     'payment_method_id' => $request->payment_method_id,
-                    'shipping_method_id' => $request->shipping_method_id ?? 1, // Default nếu ko truyền
+                    'shipping_method_id' => $request->shipping_method_id ?? 1, 
                     'status' => 'pending',
-                    'payment_status' => 'unpaid' // Mặc định là chưa thanh toán
+                    'payment_status' => 'unpaid' 
                 ]);
 
                 $createdOrderIds[] = $order->id;
@@ -86,20 +136,23 @@ class OrderController extends Controller
                     ]);
                     
                     $item->sku->decrement('stock', $item->quantity);
-                    $item->delete(); // Xóa khỏi giỏ
+                    $item->delete(); 
                 }
             }
             
+            // --- TRỪ LƯỢT DÙNG COUPON ---
+            if ($couponApplied && $coupon) {
+                $coupon->decrement('usage_limit');
+            }
+            // -----------------------------
+
             DB::commit();
 
-            // 6. Xử lý logic trả về cho Frontend
-            // Nếu là COD (ID=1) -> Xong luôn
-            // Nếu là VNPay (ID=2) -> Trả về thông tin để Frontend gọi tiếp API tạo link
-            
+            // 6. Trả về cho Frontend
             return response()->json([
                 'message' => 'Tạo đơn hàng thành công!',
-                'order_ids' => $createdOrderIds, // Trả về mảng các ID đơn hàng
-                'total_amount' => $grandTotal, // Tổng tiền cần thanh toán VNPay
+                'order_ids' => $createdOrderIds, 
+                'total_amount' => $grandTotal, 
                 'payment_method_id' => $request->payment_method_id
             ]);
             

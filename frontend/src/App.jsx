@@ -1,13 +1,12 @@
-import React from 'react';
+import React from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import CartPage from './pages/CartPage';
-import CheckoutPage from './pages/CheckoutPage';
-import './App.css'; // 👈 QUAN TRỌNG: Nhớ import file CSS vừa tạo
-
-// Nếu bạn chưa cài icon thì dùng chữ thường, không sao cả
-// import { ShoppingCart, Home, User } from 'lucide-react'; 
+import CartPage from "./pages/CartPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import PaymentResult from "./pages/PaymentResult";
+import "./App.css"; 
+//import { ShoppingCart, Home, User } from 'lucide-react';
 
 function App() {
   return (
@@ -17,17 +16,27 @@ function App() {
         <div className="header-content">
           {/* Logo bên trái */}
           <Link to="/" className="logo">
-             Shopii
+            Shopii
           </Link>
 
           {/* Menu bên phải */}
           <nav className="nav-menu">
-            <Link to="/" className="nav-link">Trang chủ</Link>
-              <Link to="/reviews" className="nav-link">Đánh Giá</Link>
-            <Link to="/cart" className="nav-link">🛒 Giỏ hàng</Link>
+            <Link to="/" className="nav-link">
+              Trang chủ
+            </Link>
+            <Link to="/reviews" className="nav-link">
+              Đánh Giá
+            </Link>
+            <Link to="/cart" className="nav-link">
+              🛒 Giỏ hàng
+            </Link>
             <span>|</span>
-            <Link to="/login" className="nav-link">Đăng nhập</Link>
-            <Link to="/register" className="nav-link">Đăng ký</Link>
+            <Link to="/login" className="nav-link">
+              Đăng nhập
+            </Link>
+            <Link to="/register" className="nav-link">
+              Đăng ký
+            </Link>
           </nav>
         </div>
       </header>
@@ -40,6 +49,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/payment-result" element={<PaymentResult />} />
         </Routes>
       </div>
     </div>
@@ -56,13 +66,19 @@ function Home() {
 
   return (
     <div className="welcome-card">
-      <h1 style={{ color: '#ee4d2d' }}>Chào mừng đến với Shopii </h1>
+
+      <h1 style={{ color: "#ee4d2d" }}>Chào mừng đến với Shopii 🎉</h1>
+
       <p>Nền tảng thương mại điện tử yêu thích của bạn.</p>
-      
+
       {isLogin ? (
         <div style={{ marginTop: 20 }}>
-          <span style={{ color: 'green', fontWeight: 'bold' }}>✅ Đã đăng nhập</span>
-          <button onClick={logout} className="btn-logout">Đăng xuất</button>
+          <span style={{ color: "green", fontWeight: "bold" }}>
+            ✅ Đã đăng nhập
+          </span>
+          <button onClick={logout} className="btn-logout">
+            Đăng xuất
+          </button>
         </div>
       ) : (
         <div style={{ marginTop: 20 }}>
