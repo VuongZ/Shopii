@@ -26,7 +26,7 @@ function App() {
               <Link to="/reviews" className="nav-link">Đánh Giá</Link>
             <Link to="/cart" className="nav-link">🛒 Giỏ hàng</Link>
             <span>|</span>
-            <Link to="/login" className="nav-link">Đăng nhập</Link>
+            <Link to="/login" className="nav-link">Đăng nhậpp</Link>
             <Link to="/register" className="nav-link">Đăng ký</Link>
           </nav>
         </div>
