@@ -20,7 +20,7 @@ const CheckoutPage = () => {
         const [cartRes, addrRes] = await Promise.all([
           cartApi.getCart(),
           cartApi.getAddresses().catch((err) => {
-             console.log("Chưa có API địa chỉ, dùng mảng rỗng");
+             console.log("Chưa có API địa chỉ, dùng mảng rỗng"+err);
              return { data: [] };
           }) 
         ]);

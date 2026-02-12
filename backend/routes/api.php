@@ -37,7 +37,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/checkout', [OrderController::class, 'checkout']);    
     Route::get('/user/addresses', [UserAddressController::class, 'index']);
     Route::post('/user/addresses', [UserAddressController::class, 'store']);
-    
     // Thanh toán VNPay (Tạo link thanh toán)
     Route::post('/payment/vnpay', [PaymentController::class, 'createPayment']);
     Route::get('/payment/vnpay-callback', [PaymentController::class, 'vnpayCallback']);
