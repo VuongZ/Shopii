@@ -66,7 +66,9 @@ function Home() {
 
   return (
     <div className="welcome-card">
+
       <h1 style={{ color: "#ee4d2d" }}>Chào mừng đến với Shopii 🎉</h1>
+
       <p>Nền tảng thương mại điện tử yêu thích của bạn.</p>
 
       {isLogin ? (
