@@ -5,10 +5,8 @@ import Register from "./pages/Register";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import PaymentResult from "./pages/PaymentResult";
-import "./App.css"; // 👈 QUAN TRỌNG: Nhớ import file CSS vừa tạo
-
-// Nếu bạn chưa cài icon thì dùng chữ thường, không sao cả
-// import { ShoppingCart, Home, User } from 'lucide-react';
+import "./App.css"; 
+//import { ShoppingCart, Home, User } from 'lucide-react';
 
 function App() {
   return (

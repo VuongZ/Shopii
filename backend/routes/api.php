@@ -10,6 +10,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserAddressController;
+use App\Http\Controllers\CouponController;  
 
 // 1. KHU VỰC CÔNG KHAI (Không cần đăng nhập)
 Route::post('/register', [AuthController::class, 'register']);
@@ -37,6 +38,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/checkout', [OrderController::class, 'checkout']);    
     Route::get('/user/addresses', [UserAddressController::class, 'index']);
     Route::post('/user/addresses', [UserAddressController::class, 'store']);
+    //Giảm giá đơn hàng
+    Route::get('/coupons', [CouponController::class, 'index']); // Lấy danh sách
+    Route::post('/coupons/apply', [CouponController::class, 'apply']); // Áp dụng mã
+
     // Thanh toán VNPay (Tạo link thanh toán)
     Route::post('/payment/vnpay', [PaymentController::class, 'createPayment']);
     Route::get('/payment/vnpay-callback', [PaymentController::class, 'vnpayCallback']);

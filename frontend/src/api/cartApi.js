@@ -24,7 +24,14 @@ const cartApi = {
   remove(id) {
     return axiosClient.delete(`/cart/${id}`);
   },
-
+  //giảm giá
+  getCoupons(shopId = null) {
+        const params = shopId ? { shop_id: shopId } : {};
+        return axiosClient.get('/coupons', { params });
+    },
+    applyCoupon(data) {
+        return axiosClient.post('/coupons/apply', data);
+    },
   // Thanh toán
   checkout(data) {
     return axiosClient.post("/checkout", data);
