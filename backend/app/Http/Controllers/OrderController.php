@@ -161,4 +161,28 @@ class OrderController extends Controller
             return response()->json(['message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+
+        // Lấy đơn hàng kèm theo Shop và các sản phẩm bên trong
+        $orders = Order::with(['shop', 'items.sku.product'])
+            ->where('user_id', $user->id)
+            ->orderBy('created_at', 'desc') // Mới nhất lên đầu
+            ->get();
+
+        return response()->json($orders);
+    }
+    
+    // Xem chi tiết một đơn hàng (Dùng khi bấm vào xem chi tiết)
+    public function show($id)
+    {
+        $user = Auth::user();
+        $order = Order::with(['shop', 'items.sku.product', 'userAddress'])
+            ->where('user_id', $user->id)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        return response()->json($order);
+    }
 }

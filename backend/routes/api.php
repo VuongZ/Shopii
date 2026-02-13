@@ -45,4 +45,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Thanh toán VNPay (Tạo link thanh toán)
     Route::post('/payment/vnpay', [PaymentController::class, 'createPayment']);
     Route::get('/payment/vnpay-callback', [PaymentController::class, 'vnpayCallback']);
+
+    // API Lịch sử đơn hàng
+    Route::get('/orders', [OrderController::class, 'index']); 
+    Route::get('/orders/{id}', [OrderController::class, 'show']);
 });
