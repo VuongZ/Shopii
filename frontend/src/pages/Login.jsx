@@ -26,9 +26,12 @@ export default function Login() {
             localStorage.setItem('ACCESS_TOKEN', response.data.token);
             localStorage.setItem('USER_INFO', JSON.stringify(response.data.user));
 
+            window.dispatchEvent(new Event("storage"));
             // 2. Thông báo & Chuyển trang
             alert("Đăng nhập thành công!");
             navigate('/'); // Chuyển về trang chủ
+            
+
             
         } catch (err) {
             console.error(err);
