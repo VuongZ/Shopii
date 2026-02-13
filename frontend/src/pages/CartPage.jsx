@@ -156,8 +156,8 @@ const CartPage = () => {
         </div>
 
         {!cartGroups || Object.keys(cartGroups).length === 0 ? (
-          <div className="empty-cart-box">
-            <img src="/empty-cart.png" alt="Giỏ hàng trống" />
+          <div className="empty-cart">
+            <img src="/empty-cart.png" />
             <p>Giỏ hàng của bạn còn trống</p>
             <button onClick={() => navigate("/")}>Mua sắm ngay</button>
           </div>
