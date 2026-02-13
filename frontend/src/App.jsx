@@ -11,6 +11,13 @@ import OrderHistoryPage from "./pages/OrderHistoryPage";
 //import { ShoppingCart, Home, User } from 'lucide-react';
 
 function App() {
+  const isLogin = localStorage.getItem("ACCESS_TOKEN");
+
+const handleLogout = () => {
+  localStorage.removeItem("ACCESS_TOKEN");
+  window.location.reload();
+};
+
   return (
     <div className="app-container">
       {/* HEADER MÀU CAM */}
@@ -36,13 +43,21 @@ function App() {
             <Link to="/orders" className="nav-link">
               📦 Đơn mua
             </Link>
-            <span></span>
-            <Link to="/login" className="nav-link">
-              Đăng nhập
-            </Link>
-            <Link to="/register" className="nav-link">
-              Đăng ký
-            </Link>
+           {isLogin ? (
+  <span className="nav-link" onClick={handleLogout} style={{ cursor: "pointer" }}>
+    Đăng xuất
+  </span>
+) : (
+  <>
+    <Link to="/login" className="nav-link">
+      Đăng nhập
+    </Link>
+    <Link to="/register" className="nav-link">
+      Đăng ký
+    </Link>
+  </>
+)}
+
           </nav>
         </div>
       </header>
