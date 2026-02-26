@@ -47,8 +47,8 @@ function App() {
           <nav className="nav-menu">
             <Link to="/" className="nav-link">Trang chủ</Link>
             <Link to="/reviews" className="nav-link">Đánh Giá</Link>
-            <Link to="/cart" className="nav-link">🛒 Giỏ hàng</Link>
-            <Link to="/orders" className="nav-link">📦 Đơn mua</Link>
+            <Link to="/cart" className="nav-link"> Giỏ hàng</Link>
+            <Link to="/orders" className="nav-link"> Đơn mua</Link>
 
             {isLogin ? (
               <span
@@ -95,13 +95,13 @@ function Home() {
 
   return (
     <div className="welcome-card">
-      <h1 className="home-title">Chào mừng đến với Shopii 🎉</h1>
+      <h1 className="home-title">Chào mừng đến với Shopii </h1>
       <p>Nền tảng thương mại điện tử yêu thích của bạn.</p>
 
       {isLogin ? (
         <div style={{ marginTop: 20 }}>
           <span style={{ color: "green", fontWeight: "bold" }}>
-            ✅ Đã đăng nhập
+             Đã đăng nhập
           </span>
           <button onClick={logout} className="btn-logout">
             Đăng xuất
