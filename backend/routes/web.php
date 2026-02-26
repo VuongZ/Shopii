@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
+use App\Models\Product;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -14,7 +15,12 @@ use Illuminate\Support\Facades\Artisan;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    $products = Product::all();
+   return response()->json([
+        'status' => 'success',
+        'message' => 'Shopii Backend API is running!',
+        'data' => $products  
+    ]);
 });
 Route::get('/clear-cache', function() {
     Artisan::call('config:clear');
