@@ -9,10 +9,12 @@ import "./App.css";
 import logoShopii from "../public/logoShopii.png";
 import OrderHistoryPage from "./pages/OrderHistoryPage";
 import { useState, useEffect } from "react";
+import Categories from "./pages/CategoriesPage";
 
 //import { ShoppingCart, Home, User } from 'lucide-react';
 
 function App() {
+  const user = JSON.parse(localStorage.getItem("USER_INFO"));
   const [isLogin, setIsLogin] = useState(
     !!localStorage.getItem("ACCESS_TOKEN")
   );
@@ -49,6 +51,11 @@ function App() {
             <Link to="/reviews" className="nav-link">Đánh Giá</Link>
             <Link to="/cart" className="nav-link"> Giỏ hàng</Link>
             <Link to="/orders" className="nav-link"> Đơn mua</Link>
+            {isLogin && user?.role === "admin" && (
+              <Link to="/categories" className="nav-link">
+                Categories
+              </Link>
+            )}
 
             {isLogin ? (
               <span
@@ -77,6 +84,14 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/payment-result" element={<PaymentResult />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
+          <Route
+            path="/categories"
+            element={
+              isLogin && user?.role === "admin"
+                ? <Categories />
+                : <Home />
+            }
+          />
         </Routes>
       </div>
     </div>
@@ -101,7 +116,7 @@ function Home() {
       {isLogin ? (
         <div style={{ marginTop: 20 }}>
           <span style={{ color: "green", fontWeight: "bold" }}>
-             Đã đăng nhập
+            Đã đăng nhập
           </span>
           <button onClick={logout} className="btn-logout">
             Đăng xuất

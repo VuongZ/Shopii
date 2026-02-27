@@ -11,6 +11,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserAddressController;
 use App\Http\Controllers\CouponController;  
+use App\Http\Controllers\CategoryController;
 
 // 1. KHU VỰC CÔNG KHAI (Không cần đăng nhập)
 Route::post('/register', [AuthController::class, 'register']);
@@ -49,4 +50,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // API Lịch sử đơn hàng
     Route::get('/orders', [OrderController::class, 'index']); 
     Route::get('/orders/{id}', [OrderController::class, 'show']);
+
+    // 3. KHU VỰC ADMIN (Chỉ admin mới truy cập được)
+// 3. KHU VỰC ADMIN (Chỉ admin mới truy cập được)
+Route::middleware(['admin'])->group(function () {
+
+    Route::get('/categories', [CategoryController::class, 'index']);
+    Route::post('/categories', [CategoryController::class, 'store']);
+    Route::put('/categories/{id}', [CategoryController::class, 'update']);
+    Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+
+});
 });
