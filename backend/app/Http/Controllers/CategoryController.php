@@ -16,34 +16,45 @@ class CategoryController extends Controller
 
     // Thêm mới
     public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:categories,id'
-        ]);
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'slug' => 'nullable|string|max:255',
+        'parent_id' => 'nullable|exists:categories,id',
+        'image' => 'nullable|string'
+    ]);
 
-        $category = Category::create([
-            'name' => $request->name,
-            'parent_id' => $request->parent_id
-        ]);
+    $category = Category::create([
+        'name' => $request->name,
+        'slug' => $request->slug,
+        'parent_id' => $request->parent_id ?: null,
+        'image' => $request->image,
+    ]);
 
-        return response()->json($category, 201);
-    }
+    return response()->json($category, 201);
+}
 
     // Cập nhật
     public function update(Request $request, $id)
-    {
-        $category = Category::findOrFail($id);
+{
+    $category = Category::findOrFail($id);
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:categories,id'
-        ]);
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'slug' => 'nullable|string|max:255',
+        'parent_id' => 'nullable|exists:categories,id',
+        'image' => 'nullable|string'
+    ]);
 
-        $category->update($request->only('name', 'parent_id'));
+    $category->update([
+        'name' => $request->name,
+        'slug' => $request->slug,
+        'parent_id' => $request->parent_id ?: null,
+        'image' => $request->image,
+    ]);
 
-        return response()->json($category);
-    }
+    return response()->json($category);
+}
 
     // Xóa
     public function destroy($id)
