@@ -14,6 +14,7 @@ import Categories from "./pages/CategoriesPage";
 //import { ShoppingCart, Home, User } from 'lucide-react';
 
 function App() {
+  const [searchKeyword, setSearchKeyword] = useState("");
   const user = JSON.parse(localStorage.getItem("USER_INFO"));
   const [isLogin, setIsLogin] = useState(
     !!localStorage.getItem("ACCESS_TOKEN")
@@ -47,6 +48,19 @@ function App() {
           </Link>
 
           <nav className="nav-menu">
+            <input
+              type="text"
+              placeholder="Tìm sản phẩm..."
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "6px",
+                border: "1px solid #ddd",
+                marginRight: "15px",
+                width: "200px"
+              }}
+            />
             <Link to="/" className="nav-link">Trang chủ</Link>
             <Link to="/reviews" className="nav-link">Đánh Giá</Link>
             <Link to="/cart" className="nav-link"> Giỏ hàng</Link>
@@ -77,19 +91,19 @@ function App() {
 
       <div className="main-content">
         <Routes>
-          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/payment-result" element={<PaymentResult />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
+          <Route path="/" element={<Home searchKeyword={searchKeyword} />} />
           <Route
             path="/categories"
             element={
               isLogin && user?.role === "admin"
                 ? <Categories />
-                : <Home />
+                : <Home searchKeyword={searchKeyword} />
             }
           />
         </Routes>
@@ -101,7 +115,7 @@ function App() {
 
 
 // Trang chủ đơn giản
-function Home() {
+function Home({ searchKeyword }) {
   const [products, setProducts] = React.useState([]);
   const [showLoginNotice, setShowLoginNotice] = React.useState(
     !localStorage.getItem("ACCESS_TOKEN")
@@ -122,69 +136,71 @@ function Home() {
       console.error(error);
     }
   };
-
+const filteredProducts = products.filter((product) =>
+  product.name?.toLowerCase().includes(searchKeyword.toLowerCase())
+);
   return (
     <div style={{ padding: "40px", position: "relative" }}>
-      
+
       {/* 🔔 Thông báo chưa đăng nhập */}
       {showLoginNotice && (
-  <div
-    style={{
-      position: "fixed",
-      top: "20px",
-      right: "20px",
-      background: "white",
-      padding: "22px",
-      borderRadius: "12px",
-      boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-      width: "300px",
-      zIndex: 1000,
-    }}
-  >
-    {/* Nút đóng */}
-    <button
-      onClick={() => setShowLoginNotice(false)}
-      style={{
-        position: "absolute",
-        top: "10px",
-        right: "12px",
-        border: "none",
-        background: "none",
-        cursor: "pointer",
-        fontSize: "18px",
-        fontWeight: "bold",
-        color: "#555",
-      }}
-    >
-      ✖
-    </button>
+        <div
+          style={{
+            position: "fixed",
+            top: "20px",
+            right: "20px",
+            background: "white",
+            padding: "22px",
+            borderRadius: "12px",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+            width: "300px",
+            zIndex: 1000,
+          }}
+        >
+          {/* Nút đóng */}
+          <button
+            onClick={() => setShowLoginNotice(false)}
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "12px",
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              fontSize: "18px",
+              fontWeight: "bold",
+              color: "#555",
+            }}
+          >
+            ✖
+          </button>
 
-    <h3 style={{ marginBottom: "12px" }}>
-      Bạn chưa đăng nhập
-    </h3>
+          <h3 style={{ marginBottom: "12px" }}>
+            Bạn chưa đăng nhập
+          </h3>
 
-    <p style={{ fontSize: "14px", marginBottom: "18px", color: "#666" }}>
-      Đăng nhập để mua hàng và sử dụng đầy đủ chức năng.
-    </p>
+          <p style={{ fontSize: "14px", marginBottom: "18px", color: "#666" }}>
+            Đăng nhập để mua hàng và sử dụng đầy đủ chức năng.
+          </p>
 
-    {/* Nút giống banner */}
-    <a
-      href="/login"
-      style={{
-        display: "block",
-        textAlign: "center",
-        background: "linear-gradient(90deg, #ff7a00, #ff3c00)",
-        color: "white",
-        padding: "10px",
-        borderRadius: "8px",
-        textDecoration: "none",
-        fontWeight: "bold",
-      }}
-    >
-      Đăng nhập ngay
-    </a>
-  </div>
-)}
+          {/* Nút giống banner */}
+          <a
+            href="/login"
+            style={{
+              display: "block",
+              textAlign: "center",
+              background: "linear-gradient(90deg, #ff7a00, #ff3c00)",
+              color: "white",
+              padding: "10px",
+              borderRadius: "8px",
+              textDecoration: "none",
+              fontWeight: "bold",
+            }}
+          >
+            Đăng nhập ngay
+          </a>
+        </div>
+      )}
 
       <h2 style={{ marginBottom: "30px" }}>
         Danh sách sản phẩm
@@ -197,7 +213,7 @@ function Home() {
           gap: "25px",
         }}
       >
-        {products.map((product) => {
+        {filteredProducts.map((product) => {
           const thumbnail = product.product_images?.find(
             (img) => img.is_thumbnail == 1
           );
