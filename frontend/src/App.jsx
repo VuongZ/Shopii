@@ -114,7 +114,7 @@ function Home() {
   const fetchProducts = async () => {
     try {
       const res = await fetch(
-        "http://127.0.0.1:8000/api/products"
+        "https://shopii-backend-latest.onrender.com/api/products"
       );
       const data = await res.json();
       setProducts(data);
