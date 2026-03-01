@@ -7,7 +7,7 @@ const axiosClient = axios.create({
     Accept: "application/json",
   },
 });
-
+//https://shopii-backend-latest.onrender.com/api
 // Tự động thêm Token vào mỗi request nếu đã đăng nhập
 axiosClient.interceptors.request.use((config) => {
   const token = localStorage.getItem("ACCESS_TOKEN");
