@@ -8,6 +8,7 @@ const axiosClient = axios.create({
   },
 });
 //https://shopii-backend-latest.onrender.com/api
+//http://127.0.0.1:8000/api
 // Tự động thêm Token vào mỗi request nếu đã đăng nhập
 axiosClient.interceptors.request.use((config) => {
   const token = localStorage.getItem("ACCESS_TOKEN");
@@ -31,5 +32,8 @@ axiosClient.interceptors.response.use(
     throw error;
   },
 );
-
+axiosClient.interceptors.request.use((config) => {
+  console.log("REQUEST URL:", config.url);
+  return config;
+});
 export default axiosClient;

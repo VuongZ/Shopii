@@ -10,6 +10,8 @@ import logoShopii from "../public/logoShopii.png";
 import OrderHistoryPage from "./pages/OrderHistoryPage";
 import { useState, useEffect } from "react";
 import Categories from "./pages/CategoriesPage";
+import ShopPage from "./pages/ShopPage";
+import AdminShopsPage from "./pages/AdminShopsPage";
 
 //import { ShoppingCart, Home, User } from 'lucide-react';
 
@@ -66,8 +68,20 @@ function App() {
             <Link to="/cart" className="nav-link"> Giỏ hàng</Link>
             <Link to="/orders" className="nav-link"> Đơn mua</Link>
             {isLogin && user?.role === "admin" && (
-              <Link to="/categories" className="nav-link">
-                Categories
+              <>
+                <Link to="/categories" className="nav-link">
+                  Categories
+                </Link>
+
+                <Link to="/admin/shops" className="nav-link">
+                  Duyệt Shop
+                </Link>
+              </>
+            )}
+            {/* SELLER */}
+            {isLogin && user?.role === "seller" && (
+              <Link to="/shop" className="nav-link">
+                Shop của tôi
               </Link>
             )}
 
@@ -89,24 +103,42 @@ function App() {
         </div>
       </header>
 
-      <div className="main-content">
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/payment-result" element={<PaymentResult />} />
-          <Route path="/orders" element={<OrderHistoryPage />} />
-          <Route path="/" element={<Home searchKeyword={searchKeyword} />} />
-          <Route
-            path="/categories"
-            element={
-              isLogin && user?.role === "admin"
-                ? <Categories />
-                : <Home searchKeyword={searchKeyword} />
-            }
-          />
-        </Routes>
+      <div className="main-content"><Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/payment-result" element={<PaymentResult />} />
+        <Route path="/orders" element={<OrderHistoryPage />} />
+        <Route path="/" element={<Home searchKeyword={searchKeyword} />} />
+
+        <Route
+          path="/categories"
+          element={
+            isLogin && user?.role === "admin"
+              ? <Categories />
+              : <Home searchKeyword={searchKeyword} />
+          }
+        />
+
+        <Route
+          path="/shop"
+          element={
+            isLogin && user?.role === "seller"
+              ? <ShopPage />
+              : <Home searchKeyword={searchKeyword} />
+          }
+        />
+        <Route
+          path="/admin/shops"
+          element={
+            isLogin && user?.role === "admin"
+              ? <AdminShopsPage />
+              : <Home searchKeyword={searchKeyword} />
+          }
+        />
+      </Routes>
+        
       </div>
     </div>
   );
@@ -136,9 +168,9 @@ function Home({ searchKeyword }) {
       console.error(error);
     }
   };
-const filteredProducts = products.filter((product) =>
-  product.name?.toLowerCase().includes(searchKeyword.toLowerCase())
-);
+  const filteredProducts = products.filter((product) =>
+    product.name?.toLowerCase().includes(searchKeyword.toLowerCase())
+  );
   return (
     <div style={{ padding: "40px", position: "relative" }}>
 
