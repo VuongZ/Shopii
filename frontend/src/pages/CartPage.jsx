@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import cartApi from "../api/cartApi";
 import CartShopGroup from "../components/Cart/CartShopGroup";
@@ -13,9 +13,9 @@ const CartPage = () => {
 
   useEffect(() => {
     fetchCartData();
-  }, []);
+  }, [fetchCartData]);
 
-  const fetchCartData = async () => {
+  const fetchCartData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await cartApi.getCart();
@@ -30,7 +30,7 @@ const CartPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   // Logic lấy toàn bộ ID sản phẩm có trong giỏ
   const allItemIds = Object.values(cartGroups)

@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
-use App\Models\Product;
+use App\Models\User;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -15,12 +15,23 @@ use App\Models\Product;
 */
 
 Route::get('/', function () {
-    $products = Product::all();
-   return response()->json([
-        'status' => 'success',
-        'message' => 'Shopii Backend API is running!',
-        'data' => $products  
-    ]);
+
+    $users = User::all();
+
+    echo "<h1>User List</h1>";
+    echo "<table border='1' cellpadding='10'>";
+    echo "<tr><th>ID</th><th>Name</th><th>Email</th></tr>";
+
+    foreach ($users as $user) {
+        echo "<tr>";
+        echo "<td>{$user->id}</td>";
+        echo "<td>{$user->name}</td>";
+        echo "<td>{$user->email}</td>";
+        echo "</tr>";
+    }
+
+    echo "</table>";
+
 });
 Route::get('/clear-cache', function() {
     Artisan::call('config:clear');
