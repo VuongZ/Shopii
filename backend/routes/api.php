@@ -11,10 +11,11 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserAddressController;
 use App\Http\Controllers\CouponController;  
-
+use App\Http\Controllers\ForgotPasswordController;
 // 1. KHU VỰC CÔNG KHAI (Không cần đăng nhập)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'forgotPassword']);
 
 // Lấy danh sách sản phẩm
 Route::get('/products', [ProductController::class, 'index']); 
