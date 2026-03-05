@@ -12,13 +12,12 @@ class AuthController extends Controller
     // Đăng ký
     public function register(Request $request) {
         $fields = $request->validate([
-            'name' => 'required|string',
             'email' => 'required|string|unique:users,email',
-            'password' => 'required|string|confirmed'
+            'password' => 'required|string|confirmed',
         ]);
-
+        $name = explode('@', $fields['email'])[0];
         $user = User::create([
-            'name' => $fields['name'],
+            'name' => $name,
             'email' => $fields['email'],
             'password' => Hash::make($fields['password']),
             'role' => 'user'
@@ -38,8 +37,15 @@ class AuthController extends Controller
             'email' => 'required|string',
             'password' => 'required|string'
         ]);
-
-        $user = User::where('email', $fields['email'])->first();
+        $logininput=$fields['email'];
+    
+        if (filter_var($logininput, FILTER_VALIDATE_EMAIL)) {
+            $user = User::where('email', $logininput)->first();
+        } else {
+            $user = User::whereHas('addresses', function ($query) use ($logininput) {
+                $query->where('recipient_phone', $logininput);
+            })->first();
+        }
 
         if(!$user || !Hash::check($fields['password'], $user->password)) {
             return response()->json([
