@@ -19,7 +19,7 @@ function App() {
   const [searchKeyword, setSearchKeyword] = useState("");
   const user = JSON.parse(localStorage.getItem("USER_INFO"));
   const [isLogin, setIsLogin] = useState(
-    !!localStorage.getItem("ACCESS_TOKEN")
+    !!localStorage.getItem("ACCESS_TOKEN"),
   );
 
   useEffect(() => {
@@ -60,13 +60,23 @@ function App() {
                 borderRadius: "6px",
                 border: "1px solid #ddd",
                 marginRight: "15px",
-                width: "200px"
+                width: "200px",
               }}
             />
-            <Link to="/" className="nav-link">Trang chủ</Link>
-            <Link to="/reviews" className="nav-link">Đánh Giá</Link>
-            <Link to="/cart" className="nav-link"> Giỏ hàng</Link>
-            <Link to="/orders" className="nav-link"> Đơn mua</Link>
+            <Link to="/" className="nav-link">
+              Trang chủ
+            </Link>
+            <Link to="/reviews" className="nav-link">
+              Đánh Giá
+            </Link>
+            <Link to="/cart" className="nav-link">
+              {" "}
+              Giỏ hàng
+            </Link>
+            <Link to="/orders" className="nav-link">
+              {" "}
+              Đơn mua
+            </Link>
             {isLogin && user?.role === "admin" && (
               <>
                 <Link to="/categories" className="nav-link">
@@ -95,72 +105,75 @@ function App() {
               </span>
             ) : (
               <>
-                <Link to="/login" className="nav-link">Đăng nhập</Link>
-                <Link to="/register" className="nav-link">Đăng ký</Link>
+                <Link to="/login" className="nav-link">
+                  Đăng nhập
+                </Link>
+                <Link to="/register" className="nav-link">
+                  Đăng ký
+                </Link>
               </>
             )}
           </nav>
         </div>
       </header>
 
-      <div className="main-content"><Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
-        <Route path="/payment-result" element={<PaymentResult />} />
-        <Route path="/orders" element={<OrderHistoryPage />} />
-        <Route path="/" element={<Home searchKeyword={searchKeyword} />} />
+      <div className="main-content">
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/payment-result" element={<PaymentResult />} />
+          <Route path="/orders" element={<OrderHistoryPage />} />
+          <Route path="/" element={<Home searchKeyword={searchKeyword} />} />
 
-        <Route
-          path="/categories"
-          element={
-            isLogin && user?.role === "admin"
-              ? <Categories />
-              : <Home searchKeyword={searchKeyword} />
-          }
-        />
+          <Route
+            path="/categories"
+            element={
+              isLogin && user?.role === "admin" ? (
+                <Categories />
+              ) : (
+                <Home searchKeyword={searchKeyword} />
+              )
+            }
+          />
 
-        <Route
-          path="/shop"
-          element={
-            isLogin && user?.role === "seller"
-              ? <ShopPage />
-              : <Home searchKeyword={searchKeyword} />
-          }
-        />
-        <Route
-          path="/admin/shops"
-          element={
-            isLogin && user?.role === "admin"
-              ? <AdminShopsPage />
-              : <Home searchKeyword={searchKeyword} />
-          }
-        />
-      </Routes>
-        
+          <Route
+            path="/shop"
+            element={
+              isLogin && user?.role === "seller" ? (
+                <ShopPage />
+              ) : (
+                <Home searchKeyword={searchKeyword} />
+              )
+            }
+          />
+          <Route
+            path="/admin/shops"
+            element={
+              isLogin && user?.role === "admin" ? (
+                <AdminShopsPage />
+              ) : (
+                <Home searchKeyword={searchKeyword} />
+              )
+            }
+          />
+        </Routes>
       </div>
     </div>
   );
 }
 
-
-
 // Trang chủ đơn giản
 function Home({ searchKeyword }) {
   const [products, setProducts] = React.useState([]);
   const [showLoginNotice, setShowLoginNotice] = React.useState(
-    !localStorage.getItem("ACCESS_TOKEN")
+    !localStorage.getItem("ACCESS_TOKEN"),
   );
-
-  React.useEffect(() => {
-    fetchProducts();
-  }, []);
-
   const fetchProducts = async () => {
     try {
       const res = await fetch(
-        "https://shopii-backend-latest.onrender.com/api/products"
+        "https://shopii-backend-latest.onrender.com/api/products",
       );
       const data = await res.json();
       setProducts(data);
@@ -168,12 +181,15 @@ function Home({ searchKeyword }) {
       console.error(error);
     }
   };
+  React.useEffect(() => {
+    fetchProducts();
+  }, []);
+
   const filteredProducts = products.filter((product) =>
-    product.name?.toLowerCase().includes(searchKeyword.toLowerCase())
+    product.name?.toLowerCase().includes(searchKeyword.toLowerCase()),
   );
   return (
     <div style={{ padding: "40px", position: "relative" }}>
-
       {/* 🔔 Thông báo chưa đăng nhập */}
       {showLoginNotice && (
         <div
@@ -207,9 +223,7 @@ function Home({ searchKeyword }) {
             ✖
           </button>
 
-          <h3 style={{ marginBottom: "12px" }}>
-            Bạn chưa đăng nhập
-          </h3>
+          <h3 style={{ marginBottom: "12px" }}>Bạn chưa đăng nhập</h3>
 
           <p style={{ fontSize: "14px", marginBottom: "18px", color: "#666" }}>
             Đăng nhập để mua hàng và sử dụng đầy đủ chức năng.
@@ -234,9 +248,7 @@ function Home({ searchKeyword }) {
         </div>
       )}
 
-      <h2 style={{ marginBottom: "30px" }}>
-        Danh sách sản phẩm
-      </h2>
+      <h2 style={{ marginBottom: "30px" }}>Danh sách sản phẩm</h2>
 
       <div
         style={{
@@ -247,7 +259,7 @@ function Home({ searchKeyword }) {
       >
         {filteredProducts.map((product) => {
           const thumbnail = product.product_images?.find(
-            (img) => img.is_thumbnail == 1
+            (img) => img.is_thumbnail == 1,
           );
 
           const imageUrl =
@@ -262,8 +274,7 @@ function Home({ searchKeyword }) {
                 background: "white",
                 padding: "15px",
                 borderRadius: "8px",
-                boxShadow:
-                  "0 3px 10px rgba(0,0,0,0.05)",
+                boxShadow: "0 3px 10px rgba(0,0,0,0.05)",
               }}
             >
               <img
@@ -277,9 +288,7 @@ function Home({ searchKeyword }) {
                 }}
               />
 
-              <h3 style={{ margin: "12px 0 6px" }}>
-                {product.name}
-              </h3>
+              <h3 style={{ margin: "12px 0 6px" }}>{product.name}</h3>
 
               <p
                 style={{
