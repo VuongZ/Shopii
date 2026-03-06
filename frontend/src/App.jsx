@@ -93,9 +93,9 @@ function App() {
             <Link to="/" className="nav-link">
               Trang chủ
             </Link>
-            <Link to="/reviews" className="nav-link">
+            {/* <Link to="/reviews" className="nav-link">
               Đánh Giá
-            </Link>
+            </Link> */}
             <div
               className="cart-wrapper"
               onMouseEnter={() => setShowCart(true)}
