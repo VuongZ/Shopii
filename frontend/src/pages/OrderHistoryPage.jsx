@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import cartApi from "../api/orderApi";
+import orderApi from "../api/orderApi";
 import { Link, useNavigate } from "react-router-dom";
 
 const OrderHistoryPage = () => {
@@ -19,7 +19,7 @@ const OrderHistoryPage = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await cartApi.getMyOrders();
+        const res = await orderApi.getMyOrders();
         setOrders(res.data || []);
       } catch (error) {
         console.error("Lỗi tải đơn hàng:", error);

@@ -2,7 +2,7 @@ import axiosClient from "./axiosClient";
 
 const orderApi = {
   getMyOrders() {
-    return axiosClient.get("/orders/my");
+    return axiosClient.get("/orders");
   },
 
   getOrderDetail(id) {
