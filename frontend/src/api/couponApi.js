@@ -6,7 +6,7 @@ const couponApi = {
   },
 
   applyCoupon(data) {
-    return axiosClient.post("/apply-coupon", data);
+    return axiosClient.post("/coupons/apply", data);
   },
 };
 

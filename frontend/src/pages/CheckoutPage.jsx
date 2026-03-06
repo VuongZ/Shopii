@@ -31,6 +31,9 @@ const CheckoutPage = () => {
   const shippingFee = 30000;
 
   useEffect(() => {
+    if (selectedItems.length === 0) {
+      navigate("/cart");
+    }
     const fetchData = async () => {
       try {
         const cartRes = await cartApi.getCart();
@@ -67,7 +70,7 @@ const CheckoutPage = () => {
     if (selectedItems.length > 0) {
       fetchData();
     }
-  }, [selectedItems]);
+  }, [selectedItems, navigate]);
 
   const totalProductPrice = cartItems.reduce(
     (sum, item) => sum + Number(item.price) * item.quantity,
@@ -130,7 +133,7 @@ const CheckoutPage = () => {
 
       if (paymentMethod === 2) {
         const payRes = await paymentApi.createPaymentUrl({
-          orderId: order_ids[0],
+          orderId: order_ids.join("-"),
           amount: total_amount,
         });
 

@@ -48,7 +48,9 @@ class OrderController extends Controller
                     ->first();
                 
                 if (!$coupon) {
-                    
+                    return response()->json([
+                     'message' => 'Mã giảm giá không hợp lệ hoặc đã hết hạn'
+                    ], 400);
                 }
             }
 

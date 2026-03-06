@@ -102,20 +102,30 @@ class PaymentController extends Controller
         if ($secureHash == $vnp_SecureHash) {
             if ($request->vnp_ResponseCode == '00') {
                 // Giao dịch thành công -> Cập nhật DB
-                $orderId = $request->vnp_TxnRef;
-                
-                $order = Order::find($orderId);
-                if ($order) {
-                    // Kiểm tra xem đơn hàng đã được cập nhật chưa để tránh update 2 lần
-                    if($order->payment_status != 'paid'){
-                         $order->payment_status = 'paid';
-                         $order->status = 'confirmed'; // Chuyển trạng thái đơn hàng
-                         $order->save();
-                    }
-                    
-                    return response()->json(['message' => 'Giao dịch thành công', 'data' => $order]);
-                }
-                return response()->json(['message' => 'Không tìm thấy đơn hàng'], 404);
+               $orderIds = explode('-', $request->vnp_TxnRef);
+
+$updated = false;
+
+foreach ($orderIds as $id) {
+    $order = Order::find($id);
+
+    if ($order && $order->payment_status != 'paid') {
+        $order->payment_status = 'paid';
+        $order->status = 'confirmed';
+        $order->save();
+        $updated = true;
+    }
+}
+
+if ($updated) {
+    return response()->json([
+        'message' => 'Thanh toán thành công'
+    ]);
+}
+
+return response()->json([
+    'message' => 'Không tìm thấy đơn hàng'
+], 404);
             }
             return response()->json(['message' => 'Giao dịch không thành công'], 400);
         } else {

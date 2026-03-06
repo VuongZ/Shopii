@@ -2,11 +2,11 @@ import axiosClient from "./axiosClient";
 
 const paymentApi = {
   createPaymentUrl(data) {
-    return axiosClient.post("/vnpay/create-payment", data);
+    return axiosClient.post("/payment/vnpay", data);
   },
 
-  vnpayReturn(queryString) {
-    return axiosClient.get(`/vnpay/return${queryString}`);
+  vnpayReturn(query) {
+    return axiosClient.get(`/payment/vnpay-callback${query}`);
   },
 };
 

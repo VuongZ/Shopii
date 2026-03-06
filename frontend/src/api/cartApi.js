@@ -14,7 +14,7 @@ const cartApi = {
   },
 
   getAddresses() {
-    return axiosClient.get("/addresses");
+    return axiosClient.get("/user/addresses");
   },
 
   checkout(data) {
