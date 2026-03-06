@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import cartApi from "../api/cartApi";
+import cartApi from "../api/orderApi";
 import { Link, useNavigate } from "react-router-dom";
 
 const OrderHistoryPage = () => {
