@@ -112,7 +112,7 @@ const OrderHistoryPage = () => {
                 display: "inline-block",
                 marginTop: "10px",
                 padding: "10px 30px",
-                backgroundColor: "#ee4d2d",
+                backgroundColor: "#672dee",
                 color: "white",
                 textDecoration: "none",
                 borderRadius: "2px",
