@@ -1,5 +1,8 @@
 import React from "react";
+import axiosClient from "./api/axiosClient";
 import { Routes, Route, Link } from "react-router-dom";
+import { ShoppingCart } from "lucide-react";
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import CartPage from "./pages/CartPage";
@@ -17,11 +20,34 @@ import AdminShopsPage from "./pages/AdminShopsPage";
 
 function App() {
   const [searchKeyword, setSearchKeyword] = useState("");
-  const user = JSON.parse(localStorage.getItem("USER_INFO"));
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("USER_INFO")),
+  );
+  const [cartItems, setCartItems] = useState([]);
+  const [showCart, setShowCart] = useState(false);
+
   const [isLogin, setIsLogin] = useState(
     !!localStorage.getItem("ACCESS_TOKEN"),
   );
+  const fetchCart = async () => {
+    try {
+      const res = await axiosClient.get("/cart");
+      const cartData = res.data || {};
+      const items = Object.values(cartData).flat();
+      setCartItems(items);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  useEffect(() => {
+    const init = async () => {
+      if (localStorage.getItem("ACCESS_TOKEN")) {
+        await fetchCart();
+      }
+    };
 
+    init();
+  }, []);
   useEffect(() => {
     const syncLoginState = () => {
       setIsLogin(!!localStorage.getItem("ACCESS_TOKEN"));
@@ -37,6 +63,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem("ACCESS_TOKEN");
     localStorage.removeItem("USER_INFO");
+    setUser(null);
     setIsLogin(false);
   };
 
@@ -69,10 +96,105 @@ function App() {
             <Link to="/reviews" className="nav-link">
               Đánh Giá
             </Link>
-            <Link to="/cart" className="nav-link">
-              {" "}
-              Giỏ hàng
-            </Link>
+            <div
+              className="cart-wrapper"
+              onMouseEnter={() => setShowCart(true)}
+              onMouseLeave={() => setShowCart(false)}
+              style={{ position: "relative" }}
+            >
+              <Link
+                to="/cart"
+                className="nav-link"
+                style={{ position: "relative" }}
+              >
+                <ShoppingCart size={28} />
+
+                {cartItems.length > 0 && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "-8px",
+                      right: "-10px",
+                      background: "#ff3c00",
+                      color: "white",
+                      borderRadius: "50%",
+                      fontSize: "12px",
+                      padding: "3px 6px",
+                    }}
+                  >
+                    {cartItems.length}
+                  </span>
+                )}
+              </Link>
+
+              {showCart && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "35px",
+                    right: "0",
+                    width: "320px",
+                    background: "white",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+                    borderRadius: "8px",
+                    padding: "10px",
+                    zIndex: 1000,
+                  }}
+                >
+                  <h4 style={{ marginBottom: "10px" }}>Sản phẩm mới thêm</h4>
+
+                  {cartItems.length === 0 ? (
+                    <p>Chưa có sản phẩm</p>
+                  ) : (
+                    cartItems.slice(0, 5).map((item) => (
+                      <div
+                        key={item.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          marginBottom: "10px",
+                        }}
+                      >
+                        <img
+                          src={item.image || "https://via.placeholder.com/40"}
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            objectFit: "cover",
+                            marginRight: "10px",
+                          }}
+                        />
+
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: "13px" }}>
+                            {item.product_name}
+                          </div>
+                        </div>
+
+                        <div style={{ color: "#ee4d2d", fontSize: "13px" }}>
+                          {Number(item.price).toLocaleString()}đ
+                        </div>
+                      </div>
+                    ))
+                  )}
+
+                  <div style={{ textAlign: "right", marginTop: "10px" }}>
+                    <Link
+                      to="/cart"
+                      style={{
+                        background: "#ee4d2d",
+                        color: "white",
+                        padding: "6px 12px",
+                        borderRadius: "4px",
+                        textDecoration: "none",
+                      }}
+                    >
+                      Xem Giỏ Hàng
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
             <Link to="/orders" className="nav-link">
               {" "}
               Đơn mua
@@ -172,11 +294,8 @@ function Home({ searchKeyword }) {
   );
   const fetchProducts = async () => {
     try {
-      const res = await fetch(
-        "https://shopii-backend-latest.onrender.com/api/products",
-      );
-      const data = await res.json();
-      setProducts(data);
+      const res = await axiosClient.get("/products");
+      setProducts(res.data);
     } catch (error) {
       console.error(error);
     }
