@@ -10,11 +10,6 @@ const CartPage = () => {
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false); // Đề xuất: Trạng thái khi đang gọi API update
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchCartData();
-  }, [fetchCartData]);
-
   const fetchCartData = useCallback(async () => {
     try {
       setLoading(true);
@@ -31,10 +26,14 @@ const CartPage = () => {
       setLoading(false);
     }
   }, [navigate]);
+  useEffect(() => {
+    fetchCartData();
+  }, [fetchCartData]);
 
   // Logic lấy toàn bộ ID sản phẩm có trong giỏ
   const allItemIds = Object.values(cartGroups)
     .flat()
+    .filter(Boolean)
     .map((item) => item.id);
   const isAllSelected =
     allItemIds.length > 0 &&
