@@ -2,8 +2,8 @@ import axios from 'axios'
 
 const axiosClient = axios.create({
   // https://shopii-backend-latest.onrender.com/api backend render
-  // http://localhost:8000/api/
-  baseURL: 'https://shopii-backend-latest.onrender.com/api',
+  //  http://localhost:8000/api/
+  baseURL: ' http://localhost:8000/api/',
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -30,8 +30,12 @@ axiosClient.interceptors.response.use(
       localStorage.removeItem('ACCESS_TOKEN')
       // window.location.reload();
     }
+
     throw error
   }
 )
-
+axiosClient.interceptors.request.use((config) => {
+  console.log('REQUEST URL:', config.url)
+  return config
+})
 export default axiosClient
