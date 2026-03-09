@@ -7,7 +7,6 @@ function UsersPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
-  // LOAD USERS FROM HTML
   const loadUsers = async () => {
     const res = await fetch(API + "/users");
     const html = await res.text();
@@ -20,13 +19,15 @@ function UsersPage() {
     const list = [];
 
     for (let i = 1; i < rows.length; i++) {
-      const tds = rows[i].querySelectorAll("td");
+      const row = rows[i];
 
-      const id = tds[0]?.innerText.trim();
+      const id = row.children[0]?.innerText.trim();
 
-      const name = tds[1]?.querySelector("input")?.value;
+      const nameInput = row.querySelector("input[name='name']");
+      const emailInput = row.querySelector("input[name='email']");
 
-      const email = tds[2]?.querySelector("input")?.value;
+      const name = nameInput ? nameInput.value : "";
+      const email = emailInput ? emailInput.value : "";
 
       if (id) {
         list.push({ id, name, email });
@@ -35,6 +36,7 @@ function UsersPage() {
 
     setUsers(list);
   };
+
   useEffect(() => {
     loadUsers();
   }, []);
