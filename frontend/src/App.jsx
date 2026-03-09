@@ -2,7 +2,7 @@ import React from "react";
 import axiosClient from "./api/axiosClient";
 import { Routes, Route, Link } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
-
+import UsersPage from "./pages/UsersPage";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -61,15 +61,12 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/payment-result" element={<PaymentResult />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
-
+          <Route path="/users" element={<UsersPage />} />
           {/* Trang chi tiết sản phẩm */}
           <Route path="/product/:id" element={<ProductDetailPage />} />
 
           {/* Trang chủ */}
-          <Route
-            path="/"
-            element={<Home searchKeyword={searchKeyword} />}
-          />
+          <Route path="/" element={<Home searchKeyword={searchKeyword} />} />
         </Routes>
       </main>
     </div>
