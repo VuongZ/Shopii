@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Routes, Route, Link } from 'react-router-dom'
 import { ShoppingCart } from 'lucide-react'
 import axiosClient from './api/axiosClient'
+import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import CartPage from './pages/CartPage'
@@ -17,6 +18,7 @@ import AdminShopsPage from './pages/AdminShopsPage'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import VerifyOTP from './pages/VerifyOTP'
+import UsersPage from './pages/UsersPage'
 //import { ShoppingCart, Home, User } from 'lucide-react';
 
 function App() {
@@ -171,6 +173,8 @@ function App() {
               )
             }
           />
+          <Route path="/users" element={<UsersPage />} />
+
           {/* Trang chi tiết sản phẩm */}
           <Route path="/product/:id" element={<ProductDetailPage />} />
 
