@@ -3,7 +3,7 @@ import axiosClient from "./api/axiosClient";
 import { Routes, Route, Link } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
 import UsersPage from "./pages/UsersPage";
-import Home from "./pages/Home";
+import Home from "./pages/ShopPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import CartPage from "./pages/CartPage";
