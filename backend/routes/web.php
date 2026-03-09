@@ -3,64 +3,134 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\Request;
 use App\Models\User;
 
-Route::get('/', function () {
+/*
+|--------------------------------------------------------------------------
+| CREATE USER
+|--------------------------------------------------------------------------
+*/
+Route::post('/users', function (Request $request) {
 
-    try {
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => bcrypt('123456')
+    ]);
 
-        // Cache danh sách user trong 60 giây
-        $users = Cache::remember('users_page_' . request('page', 1), 60, function () {
-            return User::select('id','name','email')
-                ->orderBy('id','desc')
-                ->paginate(20);
-        });
-
-        echo "
-        <style>
-        body{font-family:Arial;padding:20px}
-        table{border-collapse:collapse;width:600px}
-        th,td{padding:8px;border:1px solid #ccc;text-align:left}
-        th{background:#f2f2f2}
-        h1{margin-bottom:20px}
-        .pagination a{margin:4px;padding:6px 10px;border:1px solid #ccc;text-decoration:none}
-        </style>
-        ";
-
-        echo "<h1>User List</h1>";
-
-        echo "<table>";
-        echo "<tr><th>ID</th><th>Name</th><th>Email</th></tr>";
-
-        foreach ($users as $user) {
-            echo "<tr>";
-            echo "<td>{$user->id}</td>";
-            echo "<td>{$user->name}</td>";
-            echo "<td>{$user->email}</td>";
-            echo "</tr>";
-        }
-
-        echo "</table>";
-
-        echo "<div class='pagination'>";
-        echo $users->links();
-        echo "</div>";
-
-    } catch (\Exception $e) {
-
-        echo "<h2>Database Error</h2>";
-        echo "<pre>".$e->getMessage()."</pre>";
-
-    }
+    return response()->json($user);
 
 });
 
+/*
+|--------------------------------------------------------------------------
+| READ ALL USERS
+|--------------------------------------------------------------------------
+*/
+Route::get('/users', function () {
+
+    $users = Cache::remember('users_list', 60, function () {
+        return User::select('id','name','email')->get();
+    });
+
+    return response()->json($users);
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| READ USER BY ID
+|--------------------------------------------------------------------------
+*/
+Route::get('/users/{id}', function ($id) {
+
+    $user = User::select('id','name','email')->find($id);
+
+    if(!$user){
+        return response()->json(["message"=>"User not found"],404);
+    }
+
+    return response()->json($user);
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| UPDATE USER
+|--------------------------------------------------------------------------
+*/
+Route::put('/users/{id}', function (Request $request,$id) {
+
+    $user = User::find($id);
+
+    if(!$user){
+        return response()->json(["message"=>"User not found"],404);
+    }
+
+    $user->update([
+        'name'=>$request->name,
+        'email'=>$request->email
+    ]);
+
+    return response()->json($user);
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| DELETE USER
+|--------------------------------------------------------------------------
+*/
+Route::delete('/users/{id}', function ($id) {
+
+    $user = User::find($id);
+
+    if(!$user){
+        return response()->json(["message"=>"User not found"],404);
+    }
+
+    $user->delete();
+
+    return response()->json(["message"=>"User deleted"]);
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| HTML PAGE USER TABLE
+|--------------------------------------------------------------------------
+*/
+Route::get('/', function () {
+
+    $users = User::select('id','name','email')->paginate(20);
+
+    echo "<h1>User List</h1>";
+    echo "<table border='1' cellpadding='8'>";
+    echo "<tr><th>ID</th><th>Name</th><th>Email</th></tr>";
+
+    foreach($users as $user){
+        echo "<tr>";
+        echo "<td>$user->id</td>";
+        echo "<td>$user->name</td>";
+        echo "<td>$user->email</td>";
+        echo "</tr>";
+    }
+
+    echo "</table>";
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| CLEAR CACHE
+|--------------------------------------------------------------------------
+*/
 Route::get('/clear-cache-secret-123', function () {
 
     Artisan::call('config:clear');
     Artisan::call('cache:clear');
-    Artisan::call('config:cache');
 
-    return "Cache cleared successfully!";
+    return "Cache cleared";
 
 });
