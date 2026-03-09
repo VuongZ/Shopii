@@ -1,5 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Routes, Route, Link } from 'react-router-dom'
+import { ShoppingCart } from 'lucide-react'
+import axiosClient from './api/axiosClient'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import CartPage from './pages/CartPage'
@@ -8,7 +10,7 @@ import PaymentResult from './pages/PaymentResult'
 import './App.css'
 import logoShopii from '../public/logoShopii.png'
 import OrderHistoryPage from './pages/OrderHistoryPage'
-import { useState, useEffect } from 'react'
+import ProductDetailPage from './pages/ProductDetailPage'
 import Categories from './pages/CategoriesPage'
 import ShopPage from './pages/ShopPage'
 import AdminShopsPage from './pages/AdminShopsPage'
@@ -41,83 +43,91 @@ function App() {
   }
 
   return (
-    <div className="app-container">
-      <header className="shopee-header">
-        <div className="header-content">
-          <Link to="/" className="logo">
-            <img src={logoShopii} alt="Shopii Logo" />
-            Shopii
+    <div className="app">
+      {/* HEADER */}
+      <header className="header">
+        <div className="logo">
+          <Link to="/">Shopii</Link>
+        </div>
+
+        {/* SEARCH */}
+        <input
+          type="text"
+          placeholder="Tìm sản phẩm..."
+          className="search-input"
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
+        />
+        <nav className="nav-menu">
+          <input
+            type="text"
+            placeholder="Tìm sản phẩm..."
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid #ddd',
+              marginRight: '15px',
+              width: '200px',
+            }}
+          />
+          <Link to="/" className="nav-link">
+            Trang chủ
+          </Link>
+          <Link to="/reviews" className="nav-link">
+            Đánh Giá
+          </Link>
+          <Link to="/cart" className="nav-link">
+            {' '}
+            Giỏ hàng
           </Link>
 
-          <nav className="nav-menu">
-            <input
-              type="text"
-              placeholder="Tìm sản phẩm..."
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '6px',
-                border: '1px solid #ddd',
-                marginRight: '15px',
-                width: '200px',
-              }}
-            />
-            <Link to="/" className="nav-link">
-              Trang chủ
-            </Link>
-            <Link to="/reviews" className="nav-link">
-              Đánh Giá
-            </Link>
-            <Link to="/cart" className="nav-link">
-              {' '}
-              Giỏ hàng
-            </Link>
-            <Link to="/orders" className="nav-link">
-              {' '}
-              Đơn mua
-            </Link>
-            {isLogin && user?.role === 'admin' && (
-              <>
-                <Link to="/categories" className="nav-link">
-                  Categories
-                </Link>
-
-                <Link to="/admin/shops" className="nav-link">
-                  Duyệt Shop
-                </Link>
-              </>
-            )}
-            {/* SELLER */}
-            {isLogin && user?.role === 'seller' && (
-              <Link to="/shop" className="nav-link">
-                Shop của tôi
+          <Link to="/orders" className="nav-link">
+            {' '}
+            Đơn mua
+          </Link>
+          {isLogin && user?.role === 'admin' && (
+            <>
+              <Link to="/categories" className="nav-link">
+                Categories
               </Link>
-            )}
 
-            {isLogin ? (
-              <span
-                className="nav-link"
-                onClick={handleLogout}
-                style={{ cursor: 'pointer' }}
-              >
-                Đăng xuất
-              </span>
-            ) : (
-              <>
-                <Link to="/login" className="nav-link">
-                  Đăng nhập
-                </Link>
-                <Link to="/register" className="nav-link">
-                  Đăng ký
-                </Link>
-              </>
-            )}
-          </nav>
-        </div>
+              <Link to="/admin/shops" className="nav-link">
+                Duyệt Shop
+              </Link>
+            </>
+          )}
+          {/* SELLER */}
+          {isLogin && user?.role === 'seller' && (
+            <Link to="/shop" className="nav-link">
+              Shop của tôi
+            </Link>
+          )}
+
+          {isLogin ? (
+            <span
+              className="nav-link"
+              onClick={handleLogout}
+              style={{ cursor: 'pointer' }}
+            >
+              Đăng xuất
+            </span>
+          ) : (
+            <>
+              <Link to="/login" className="nav-link">
+                Đăng nhập
+              </Link>
+              <Link to="/register" className="nav-link">
+                Đăng ký
+              </Link>
+            </>
+          )}
+        </nav>
       </header>
 
-      <div className="main-content">
+      {/* MAIN */}
+      <main className="main">
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -125,6 +135,7 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/payment-result" element={<PaymentResult />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
+
           <Route path="/" element={<Home searchKeyword={searchKeyword} />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -160,8 +171,13 @@ function App() {
               )
             }
           />
+          {/* Trang chi tiết sản phẩm */}
+          <Route path="/product/:id" element={<ProductDetailPage />} />
+
+          {/* Trang chủ */}
+          <Route path="/" element={<Home searchKeyword={searchKeyword} />} />
         </Routes>
-      </div>
+      </main>
     </div>
   )
 }

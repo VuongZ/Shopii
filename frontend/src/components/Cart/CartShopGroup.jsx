@@ -1,9 +1,6 @@
 import React from "react";
-// Import đúng đường dẫn QuantitySelector (kiểm tra lại thư mục của bạn)
-// Nếu QuantitySelector nằm ở src/components/Button/QuantitySelector.jsx:
+
 import QuantitySelector from "../Button/QuantitySelector";
-// Hoặc nếu nằm ở src/components/QuantitySelector.jsx:
-// import QuantitySelector from "../QuantitySelector";
 
 const CartShopGroup = ({
   shopName,

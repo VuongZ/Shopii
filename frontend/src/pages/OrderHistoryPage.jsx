@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import cartApi from "../api/cartApi";
+import orderApi from "../api/orderApi";
 import { Link, useNavigate } from "react-router-dom";
 
 const OrderHistoryPage = () => {
@@ -19,7 +19,7 @@ const OrderHistoryPage = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await cartApi.getMyOrders();
+        const res = await orderApi.getMyOrders();
         setOrders(res.data || []);
       } catch (error) {
         console.error("Lỗi tải đơn hàng:", error);
@@ -112,7 +112,7 @@ const OrderHistoryPage = () => {
                 display: "inline-block",
                 marginTop: "10px",
                 padding: "10px 30px",
-                backgroundColor: "#ee4d2d",
+                backgroundColor: "#672dee",
                 color: "white",
                 textDecoration: "none",
                 borderRadius: "2px",
