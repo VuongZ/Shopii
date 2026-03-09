@@ -12,25 +12,29 @@ function UsersPage() {
     const res = await fetch(API + "/users");
     const html = await res.text();
 
-    const rows = [...html.matchAll(/<tr>[\s\S]*?<\/tr>/g)];
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+
+    const rows = doc.querySelectorAll("table tr");
 
     const list = [];
 
-    rows.slice(1).forEach((row) => {
-      const cols = [...row[0].matchAll(/<td>(.*?)<\/td>/g)];
+    for (let i = 1; i < rows.length; i++) {
+      const tds = rows[i].querySelectorAll("td");
 
-      if (cols.length >= 3) {
-        list.push({
-          id: cols[0][1],
-          name: cols[1][1].replace(/<.*?>/g, ""),
-          email: cols[2][1].replace(/<.*?>/g, ""),
-        });
+      const id = tds[0]?.innerText.trim();
+
+      const name = tds[1]?.querySelector("input")?.value;
+
+      const email = tds[2]?.querySelector("input")?.value;
+
+      if (id) {
+        list.push({ id, name, email });
       }
-    });
+    }
 
     setUsers(list);
   };
-
   useEffect(() => {
     loadUsers();
   }, []);
