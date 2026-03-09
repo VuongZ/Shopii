@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
 
 import userApi from "./api/userApi";
 
 import UsersPage from "./pages/UsersPage";
-import Home from "./pages/ShopPage";
+import Home from "./pages/HomePage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import CartPage from "./pages/CartPage";
@@ -17,36 +17,37 @@ import ProductDetailPage from "./pages/ProductDetailPage";
 import "./App.css";
 
 function App() {
-  const [searchKeyword, setSearchKeyword] = useState("");
-  const [user, setUser] = useState(null);
-
   const navigate = useNavigate();
 
-  // Load user khi refresh
-  useEffect(() => {
-    const token = localStorage.getItem("ACCESS_TOKEN");
+  const [searchKeyword, setSearchKeyword] = useState("");
+
+  // Load user từ localStorage khi khởi tạo
+  const [user, setUser] = useState(() => {
     const info = localStorage.getItem("USER_INFO");
+    return info ? JSON.parse(info) : null;
+  });
 
-    if (token && info) {
-      setUser(JSON.parse(info));
-    }
-
+  // Lắng nghe thay đổi localStorage
+  useEffect(() => {
     const handleStorage = () => {
       const info = localStorage.getItem("USER_INFO");
-      if (info) setUser(JSON.parse(info));
-      else setUser(null);
+      setUser(info ? JSON.parse(info) : null);
     };
 
     window.addEventListener("storage", handleStorage);
 
-    return () => window.removeEventListener("storage", handleStorage);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+    };
   }, []);
 
   // Logout
   const handleLogout = async () => {
     try {
       await userApi.logout();
-    } catch (e) {}
+    } catch (err) {
+      console.log("Logout error:", err);
+    }
 
     localStorage.removeItem("ACCESS_TOKEN");
     localStorage.removeItem("USER_INFO");
@@ -58,7 +59,7 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* HEADER */}
+      {/* ================= NAVBAR ================= */}
       <header className="shopee-header">
         <div className="header-content">
           {/* LOGO */}
@@ -77,18 +78,18 @@ function App() {
               padding: "6px 10px",
               width: "300px",
               borderRadius: "6px",
-              border: "1px solid #ccc",
+              border: "1px solid #ddd",
             }}
           />
 
-          {/* NAV */}
+          {/* NAV MENU */}
           <nav className="nav-menu">
             <Link to="/" className="nav-link">
               Trang chủ
             </Link>
 
             <Link to="/cart" className="nav-link">
-              <ShoppingCart size={18} />
+              <ShoppingCart size={20} />
             </Link>
 
             <Link to="/orders" className="nav-link">
@@ -111,7 +112,7 @@ function App() {
               </>
             ) : (
               <>
-                <span style={{ marginLeft: 10 }}>
+                <span style={{ marginLeft: "10px" }}>
                   Xin chào <b>{user.name}</b>
                 </span>
 
@@ -124,7 +125,7 @@ function App() {
         </div>
       </header>
 
-      {/* MAIN */}
+      {/* ================= MAIN ================= */}
       <main className="main-content">
         <Routes>
           <Route path="/" element={<Home searchKeyword={searchKeyword} />} />
