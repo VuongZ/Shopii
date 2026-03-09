@@ -4,10 +4,46 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Models\User;
 
+/*
+|--------------------------------------------------------------------------
+| HOME
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/', function () {
     return redirect('/users');
 });
-Route::match(['get','post'],'/users',function(Request $request){
+
+
+/*
+|--------------------------------------------------------------------------
+| SHOW USER DETAIL
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/users/{id}', function ($id) {
+
+    $user = User::findOrFail($id);
+
+    return "
+    <h1>User Detail</h1>
+
+    ID: $user->id <br>
+    Name: $user->name <br>
+    Email: $user->email <br><br>
+
+    <a href='/users'>Back</a>
+    ";
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| USERS CRUD PAGE
+|--------------------------------------------------------------------------
+*/
+
+Route::match(['get','post'],'/users', function(Request $request){
 
     // CREATE
     if($request->isMethod('post')){
@@ -20,73 +56,118 @@ Route::match(['get','post'],'/users',function(Request $request){
 
     $users = User::orderBy('id','desc')->get();
 
-    return response()->make('
+    $rows = "";
+
+    foreach($users as $user){
+
+        $rows .= "
+
+        <tr>
+
+        <td>$user->id</td>
+
+        <td>
+        <form method='POST' action='/users/$user->id/update'>
+        <input type='hidden' name='_token' value='".csrf_token()."'>
+        <input type='text' name='name' value='$user->name'>
+        </td>
+
+        <td>
+        <input type='text' name='email' value='$user->email'>
+        </td>
+
+        <td>
+
+        <button class='update'>Update</button>
+        </form>
+
+        <form method='POST' action='/users/$user->id/delete' style='display:inline'>
+        <input type='hidden' name='_token' value='".csrf_token()."'>
+        <button class='delete'>Delete</button>
+        </form>
+
+        <a href='/users/$user->id'>
+        <button class='view'>View</button>
+        </a>
+
+        </td>
+
+        </tr>
+
+        ";
+    }
+
+    return response()->make("
+
 <html>
+
 <head>
+
 <title>User CRUD</title>
 
 <style>
-body{
-    font-family: Arial;
-    background:#f5f5f5;
-    padding:40px;
-}
 
-h1{
-    margin-bottom:20px;
+body{
+font-family: Arial;
+background:#f5f5f5;
+padding:40px;
 }
 
 table{
-    border-collapse: collapse;
-    width:100%;
-    background:white;
+border-collapse: collapse;
+width:100%;
+background:white;
 }
 
 th,td{
-    padding:10px;
-    border:1px solid #ddd;
+padding:10px;
+border:1px solid #ddd;
 }
 
 th{
-    background:#f0f0f0;
+background:#f0f0f0;
 }
 
 input{
-    padding:6px;
-    width:90%;
+padding:6px;
+width:90%;
 }
 
 button{
-    padding:6px 10px;
-    border:none;
-    color:white;
-    cursor:pointer;
+padding:6px 10px;
+border:none;
+color:white;
+cursor:pointer;
+margin-right:5px;
 }
 
 .create{background:#3498db;}
 .update{background:#3498db;}
 .delete{background:#e74c3c;}
-
-form{margin:0;}
+.view{background:#2ecc71;}
 
 .top-form{
-    margin-bottom:20px;
+margin-bottom:20px;
 }
 
 </style>
+
 </head>
 
 <body>
 
 <h1>User CRUD</h1>
 
-<form method="POST" class="top-form">
-<input type="hidden" name="_token" value="'.csrf_token().'">
+<form method='POST' class='top-form'>
 
-<input name="name" placeholder="Name" required>
-<input name="email" placeholder="Email" required>
+<input type='hidden' name='_token' value='".csrf_token()."'>
 
-<button class="create">Create</button>
+<input name='name' placeholder='Name' required>
+
+<input name='email' placeholder='Email' required>
+
+<button class='create'>Create</button>
+
 </form>
 
 <table>
@@ -97,92 +178,50 @@ form{margin:0;}
 <th>Email</th>
 <th>Actions</th>
 </tr>
-'.
 
-$users->map(function($user){
-
-return '
-
-<tr>
-
-<td>'.$user->id.'</td>
-
-<td>
-<form method="POST" action="/users/'.$user->id.'/update">
-<input type="hidden" name="_token" value="'.csrf_token().'">
-<input type="text" name="name" value="'.$user->name.'">
-</td>
-
-<td>
-<input type="text" name="email" value="'.$user->email.'">
-</td>
-
-<td>
-
-<button class="update">Update</button>
-</form>
-
-<form method="POST" action="/users/'.$user->id.'/delete" style="display:inline;">
-<input type="hidden" name="_token" value="'.csrf_token().'">
-<button class="delete">Delete</button>
-</form>
-
-</td>
-
-</tr>
-
-';
-
-})->implode('')
-
-.'
+$rows
 
 </table>
 
 </body>
+
 </html>
 
-');
+");
 
 });
 
 
-// UPDATE
-Route::post('/users/{id}/update',function(Request $request,$id){
+/*
+|--------------------------------------------------------------------------
+| UPDATE
+|--------------------------------------------------------------------------
+*/
 
-$user = User::findOrFail($id);
+Route::post('/users/{id}/update', function(Request $request,$id){
 
-$user->update([
-'name'=>$request->name,
-'email'=>$request->email
-]);
+    $user = User::findOrFail($id);
 
-return redirect('/users');
+    $user->update([
+        'name'=>$request->name,
+        'email'=>$request->email
+    ]);
 
-});
-
-
-// DELETE
-Route::post('/users/{id}/delete',function($id){
-
-User::findOrFail($id)->delete();
-
-return redirect('/users');
+    return redirect('/users');
 
 });
-Route::get('/users/{id}', function ($id) {
 
-$user = App\Models\User::findOrFail($id);
 
-return "
-<h1>User Detail</h1>
+/*
+|--------------------------------------------------------------------------
+| DELETE
+|--------------------------------------------------------------------------
+*/
 
-ID: $user->id <br>
-Name: $user->name <br>
-Email: $user->email <br>
+Route::post('/users/{id}/delete', function($id){
 
-<br>
-<a href='/users'>Back</a>
-";
+    User::findOrFail($id)->delete();
+
+    return redirect('/users');
 
 });
