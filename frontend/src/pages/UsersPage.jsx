@@ -7,29 +7,28 @@ function UsersPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
-  const loadUsers = () => {
-    fetch(API + "/users")
-      .then((res) => res.text())
-      .then((html) => {
-        let parser = new DOMParser();
-        let doc = parser.parseFromString(html, "text/html");
+  // LOAD USERS FROM HTML
+  const loadUsers = async () => {
+    const res = await fetch(API + "/users");
+    const html = await res.text();
 
-        let rows = doc.querySelectorAll("table tr");
+    const rows = [...html.matchAll(/<tr>[\s\S]*?<\/tr>/g)];
 
-        let list = [];
+    const list = [];
 
-        for (let i = 1; i < rows.length; i++) {
-          let cells = rows[i].querySelectorAll("td");
+    rows.slice(1).forEach((row) => {
+      const cols = [...row[0].matchAll(/<td>(.*?)<\/td>/g)];
 
-          list.push({
-            id: cells[0].innerText,
-            name: cells[1].innerText,
-            email: cells[2].innerText,
-          });
-        }
+      if (cols.length >= 3) {
+        list.push({
+          id: cols[0][1],
+          name: cols[1][1].replace(/<.*?>/g, ""),
+          email: cols[2][1].replace(/<.*?>/g, ""),
+        });
+      }
+    });
 
-        setUsers(list);
-      });
+    setUsers(list);
   };
 
   useEffect(() => {
@@ -37,43 +36,48 @@ function UsersPage() {
   }, []);
 
   // CREATE
-  const createUser = () => {
-    fetch(API + "/users", {
+  const createUser = async () => {
+    await fetch(API + "/users", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: `name=${name}&email=${email}`,
-    }).then(() => {
-      setName("");
-      setEmail("");
-      loadUsers();
     });
+
+    setName("");
+    setEmail("");
+
+    loadUsers();
   };
 
   // UPDATE
-  const updateUser = (id) => {
-    let name = document.getElementById("name" + id).value;
-    let email = document.getElementById("email" + id).value;
+  const updateUser = async (id) => {
+    const name = document.getElementById("name" + id).value;
+    const email = document.getElementById("email" + id).value;
 
-    fetch(API + `/users/${id}/update`, {
+    await fetch(API + `/users/${id}/update`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: `name=${name}&email=${email}`,
-    }).then(() => loadUsers());
+    });
+
+    loadUsers();
   };
 
   // DELETE
-  const deleteUser = (id) => {
-    fetch(API + `/users/${id}/delete`, {
+  const deleteUser = async (id) => {
+    await fetch(API + `/users/${id}/delete`, {
       method: "POST",
-    }).then(() => loadUsers());
+    });
+
+    loadUsers();
   };
 
   return (
-    <div style={{ padding: "40px" }}>
+    <div style={{ padding: 40 }}>
       <h1>Users CRUD</h1>
 
       {/* CREATE */}
