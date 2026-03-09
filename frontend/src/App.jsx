@@ -2,6 +2,7 @@ import React from "react";
 import axiosClient from "./api/axiosClient";
 import { Routes, Route, Link } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
+
 import UsersPage from "./pages/UsersPage";
 import Home from "./pages/ShopPage";
 import Login from "./pages/Login";
@@ -19,13 +20,11 @@ function App() {
 
   return (
     <div className="app">
-      {/* HEADER */}
       <header className="header">
         <div className="logo">
           <Link to="/">Shopii</Link>
         </div>
 
-        {/* SEARCH */}
         <input
           type="text"
           placeholder="Tìm sản phẩm..."
@@ -34,7 +33,6 @@ function App() {
           onChange={(e) => setSearchKeyword(e.target.value)}
         />
 
-        {/* MENU */}
         <nav className="nav">
           <Link to="/" className="nav-link">
             Trang chủ
@@ -49,10 +47,13 @@ function App() {
           <Link to="/orders" className="nav-link">
             Đơn mua
           </Link>
+
+          <Link to="/users" className="nav-link">
+            Users
+          </Link>
         </nav>
       </header>
 
-      {/* MAIN */}
       <main className="main">
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -62,10 +63,8 @@ function App() {
           <Route path="/payment-result" element={<PaymentResult />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/users" element={<UsersPage />} />
-          {/* Trang chi tiết sản phẩm */}
-          <Route path="/product/:id" element={<ProductDetailPage />} />
 
-          {/* Trang chủ */}
+          <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/" element={<Home searchKeyword={searchKeyword} />} />
         </Routes>
       </main>

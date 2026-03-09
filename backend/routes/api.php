@@ -10,21 +10,19 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserAddressController;
-use App\Http\Controllers\CouponController;
+use App\Http\Controllers\CouponController;  
+// 1. KHU VỰC CÔNG KHAI (Không cần đăng nhập)
+
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\AdminShopController;
-
-/*
-|--------------------------------------------------------------------------
-| 1. PUBLIC ROUTES (Không cần đăng nhập)
-|--------------------------------------------------------------------------
-*/
-
+use App\Http\Controllers\ForgotPasswordController;
 // Auth
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login'])->name('login');
-
+Route::post('/forgot-password', [ForgotPasswordController::class, 'forgotPassword']);
+Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword']);
+Route::post('/verify-otp', [ForgotPasswordController::class, 'verifyOtp']);
 // Products
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);

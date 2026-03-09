@@ -1,36 +1,38 @@
-import axios from "axios";
+import axios from 'axios'
 
 const axiosClient = axios.create({
-  baseURL: "https://shopii-backend-latest.onrender.com/api",
+  // https://shopii-backend-latest.onrender.com/api backend render
+  //  http://localhost:8000/api/
+  baseURL: ' http://localhost:8000/api/',
   headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
   },
-});
+})
 
 axiosClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem("ACCESS_TOKEN");
+  const token = localStorage.getItem('ACCESS_TOKEN')
 
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = `Bearer ${token}`
   }
 
-  console.log("REQUEST URL:", config.url);
+  console.log('REQUEST URL:', config.url)
 
-  return config;
-});
+  return config
+})
 
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    const { response } = error;
+    const { response } = error
 
     if (response && response.status === 401) {
-      localStorage.removeItem("ACCESS_TOKEN");
+      localStorage.removeItem('ACCESS_TOKEN')
     }
 
-    throw error;
-  },
-);
+    throw error
+  }
+)
 
-export default axiosClient;
+export default axiosClient
