@@ -19,13 +19,13 @@ Route::post('/users', function (Request $request) {
         'password' => bcrypt('123456')
     ]);
 
-    return response()->json($user);
-
+    return redirect('/');
 });
+
 
 /*
 |--------------------------------------------------------------------------
-| READ ALL USERS
+| READ ALL USERS (API)
 |--------------------------------------------------------------------------
 */
 Route::get('/users', function () {
@@ -37,6 +37,7 @@ Route::get('/users', function () {
     return response()->json($users);
 
 });
+
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +55,7 @@ Route::get('/users/{id}', function ($id) {
     return response()->json($user);
 
 });
+
 
 /*
 |--------------------------------------------------------------------------
@@ -73,9 +75,9 @@ Route::put('/users/{id}', function (Request $request,$id) {
         'email'=>$request->email
     ]);
 
-    return response()->json($user);
-
+    return redirect('/');
 });
+
 
 /*
 |--------------------------------------------------------------------------
@@ -92,34 +94,85 @@ Route::delete('/users/{id}', function ($id) {
 
     $user->delete();
 
-    return response()->json(["message"=>"User deleted"]);
-
+    return redirect('/');
 });
+
 
 /*
 |--------------------------------------------------------------------------
-| HTML PAGE USER TABLE
+| HTML CRUD PAGE
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
 
-    $users = User::select('id','name','email')->paginate(20);
+    $users = User::select('id','name','email')->orderBy('id','desc')->get();
 
-    echo "<h1>User List</h1>";
-    echo "<table border='1' cellpadding='8'>";
-    echo "<tr><th>ID</th><th>Name</th><th>Email</th></tr>";
+    echo "
+    <style>
+    body{font-family:Arial;padding:30px;background:#f7f7f7}
+    h1{margin-bottom:20px}
+    table{border-collapse:collapse;width:700px;background:white}
+    th,td{border:1px solid #ddd;padding:8px;text-align:left}
+    th{background:#f0f0f0}
+    form{display:inline}
+    input{padding:6px;margin-right:5px}
+    button{padding:6px 10px;border:none;background:#3490dc;color:white;cursor:pointer}
+    .delete{background:#e3342f}
+    </style>
+
+    <h1>User CRUD</h1>
+
+    <h3>Create User</h3>
+
+    <form method='POST' action='/users'>
+        <input name='name' placeholder='Name' required>
+        <input name='email' placeholder='Email' required>
+        <button type='submit'>Create</button>
+    </form>
+
+    <br><br>
+
+    <table>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Actions</th>
+    </tr>
+    ";
 
     foreach($users as $user){
-        echo "<tr>";
-        echo "<td>$user->id</td>";
-        echo "<td>$user->name</td>";
-        echo "<td>$user->email</td>";
-        echo "</tr>";
+
+        echo "
+        <tr>
+
+        <td>{$user->id}</td>
+
+        <td>
+        <form method='POST' action='/users/{$user->id}?_method=PUT'>
+            <input name='name' value='{$user->name}'>
+        </td>
+
+        <td>
+            <input name='email' value='{$user->email}'>
+        </td>
+
+        <td>
+            <button type='submit'>Update</button>
+        </form>
+
+        <form method='POST' action='/users/{$user->id}?_method=DELETE'>
+            <button class='delete'>Delete</button>
+        </form>
+        </td>
+
+        </tr>
+        ";
     }
 
     echo "</table>";
-
 });
+
 
 /*
 |--------------------------------------------------------------------------
