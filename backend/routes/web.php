@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Models\User;
 
+Route::get('/', function () {
+    return redirect('/users');
+});
 Route::match(['get','post'],'/users',function(Request $request){
 
     // CREATE
@@ -165,5 +168,21 @@ Route::post('/users/{id}/delete',function($id){
 User::findOrFail($id)->delete();
 
 return redirect('/users');
+
+});
+Route::get('/users/{id}', function ($id) {
+
+$user = App\Models\User::findOrFail($id);
+
+return "
+<h1>User Detail</h1>
+
+ID: $user->id <br>
+Name: $user->name <br>
+Email: $user->email <br>
+
+<br>
+<a href='/users'>Back</a>
+";
 
 });
