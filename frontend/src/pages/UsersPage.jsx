@@ -85,7 +85,10 @@ function UsersPage() {
   return (
     <div style={{ padding: 40 }}>
       <h1>Users CRUD</h1>
-
+  <p style={{ color: "#555", marginBottom: 20 }}>
+        <b>Note:</b> Chỉnh sửa thông tin trên từng dòng trong table và bấm
+         <b>Update</b> lưu thay đổi.
+      </p>
       {/* CREATE */}
 
       <input
