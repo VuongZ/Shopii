@@ -159,7 +159,7 @@ margin-bottom:20px;
 <h1>User CRUD</h1>
 
 <p style='color:#555; margin-bottom:15px;'>
-Note: Điền thông tin mới vào từng dòng và bấm <b>Update</b> để thay đổi.
+Note: Điền thông tin mới vào từng dòng trong table và bấm <b>Update</b> để thay đổi.
 </p>
 <form method='POST' class='top-form'>
 
