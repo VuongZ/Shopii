@@ -26,7 +26,11 @@ Route::post('/verify-otp', [ForgotPasswordController::class, 'verifyOtp']);
 // Products
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
-
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'OK'
+    ]);
+});
 
 /*
 |--------------------------------------------------------------------------
