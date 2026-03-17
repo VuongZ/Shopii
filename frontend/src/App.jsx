@@ -1,61 +1,63 @@
-import React, { useState, useEffect } from "react";
-import { Routes, Route, Link, useNavigate } from "react-router-dom";
-import { ShoppingCart } from "lucide-react";
+import React, { useState, useEffect } from 'react'
+import { Routes, Route, Link, useNavigate } from 'react-router-dom'
+import { ShoppingCart } from 'lucide-react'
 
-import userApi from "./api/userApi";
+import userApi from './api/userApi'
 
-import UsersPage from "./pages/UsersPage";
-import Home from "./pages/HomePage";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import CartPage from "./pages/CartPage";
-import CheckoutPage from "./pages/CheckoutPage";
-import PaymentResult from "./pages/PaymentResult";
-import OrderHistoryPage from "./pages/OrderHistoryPage";
-import ProductDetailPage from "./pages/ProductDetailPage";
-
-import "./App.css";
+import UsersPage from './pages/UsersPage'
+import Home from './pages/HomePage'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import CartPage from './pages/CartPage'
+import CheckoutPage from './pages/CheckoutPage'
+import PaymentResult from './pages/PaymentResult'
+import OrderHistoryPage from './pages/OrderHistoryPage'
+import ProductDetailPage from './pages/ProductDetailPage'
+import ResetPassword from './pages/ResetPassword'
+import ForgotPassword from './pages/ForgotPassword'
+import VerifyOTP from './pages/VerifyOTP'
+import './App.css'
 
 function App() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
-  const [searchKeyword, setSearchKeyword] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState('')
 
   // Load user từ localStorage khi khởi tạo
   const [user, setUser] = useState(() => {
-    const info = localStorage.getItem("USER_INFO");
-    return info ? JSON.parse(info) : null;
-  });
+    const info = localStorage.getItem('USER_INFO')
+    return info ? JSON.parse(info) : null
+  })
 
   // Lắng nghe thay đổi localStorage
   useEffect(() => {
     const handleStorage = () => {
-      const info = localStorage.getItem("USER_INFO");
-      setUser(info ? JSON.parse(info) : null);
-    };
+      const info = localStorage.getItem('USER_INFO')
+      setUser(info ? JSON.parse(info) : null)
+    }
 
-    window.addEventListener("storage", handleStorage);
+    window.addEventListener('storage', handleStorage)
 
     return () => {
-      window.removeEventListener("storage", handleStorage);
-    };
-  }, []);
+      window.removeEventListener('storage', handleStorage)
+    }
+  }, [])
 
   // Logout
   const handleLogout = async () => {
     try {
-      await userApi.logout();
+      await userApi.logout()
     } catch (err) {
-      console.log("Logout error:", err);
+      console.log('Logout error:', err)
     }
 
-    localStorage.removeItem("ACCESS_TOKEN");
-    localStorage.removeItem("USER_INFO");
+    localStorage.removeItem('ACCESS_TOKEN')
+    localStorage.removeItem('USER_INFO')
 
-    setUser(null);
+    setUser(null)
 
-    navigate("/login");
-  };
+    navigate('/login')
+  }
 
   return (
     <div className="app-container">
@@ -74,11 +76,11 @@ function App() {
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
             style={{
-              marginLeft: "40px",
-              padding: "6px 10px",
-              width: "300px",
-              borderRadius: "6px",
-              border: "1px solid #ddd",
+              marginLeft: '40px',
+              padding: '6px 10px',
+              width: '300px',
+              borderRadius: '6px',
+              border: '1px solid #ddd',
             }}
           />
 
@@ -112,7 +114,7 @@ function App() {
               </>
             ) : (
               <>
-                <span style={{ marginLeft: "10px" }}>
+                <span style={{ marginLeft: '10px' }}>
                   Xin chào <b>{user.name}</b>
                 </span>
 
@@ -145,10 +147,16 @@ function App() {
           <Route path="/users" element={<UsersPage />} />
 
           <Route path="/product/:id" element={<ProductDetailPage />} />
+
+          <Route path="/reset-password" element={<ResetPassword />} />
+
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+
+          <Route path="/verify-otp" element={<VerifyOTP />} />
         </Routes>
       </main>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
