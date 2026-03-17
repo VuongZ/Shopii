@@ -7,29 +7,34 @@ function UsersPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
-  const loadUsers = () => {
-    fetch(API + "/users")
-      .then((res) => res.text())
-      .then((html) => {
-        let parser = new DOMParser();
-        let doc = parser.parseFromString(html, "text/html");
+  const loadUsers = async () => {
+    const res = await fetch(API + "/users");
+    const html = await res.text();
 
-        let rows = doc.querySelectorAll("table tr");
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
 
-        let list = [];
+    const rows = doc.querySelectorAll("table tr");
 
-        for (let i = 1; i < rows.length; i++) {
-          let cells = rows[i].querySelectorAll("td");
+    const list = [];
 
-          list.push({
-            id: cells[0].innerText,
-            name: cells[1].innerText,
-            email: cells[2].innerText,
-          });
-        }
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
 
-        setUsers(list);
-      });
+      const id = row.children[0]?.innerText.trim();
+
+      const nameInput = row.querySelector("input[name='name']");
+      const emailInput = row.querySelector("input[name='email']");
+
+      const name = nameInput ? nameInput.value : "";
+      const email = emailInput ? emailInput.value : "";
+
+      if (id) {
+        list.push({ id, name, email });
+      }
+    }
+
+    setUsers(list);
   };
 
   useEffect(() => {
@@ -37,45 +42,53 @@ function UsersPage() {
   }, []);
 
   // CREATE
-  const createUser = () => {
-    fetch(API + "/users", {
+  const createUser = async () => {
+    await fetch(API + "/users", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: `name=${name}&email=${email}`,
-    }).then(() => {
-      setName("");
-      setEmail("");
-      loadUsers();
     });
+
+    setName("");
+    setEmail("");
+
+    loadUsers();
   };
 
   // UPDATE
-  const updateUser = (id) => {
-    let name = document.getElementById("name" + id).value;
-    let email = document.getElementById("email" + id).value;
+  const updateUser = async (id) => {
+    const name = document.getElementById("name" + id).value;
+    const email = document.getElementById("email" + id).value;
 
-    fetch(API + `/users/${id}/update`, {
+    await fetch(API + `/users/${id}/update`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: `name=${name}&email=${email}`,
-    }).then(() => loadUsers());
+    });
+
+    loadUsers();
   };
 
   // DELETE
-  const deleteUser = (id) => {
-    fetch(API + `/users/${id}/delete`, {
+  const deleteUser = async (id) => {
+    await fetch(API + `/users/${id}/delete`, {
       method: "POST",
-    }).then(() => loadUsers());
+    });
+
+    loadUsers();
   };
 
   return (
-    <div style={{ padding: "40px" }}>
+    <div style={{ padding: 40 }}>
       <h1>Users CRUD</h1>
-
+  <p style={{ color: "#555", marginBottom: 20 }}>
+        <b>Note:</b> Chỉnh sửa thông tin trên từng dòng trong table và bấm
+         <b>Update</b> lưu thay đổi.
+      </p>
       {/* CREATE */}
 
       <input
