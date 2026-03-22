@@ -67,10 +67,36 @@ function ProductDetailPage() {
 
   return (
     <div className="main-content" style={{ padding: '40px', background: '#f8fafc', minHeight: '100vh' }}>
-      <button
+    <button
         className="btn-back"
         onClick={() => navigate(-1)}
-        style={{ marginBottom: '20px', padding: '10px 15px', border: 'none', background: '#e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+        style={{ 
+          marginBottom: '20px', 
+          padding: '10px 20px', 
+          border: '1px solid #e2e8f0', 
+          background: 'white', 
+          borderRadius: '8px', 
+          cursor: 'pointer', 
+          fontWeight: 'bold',
+          color: '#475569',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          transition: 'all 0.3s ease', // Hiệu ứng mượt mà
+          boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+        }}
+        // Thêm hiệu ứng khi rê chuột vào
+        onMouseEnter={(e) => {
+          e.target.style.background = '#f8fafc';
+          e.target.style.transform = 'translateX(-5px)'; // Nhích nhẹ sang trái kiểu "quay về"
+          e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+        }}
+        // Trả lại trạng thái cũ khi bỏ chuột ra
+        onMouseLeave={(e) => {
+          e.target.style.background = 'white';
+          e.target.style.transform = 'translateX(0)';
+          e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)';
+        }}
       >
         ← Quay lại
       </button>
