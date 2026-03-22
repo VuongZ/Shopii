@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\Product; // 
 
@@ -35,5 +36,65 @@ class ProductController extends Controller
         }
 
         return $product;
+    }
+    // Thêm sản phẩm mới (Dành cho Seller)
+  public function store(Request $request)
+    {
+        try {
+            $shop = \App\Models\Shop::where('user_id', $request->user()->id)->first(); 
+            if (!$shop) {
+                return response()->json(['message' => 'Bạn chưa có Cửa hàng để đăng sản phẩm!'], 403);
+            }
+
+            // 1. Tạo sản phẩm
+            $product = Product::create([
+                'shop_id' => $shop->id,
+                'category_id' => $request->category_id,
+                'name' => $request->name,
+                'slug' => \Illuminate\Support\Str::slug($request->name) . '-' . uniqid(), 
+                'description' => $request->description,
+                'base_price' => $request->base_price,
+            ]);
+
+            // 2. Lưu LINK ẢNH
+            if ($request->image_url) {
+                $product->product_images()->create([
+                    'image_url' => $request->image_url,
+                    'is_thumbnail' => 1
+                ]);
+            }
+
+            // 3. XỬ LÝ SKU "BẤT TỬ"
+            $skusData = $request->input('skus'); // Lấy mảng skus gửi từ React
+            
+            if (!empty($skusData) && is_array($skusData)) {
+                foreach ($skusData as $skuData) {
+                    $product->skus()->create([
+                        'sku' => $skuData['sku_code'], // Sẽ lưu chữ "Đen", "Trắng"
+                        'price' => $skuData['price'],
+                        'stock' => $skuData['stock'] ?? 0,
+                    ]);
+                }
+            } else {
+                $product->skus()->create([
+                    'sku' => 'SKU-' . strtoupper(uniqid()),
+                    'price' => $request->base_price,
+                    'stock' => $request->stock ?? 0,
+                ]);
+            }
+
+            $product->load(['product_images', 'skus']);
+
+            return response()->json([
+                'message' => 'Đăng sản phẩm thành công!',
+                'product' => $product
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Lỗi khi thêm sản phẩm!',
+                'error' => $e->getMessage() 
+            ], 500);
+        }
     }
 }

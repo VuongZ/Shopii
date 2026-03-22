@@ -15,6 +15,7 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // API gọi về local chuẩn xịn
     axiosClient.get("/products").then((res) => setProducts(res.data)).catch(console.log);
     axiosClient.get("/categories").then((res) => setCategories(res.data)).catch(console.log);
   }, []);
@@ -48,133 +49,148 @@ export default function HomePage() {
     <div style={{ padding: "40px", background: "#f5f5f5", minHeight: "100vh" }}>
       
       {/* KHU VỰC 1: THANH TÌM KIẾM HIỆU ỨNG HIỆN ĐẠI */}
-<div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '12px', marginBottom: '35px' }}>
-  <div style={{ 
-    display: 'flex', 
-    width: '100%', 
-    maxWidth: '500px', 
-    height: '46px',
-    background: 'white',
-    borderRadius: '8px',
-    padding: '2px',
-    transition: 'all 0.3s ease',
-    border: '2px solid #e2e8f0', // Viền mặc định nhẹ nhàng
-  }}
-  onMouseEnter={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
-  onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
-  >
-    <input
-      type="text"
-      placeholder="Tìm kiếm sản phẩm bạn mong muốn..."
-      value={searchInput}
-      onChange={(e) => setSearchInput(e.target.value)}
-      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-      style={{
-        flex: 1,
-        padding: '0 15px',
-        border: 'none',
-        outline: 'none',
-        fontSize: '15px',
-        background: 'transparent',
-        height: '100%'
-      }}
-    />
-  </div>
-
-  <button
-    onClick={handleSearch}
-    style={{
-      height: '46px',
-      padding: '0 28px',
-      background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', // Hiệu ứng Gradient
-      color: 'white',
-      border: 'none',
-      borderRadius: '8px',
-      cursor: 'pointer',
-      fontSize: '15px',
-      fontWeight: '600',
-      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-      boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.2)',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px'
-    }}
-    onMouseEnter={(e) => {
-      e.target.style.transform = 'translateY(-2px)';
-      e.target.style.boxShadow = '0 10px 15px -3px rgba(59, 130, 246, 0.4)';
-    }}
-    onMouseLeave={(e) => {
-      e.target.style.transform = 'translateY(0)';
-      e.target.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.2)';
-    }}
-  >
-    Tìm kiếm
-  </button>
-</div>
-      {/* KHU VỰC 2: BỘ LỌC CŨNG ĐƯỢC LÀM ĐẸP LẠI */}
-<div style={{ 
-  display: "flex", justifyContent: "space-between", alignItems: "center",
-  marginBottom: "25px", flexWrap: "wrap", gap: "15px"
-}}>
-  <h2 style={{ margin: 0, color: '#1e293b', fontSize: '24px', fontWeight: '700' }}>
-    Danh sách sản phẩm
-  </h2>
-  
-  <div style={{ display: 'flex', gap: '12px' }}>
-    {[ 
-      { value: selectedCategory, setter: setSelectedCategory, options: categories, label: "Danh mục" },
-      { value: selectedPriceRange, setter: setSelectedPriceRange, price: true }
-    ].map((filter, index) => (
-      <select
-        key={index}
-        value={filter.value}
-        onChange={(e) => filter.setter(e.target.value)}
-        style={{ 
-          padding: "10px 15px", 
-          borderRadius: "10px", 
-          border: "1px solid #cbd5e1", 
-          background: "white",
-          fontSize: "14px",
-          color: "#475569",
-          cursor: "pointer",
-          outline: "none",
-          transition: "all 0.2s",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '12px', marginBottom: '35px' }}>
+        <div style={{ 
+          display: 'flex', 
+          width: '100%', 
+          maxWidth: '500px', 
+          height: '46px',
+          background: 'white',
+          borderRadius: '8px',
+          padding: '2px',
+          transition: 'all 0.3s ease',
+          border: '2px solid #e2e8f0', 
         }}
-        onFocus={(e) => e.target.style.borderColor = "#3b82f6"}
-        onBlur={(e) => e.target.style.borderColor = "#cbd5e1"}
-      >
-        {filter.price ? (
-          <>
-            <option value="">Tất cả mức giá</option>
-            <option value="under-2m">Dưới 2 triệu</option>
-            <option value="2m-10m">2 - 10 triệu</option>
-            <option value="10m-20m">10 - 20 triệu</option>
-            <option value="above-20m">Trên 20 triệu</option>
-          </>
-        ) : (
-          <>
+        onMouseEnter={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
+        onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
+        >
+          <input
+            type="text"
+            placeholder="Tìm kiếm sản phẩm bạn mong muốn..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            style={{
+              flex: 1,
+              padding: '0 15px',
+              border: 'none',
+              outline: 'none',
+              fontSize: '15px',
+              background: 'transparent',
+              height: '100%'
+            }}
+          />
+        </div>
+
+        <button
+          onClick={handleSearch}
+          style={{
+            height: '46px',
+            padding: '0 28px',
+            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', 
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '15px',
+            fontWeight: '600',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = '0 10px 15px -3px rgba(59, 130, 246, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.2)';
+          }}
+        >
+          Tìm kiếm
+        </button>
+      </div>
+
+      {/* KHU VỰC 2: BỘ LỌC CŨNG ĐƯỢC LÀM ĐẸP LẠI */}
+      <div style={{ 
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        marginBottom: "25px", flexWrap: "wrap", gap: "15px"
+      }}>
+        <h2 style={{ margin: 0, color: '#1e293b', fontSize: '24px', fontWeight: '700' }}>
+          Danh sách sản phẩm
+        </h2>
+        
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {/* Lọc danh mục */}
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            style={{ 
+              padding: "10px 15px", borderRadius: "10px", border: "1px solid #cbd5e1", 
+              background: "white", fontSize: "14px", color: "#475569", cursor: "pointer",
+              outline: "none", transition: "all 0.2s", boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+            }}
+            onFocus={(e) => e.target.style.borderColor = "#3b82f6"}
+            onBlur={(e) => e.target.style.borderColor = "#cbd5e1"}
+          >
             <option value="">Tất cả danh mục</option>
-            {filter.options.map((cat) => (
+            {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
-          </>
-        )}
-      </select>
-    ))}
-  </div>
-</div>
+          </select>
+
+          {/* Lọc giá */}
+          <select
+            value={selectedPriceRange}
+            onChange={(e) => setSelectedPriceRange(e.target.value)}
+            style={{ 
+              padding: "10px 15px", borderRadius: "10px", border: "1px solid #cbd5e1", 
+              background: "white", fontSize: "14px", color: "#475569", cursor: "pointer",
+              outline: "none", transition: "all 0.2s", boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+            }}
+            onFocus={(e) => e.target.style.borderColor = "#3b82f6"}
+            onBlur={(e) => e.target.style.borderColor = "#cbd5e1"}
+          >
+             <option value="">Tất cả mức giá</option>
+             <option value="under-2m">Dưới 2 triệu</option>
+             <option value="2m-10m">2 - 10 triệu</option>
+             <option value="10m-20m">10 - 20 triệu</option>
+             <option value="above-20m">Trên 20 triệu</option>
+          </select>
+        </div>
+      </div>
 
       {/* KHU VỰC 3: LƯỚI SẢN PHẨM */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: "20px" }}>
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => {
+            
+            // 1. FIX LỖI ẢNH THÔNG MINH
             let image = "https://placehold.co/200x200?text=No+Image"; 
             const imageObj = product.product_images?.[0];
-            if (imageObj && imageObj.image_url) {
-              image = imageObj.image_url.startsWith("http") ? imageObj.image_url : `http://localhost:8000/storage/${imageObj.image_url}`;
+            if (imageObj) {
+              const imgUrl = imageObj.image_url || imageObj.image_path; 
+              if (imgUrl) {
+                image = imgUrl.startsWith("http") ? imgUrl : `http://localhost:8000/storage/${imgUrl}`;
+              }
             }
-            const price = product.skus?.[0]?.price ?? product.base_price ?? 0;
+
+            // 2. FIX TÍNH TOÁN GIÁ THÔNG MINH
+            let priceDisplay = `${Number(product.base_price || 0).toLocaleString()} VNĐ`;
+
+            if (product.skus && product.skus.length > 0) {
+              const prices = product.skus.map(sku => Number(sku.price));
+              const minPrice = Math.min(...prices);
+              const maxPrice = Math.max(...prices);
+              
+              if (minPrice !== maxPrice) {
+                priceDisplay = `${minPrice.toLocaleString()} - ${maxPrice.toLocaleString()} VNĐ`;
+              } else {
+                priceDisplay = `${minPrice.toLocaleString()} VNĐ`;
+              }
+            }
 
             return (
               <div
@@ -187,14 +203,14 @@ export default function HomePage() {
                 onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-5px)"}
                 onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
               >
-                <img src={image} alt={product.name} style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "8px", marginBottom: "10px" }} />
-                <h4 style={{ fontSize: "15px", marginBottom: "6px", minHeight: "40px" }}>{product.name}</h4>
-                <p style={{ color: "#ee4d2d", fontWeight: "bold", fontSize: "16px" }}>{price.toLocaleString()} VNĐ</p>
+                <img src={image} alt={product.name} style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "8px", marginBottom: "10px", border: '1px solid #f1f5f9' }} />
+                <h4 style={{ fontSize: "15px", marginBottom: "6px", minHeight: "40px", color: '#1e293b' }}>{product.name}</h4>
+                <p style={{ color: "#ee4d2d", fontWeight: "bold", fontSize: "16px" }}>{priceDisplay}</p>
               </div>
             );
           })
         ) : (
-          <p style={{ textAlign: "center", gridColumn: "1 / -1", color: "#888" }}>Không tìm thấy sản phẩm nào phù hợp.</p>
+          <p style={{ textAlign: "center", gridColumn: "1 / -1", color: "#888", padding: "40px" }}>Không tìm thấy sản phẩm nào phù hợp.</p>
         )}
       </div>
     </div>

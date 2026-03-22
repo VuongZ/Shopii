@@ -77,6 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
     /* ----------------------- SHOP (SELLER) ----------------------- */
     Route::post('/shops', [ShopController::class, 'store']);
     Route::get('/my-shop', [ShopController::class, 'myShop']);
+    Route::post('/products', [ProductController::class, 'store']);
 
     /*
     |--------------------------------------------------------------------------
