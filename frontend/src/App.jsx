@@ -16,8 +16,10 @@ import ProductDetailPage from './pages/ProductDetailPage'
 import ResetPassword from './pages/ResetPassword'
 import ForgotPassword from './pages/ForgotPassword'
 import VerifyOTP from './pages/VerifyOTP'
-// 1. PHẢI IMPORT NÓ VÀO ĐÂY THÌ MỚI DÙNG ĐƯỢC
 import CategoriesPage from './pages/CategoriesPage' 
+
+// 1. ĐÃ THÊM IMPORT TRANG SHOP VÀO ĐÂY
+import ShopPage from './pages/ShopPage'
 
 import './App.css'
 
@@ -62,10 +64,16 @@ function App() {
             <Link to="/orders" className="nav-link">Đơn mua</Link>
             <Link to="/users" className="nav-link">Users</Link>
 
-            {/* 2. SỬA LẠI ĐƯỜNG DẪN CHO GỌN: DÙNG /categories THAY VÌ /CategoriesPage */}
             {user && (user.role === 'admin' || user.role === 1) && (
               <Link to="/categories" className="nav-link" style={{ color: '#3b82f6', fontWeight: 'bold' }}>
                 Categories
+              </Link>
+            )}
+
+            {/* 2. ĐÃ THÊM NÚT "CỬA HÀNG CỦA TÔI" CHO SELLER */}
+            {user && (user.role === 'seller' || user.role === 2) && (
+              <Link to="/shop" className="nav-link" style={{ color: '#ee4d2d', fontWeight: 'bold' }}>
+                Cửa hàng của tôi
               </Link>
             )}
 
@@ -100,9 +108,10 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />
-          
-          {/* 3. KHAI BÁO ROUTE NÀY THÌ TRÌNH DUYỆT MỚI BIẾT ĐƯỜNG MÀ MỞ */}
           <Route path="/categories" element={<CategoriesPage />} />
+          
+          {/* 3. ĐÃ KHAI BÁO ROUTE CHO TRANG SHOP */}
+          <Route path="/shop" element={<ShopPage />} />
         </Routes>
       </main>
     </div>
