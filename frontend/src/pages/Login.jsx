@@ -17,12 +17,29 @@ export default function Login() {
         email: email,
         password: password,
       })
+      
+      // 1. Lưu thông tin vào LocalStorage
       localStorage.setItem('ACCESS_TOKEN', response.data.token)
       localStorage.setItem('USER_INFO', JSON.stringify(response.data.user))
 
+      // 2. Kích hoạt event để Navbar (App.jsx) nhận biết user đã đăng nhập
       window.dispatchEvent(new Event('storage'))
       alert(response.data.message)
-      navigate('/')
+
+      // 3. LOGIC CHUYỂN TRẠM DỰA TRÊN ROLE
+      const userRole = response.data.user.role; // Lấy role từ thông tin user trả về
+      
+      if (userRole === 'seller' || userRole === 2) {
+        // Nếu là người bán -> Bay thẳng vào trang Shop
+        navigate('/shop')
+      } else if (userRole === 'admin' || userRole === 1) {
+        // Nếu là admin -> Bay vào trang Categories
+        navigate('/categories')
+      } else {
+        // Nếu là khách hàng thường -> Về Trang chủ
+        navigate('/')
+      }
+
     } catch (err) {
       console.error(err)
       setError(err.response?.data?.message || 'Đăng nhập thất bại!')
