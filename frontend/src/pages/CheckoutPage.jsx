@@ -27,8 +27,20 @@ const CheckoutPage = () => {
 
   const [showCouponModal, setShowCouponModal] = useState(false);
   const [manualCode, setManualCode] = useState("");
+  const [couponApplying, setCouponApplying] = useState(false);
 
-  const shippingFee = 30000;
+  const shippingFeePerShop = 30000;
+  const shopIdList = Array.from(
+    new Set(cartItems.map((item) => item.shop_id).filter(Boolean)),
+  );
+  const shippingFee = shopIdList.length * shippingFeePerShop;
+  const shopSubtotalMap = cartItems.reduce((acc, item) => {
+    const shopId = item.shop_id;
+    if (!shopId) return acc;
+    acc[shopId] = (acc[shopId] ?? 0) + Number(item.price) * item.quantity;
+    return acc;
+  }, {});
+  const singleShopId = shopIdList.length === 1 ? shopIdList[0] : null;
 
   useEffect(() => {
     if (selectedItems.length === 0) {
@@ -40,9 +52,6 @@ const CheckoutPage = () => {
         const addrRes = await cartApi
           .getAddresses()
           .catch(() => ({ data: [] }));
-        const couponRes = await couponApi
-          .getCoupons()
-          .catch(() => ({ data: [] }));
 
         const cartData = cartRes.data || {};
         const allItems = Object.values(cartData).flat();
@@ -52,6 +61,9 @@ const CheckoutPage = () => {
         );
 
         setCartItems(filtered);
+        setAppliedCoupon(null);
+        setDiscountAmount(0);
+        setShowCouponModal(false);
 
         const addrList = addrRes.data || [];
         setAddresses(addrList);
@@ -61,6 +73,15 @@ const CheckoutPage = () => {
           setSelectedAddress(defaultAddr);
         }
 
+        const filteredShopIdList = Array.from(
+          new Set(filtered.map((item) => item.shop_id).filter(Boolean)),
+        );
+        const shopIdForCoupons =
+          filteredShopIdList.length === 1 ? filteredShopIdList[0] : null;
+
+        const couponRes = await couponApi
+          .getCoupons(shopIdForCoupons)
+          .catch(() => ({ data: [] }));
         setCoupons(couponRes.data || []);
       } catch (error) {
         console.error("Checkout load error:", error);
@@ -77,18 +98,34 @@ const CheckoutPage = () => {
     0,
   );
 
-  const finalTotal = totalProductPrice + shippingFee - discountAmount;
+  const finalTotal = Math.max(
+    0,
+    totalProductPrice + shippingFee - discountAmount,
+  );
 
   const handleApplyCoupon = async (code) => {
+    if (couponApplying) return;
     try {
-      const res = await couponApi.applyCoupon({
+      setCouponApplying(true);
+
+      const payload = {
         coupon_code: code,
-        order_total: totalProductPrice,
-      });
+        // If the cart selection is within a single shop, backend expects
+        // shop-scoped coupons to be validated against that shop subtotal.
+        order_total: singleShopId
+          ? shopSubtotalMap[singleShopId]
+          : totalProductPrice,
+      };
+
+      if (singleShopId) {
+        payload.shop_id = singleShopId;
+      }
+
+      const res = await couponApi.applyCoupon(payload);
 
       setAppliedCoupon(res.data);
-      setDiscountAmount(res.data.discount_amount);
-
+      setDiscountAmount(Number(res.data.discount_amount) || 0);
+      setManualCode("");
       setShowCouponModal(false);
 
       alert(
@@ -99,6 +136,8 @@ const CheckoutPage = () => {
         err.response?.data?.message ||
           "Mã giảm giá không hợp lệ hoặc chưa đủ điều kiện",
       );
+    } finally {
+      setCouponApplying(false);
     }
   };
 
@@ -126,7 +165,6 @@ const CheckoutPage = () => {
         payment_method_id: paymentMethod,
         shipping_method_id: 1,
         coupon_code: appliedCoupon?.code,
-        discount_amount: discountAmount,
       });
 
       const { order_ids, total_amount, message } = orderRes.data;
@@ -242,7 +280,11 @@ const CheckoutPage = () => {
 
         <div style={{ background: "#fff", padding: 20 }}>
           <h3>Voucher</h3>
-
+          {!singleShopId && (
+            <p style={{ color: "red", marginTop: 5 }}>
+              Chỉ voucher toàn sàn có thể áp dụng khi mua nhiều shop
+            </p>
+          )}
           {appliedCoupon && <p>Đã áp dụng: {appliedCoupon.code}</p>}
 
           <div style={{ display: "flex", gap: 10 }}>
@@ -315,7 +357,10 @@ const CheckoutPage = () => {
                     : coupon.discount_value + "đ"}
                 </div>
 
-                <button onClick={() => handleApplyCoupon(coupon.code)}>
+                <button
+                  onClick={() => handleApplyCoupon(coupon.code)}
+                  disabled={couponApplying}
+                >
                   Dùng
                 </button>
               </div>

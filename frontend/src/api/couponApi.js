@@ -1,8 +1,9 @@
 import axiosClient from "./axiosClient";
 
 const couponApi = {
-  getCoupons() {
-    return axiosClient.get("/coupons");
+  getCoupons(shopId) {
+    const params = shopId ? { shop_id: shopId } : undefined;
+    return axiosClient.get("/coupons", { params });
   },
 
   applyCoupon(data) {

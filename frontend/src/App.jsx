@@ -13,6 +13,7 @@ import CheckoutPage from "./pages/CheckoutPage";
 import PaymentResult from "./pages/PaymentResult";
 import OrderHistoryPage from "./pages/OrderHistoryPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
+import SellerCouponManagementPage from "./pages/SellerCouponManagementPage";
 
 import "./App.css";
 
@@ -145,6 +146,7 @@ function App() {
           <Route path="/users" element={<UsersPage />} />
 
           <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/seller-coupons" element={<SellerCouponManagementPage />} />
         </Routes>
       </main>
     </div>

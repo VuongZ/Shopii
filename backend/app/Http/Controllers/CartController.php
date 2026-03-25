@@ -100,7 +100,19 @@ class CartController extends Controller
 
     // 4. Xóa sản phẩm
     public function removeItem($id) {
-        CartItem::destroy($id);
+        $user = Auth::user();
+
+        $item = CartItem::where('id', $id)
+            ->whereHas('cart', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })
+            ->first();
+
+        if (!$item) {
+            return response()->json(['message' => 'Sản phẩm không tồn tại trong giỏ'], 404);
+        }
+
+        $item->delete();
         return response()->json(['message' => 'Đã xóa sản phẩm']);
     }
 }

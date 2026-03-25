@@ -34,7 +34,9 @@ class CouponController extends Controller
     {
         $request->validate([
             'coupon_code' => 'required|string',
-            'order_total' => 'required|numeric',
+            'order_total' => 'required|numeric|min:0',
+            // Optional: when provided, ensure shop-scoped coupons are applied correctly.
+            'shop_id' => 'nullable|integer|exists:shops,id',
         ]);
 
         $code = $request->coupon_code;
@@ -44,14 +46,11 @@ class CouponController extends Controller
         $coupon = Coupon::where('code', $code)
             ->where('start_date', '<=', $now)
             ->where('end_date', '>=', $now)
+            ->where('usage_limit', '>', 0)
             ->first();
 
         if (!$coupon) {
             return response()->json(['message' => 'Mã giảm giá không tồn tại hoặc đã hết hạn'], 400);
-        }
-
-        if ($coupon->usage_limit <= 0) {
-             return response()->json(['message' => 'Mã giảm giá đã hết lượt sử dụng'], 400);
         }
 
         if ($total < $coupon->min_order_value) {
@@ -60,9 +59,20 @@ class CouponController extends Controller
             ], 400);
         }
 
+        // Shop-scoped coupon: reject unless the request provides a matching shop context.
+        if ($coupon->shop_id !== null) {
+            if (!$request->filled('shop_id')) {
+                return response()->json(['message' => 'Mã giảm giá chỉ áp dụng cho một shop cụ thể'], 400);
+            }
+
+            if ((int) $request->input('shop_id') !== (int) $coupon->shop_id) {
+                return response()->json(['message' => 'Mã giảm giá không áp dụng cho shop này'], 400);
+            }
+        }
+
         // Tính toán số tiền được giảm
         $discountAmount = 0;
-        if ($coupon->discount_type == 'fixed') {
+        if ($coupon->discount_type === 'fixed') {
             $discountAmount = $coupon->discount_value;
         } else {
             // Loại phần trăm

@@ -59,11 +59,66 @@ class OrderController extends Controller
                 return $item->sku->product->shop_id;
             });
 
-            $createdOrderIds = []; 
-            $grandTotal = 0; 
-            
-            // Biến cờ để đảm bảo mã giảm giá chỉ áp dụng 1 lần (nếu là mã toàn sàn)
-            $couponApplied = false; 
+            // Pre-compute shop totals for coupon validation/discount base.
+            $shopTotals = $itemsByShop->map(function ($shopItems) {
+                return $shopItems->sum(function ($item) {
+                    return $item->sku->price * $item->quantity;
+                });
+            });
+
+            $createdOrderIds = [];
+            $grandTotal = 0;
+
+            // Coupon logic (apply at most once per checkout).
+            // - shop-scoped: applied to that shop only if min_order_value is met.
+            // - global (shop_id null): discount is computed from cart total, and distributed across shop orders.
+            $couponDiscountAmount = 0;
+            $couponTargetShopId = null;
+            $couponWillBeApplied = false;
+            $couponRemainingDiscountAmount = 0;
+
+            if ($coupon) {
+                $cartProductTotal = (float) $shopTotals->sum();
+                if ($coupon->shop_id === null) {
+                    $couponBaseTotal = $cartProductTotal;
+                    if ($couponBaseTotal >= (float) $coupon->min_order_value) {
+                        if ($coupon->discount_type === 'fixed') {
+                            $couponDiscountAmount = min((float) $coupon->discount_value, $couponBaseTotal);
+                        } else {
+                            $couponDiscountAmount = ($couponBaseTotal * (float) $coupon->discount_value) / 100;
+                            if ($coupon->max_discount_value && $couponDiscountAmount > (float) $coupon->max_discount_value) {
+                                $couponDiscountAmount = (float) $coupon->max_discount_value;
+                            }
+                            if ($couponDiscountAmount > $couponBaseTotal) {
+                                $couponDiscountAmount = $couponBaseTotal;
+                            }
+                        }
+
+                        $couponWillBeApplied = $couponDiscountAmount > 0;
+                        $couponRemainingDiscountAmount = (float) $couponDiscountAmount;
+                    }
+                } else {
+                    $targetShopId = (int) $coupon->shop_id;
+                    $couponBaseTotal = (float) ($shopTotals->get($targetShopId) ?? 0);
+                    if ($couponBaseTotal >= (float) $coupon->min_order_value && $shopTotals->has($targetShopId)) {
+                        if ($coupon->discount_type === 'fixed') {
+                            $couponDiscountAmount = min((float) $coupon->discount_value, $couponBaseTotal);
+                        } else {
+                            $couponDiscountAmount = ($couponBaseTotal * (float) $coupon->discount_value) / 100;
+                            if ($coupon->max_discount_value && $couponDiscountAmount > (float) $coupon->max_discount_value) {
+                                $couponDiscountAmount = (float) $coupon->max_discount_value;
+                            }
+                            if ($couponDiscountAmount > $couponBaseTotal) {
+                                $couponDiscountAmount = $couponBaseTotal;
+                            }
+                        }
+
+                        $couponWillBeApplied = $couponDiscountAmount > 0;
+                        $couponTargetShopId = $targetShopId;
+                        $couponRemainingDiscountAmount = 0;
+                    }
+                }
+            }
 
             foreach ($itemsByShop as $shopId => $shopItems) {
                 $shopTotal = 0;
@@ -77,33 +132,19 @@ class OrderController extends Controller
                     }
                 }
 
-                // --- TÍNH GIẢM GIÁ CHO ĐƠN HÀNG NÀY ---
                 $discountAmount = 0;
-                if ($coupon && !$couponApplied) {
-                    // Logic: 
-                    // 1. Nếu Coupon của Shop (shop_id trùng khớp) -> Áp dụng
-                    // 2. Nếu Coupon sàn (shop_id null) -> Áp dụng cho đơn đầu tiên hoặc chia đều (ở đây mình làm đơn giản là áp dụng cho đơn đầu tiên thỏa mãn)
-                    
-                    $isValidShop = ($coupon->shop_id === null) || ($coupon->shop_id == $shopId);
-                    $isMinOrderReached = $shopTotal >= $coupon->min_order_value;
-
-                    if ($isValidShop && $isMinOrderReached) {
-                        if ($coupon->discount_type == 'fixed') {
-                            $discountAmount = $coupon->discount_value;
-                        } else {
-                            $discountAmount = ($shopTotal * $coupon->discount_value) / 100;
-                            if ($coupon->max_discount_value && $discountAmount > $coupon->max_discount_value) {
-                                $discountAmount = $coupon->max_discount_value;
-                            }
+                if ($couponWillBeApplied) {
+                    if ($coupon->shop_id === null) {
+                        // Global coupon: distribute discount across shops in iteration order.
+                        if ($couponRemainingDiscountAmount > 0) {
+                            $discountAmount = min((float) $couponRemainingDiscountAmount, (float) $shopTotal);
+                            $couponRemainingDiscountAmount -= $discountAmount;
                         }
-                        
-                        // Đảm bảo không giảm âm tiền
-                        if ($discountAmount > $shopTotal) $discountAmount = $shopTotal;
-                        
-                        $couponApplied = true; // Đánh dấu đã dùng mã
+                    } elseif ($couponTargetShopId !== null && (int) $shopId === (int) $couponTargetShopId) {
+                        // Shop-scoped coupon: apply to the matching shop only.
+                        $discountAmount = (float) $couponDiscountAmount;
                     }
                 }
-                // ---------------------------------------
 
                 $shippingFee = 30000; 
                 $finalTotal = $shopTotal + $shippingFee - $discountAmount; // Trừ giảm giá
@@ -143,7 +184,7 @@ class OrderController extends Controller
             }
             
             // --- TRỪ LƯỢT DÙNG COUPON ---
-            if ($couponApplied && $coupon) {
+            if ($couponWillBeApplied && $coupon) {
                 $coupon->decrement('usage_limit');
             }
             // -----------------------------
