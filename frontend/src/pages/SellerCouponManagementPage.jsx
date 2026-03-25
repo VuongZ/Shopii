@@ -1,276 +1,226 @@
-import React, { useEffect, useMemo, useState } from "react";
-import axiosClient from "../api/axiosClient";
-import couponApi from "../api/couponApi";
+import React, { useEffect, useMemo, useState } from 'react'
+import axiosClient from '../api/axiosClient'
+import couponApi from '../api/couponApi'
 
 const SellerCouponManagementPage = () => {
-  const [shop, setShop] = useState(null);
-  const [coupons, setCoupons] = useState([]);
+  const [shop, setShop] = useState(null)
+  const [coupons, setCoupons] = useState([])
 
-  const [loading, setLoading] = useState(false);
-  const [globalError, setGlobalError] = useState("");
+  const [globalError, setGlobalError] = useState('')
 
-  const [code, setCode] = useState("");
-  const [discountType, setDiscountType] = useState("fixed");
-  const [discountValue, setDiscountValue] = useState("");
-  const [minOrderValue, setMinOrderValue] = useState("");
+  const [code, setCode] = useState('')
+  const [discountType, setDiscountType] = useState('fixed')
+  const [discountValue, setDiscountValue] = useState('')
+  const [minOrderValue, setMinOrderValue] = useState('')
 
-  const [creating, setCreating] = useState(false);
-  const [deletingId, setDeletingId] = useState(null);
+  const [creating, setCreating] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
 
   const canCreate = useMemo(() => {
-    return (
-      shop &&
-      code.trim().length > 0 &&
-      discountValue !== "" &&
-      minOrderValue !== ""
-    );
-  }, [shop, code, discountValue, minOrderValue]);
+    return shop && code && discountValue && minOrderValue
+  }, [shop, code, discountValue, minOrderValue])
 
   const loadData = async () => {
-    setLoading(true);
-    setGlobalError("");
+    setGlobalError('')
     try {
-      const shopRes = await axiosClient.get("/my-shop");
-      setShop(shopRes.data);
+      const shopRes = await axiosClient.get('/my-shop')
+      setShop(shopRes.data)
 
-      const shopId = shopRes.data?.id;
-      const couponsRes = await couponApi.getCoupons(shopId);
-      setCoupons(couponsRes.data || []);
+      const couponsRes = await couponApi.getCoupons(shopRes.data.id)
+      setCoupons(couponsRes.data || [])
     } catch (err) {
-      const message = err.response?.data?.message || "Không tải được dữ liệu";
-      setGlobalError(message);
-    } finally {
-      setLoading(false);
+      setGlobalError('Không tải được dữ liệu');
+      console.log(err);
     }
-  };
+  }
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadData()
+  }, [])
 
   const handleCreate = async (e) => {
-    e.preventDefault();
-    if (!shop) return;
+    e.preventDefault()
+    setCreating(true)
 
-    const normalizedCode = code.trim().toUpperCase();
-    const discountValueNum = Number(discountValue);
-    const minOrderValueNum = Number(minOrderValue);
-
-    if (!normalizedCode) {
-      setGlobalError("Vui lòng nhập mã coupon");
-      return;
-    }
-    if (Number.isNaN(discountValueNum) || discountValueNum < 0) {
-      setGlobalError("discount_value không hợp lệ");
-      return;
-    }
-    if (Number.isNaN(minOrderValueNum) || minOrderValueNum < 0) {
-      setGlobalError("min_order_value không hợp lệ");
-      return;
-    }
-
-    setCreating(true);
-    setGlobalError("");
     try {
-      await axiosClient.post("/coupons", {
+      await axiosClient.post('/coupons', {
         shop_id: shop.id,
-        code: normalizedCode,
+        code: code.trim().toUpperCase(),
         discount_type: discountType,
-        discount_value: discountValueNum,
-        min_order_value: minOrderValueNum,
-      });
+        discount_value: Number(discountValue),
+        min_order_value: Number(minOrderValue),
+      })
 
-      setCode("");
-      setDiscountValue("");
-      setMinOrderValue("");
-      setDiscountType("fixed");
-
-      await loadData();
-    } catch (err) {
-      const message =
-        err.response?.data?.message || "Không thể tạo coupon lúc này";
-      setGlobalError(message);
+      setCode('')
+      setDiscountValue('')
+      setMinOrderValue('')
+      await loadData()
+    } catch {
+      setGlobalError('Không thể tạo coupon')
     } finally {
-      setCreating(false);
+      setCreating(false)
     }
-  };
+  }
 
-  const handleDelete = async (couponId) => {
-    if (!couponId) return;
-    if (!window.confirm("Xóa coupon này?")) return;
+  const handleDelete = async (id) => {
+    if (!window.confirm('Xóa coupon này?')) return
 
-    setDeletingId(couponId);
-    setGlobalError("");
+    setDeletingId(id)
     try {
-      await axiosClient.delete(`/coupons/${couponId}`);
-      await loadData();
-    } catch (err) {
-      const message =
-        err.response?.data?.message || "Không thể xóa coupon lúc này";
-      setGlobalError(message);
+      await axiosClient.delete(`/coupons/${id}`)
+      await loadData()
+    } catch {
+      setGlobalError('Không thể xóa')
     } finally {
-      setDeletingId(null);
+      setDeletingId(null)
     }
-  };
+  }
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: 20 }}>
-      <h2 style={{ marginBottom: 16 }}>Seller Coupon Management</h2>
+    <div style={{ padding: 30 }}>
+      <h2 style={{ marginBottom: 20 }}>🎟 Quản lý mã giảm giá</h2>
 
-      {loading && <p>Đang tải...</p>}
       {globalError && (
-        <div style={{ color: "#b42318", marginBottom: 16 }}>{globalError}</div>
+        <div style={{ color: 'red', marginBottom: 10 }}>{globalError}</div>
       )}
 
-      {!loading && shop && (
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ color: "#333" }}>
-            Shop: <b>{shop.name}</b>
-          </div>
-        </div>
-      )}
+      {/* CREATE */}
+      <div
+        style={{
+          background: '#fff',
+          padding: 20,
+          borderRadius: 12,
+          boxShadow: '0 6px 20px rgba(0,0,0,0.05)',
+          marginBottom: 30,
+        }}
+      >
+        <h3>Tạo coupon</h3>
 
-      <div style={{ background: "#fff", padding: 16, borderRadius: 8 }}>
-        <h3 style={{ marginTop: 0, marginBottom: 12 }}>Tạo coupon mới</h3>
+        <form
+          onSubmit={handleCreate}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2,1fr)',
+            gap: 15,
+          }}
+        >
+          <input
+            placeholder="Mã coupon (SALE10)"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            style={inputStyle}
+          />
 
-        <form onSubmit={handleCreate} style={{ display: "grid", gap: 12 }}>
-          <div>
-            <label>Mã coupon</label>
-            <input
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="VD: SALE10"
-              style={{ width: "100%", padding: 8 }}
-              disabled={creating}
-            />
-          </div>
+          <select
+            value={discountType}
+            onChange={(e) => setDiscountType(e.target.value)}
+            style={inputStyle}
+          >
+            <option value="fixed">Giảm tiền</option>
+            <option value="percent">Giảm %</option>
+          </select>
 
-          <div>
-            <label>discount_type</label>
-            <select
-              value={discountType}
-              onChange={(e) => setDiscountType(e.target.value)}
-              style={{ width: "100%", padding: 8 }}
-              disabled={creating}
-            >
-              <option value="fixed">fixed (giảm cố định)</option>
-              <option value="percent">percent (giảm %)</option>
-            </select>
-          </div>
+          <input
+            type="number"
+            placeholder="Giá trị giảm"
+            value={discountValue}
+            onChange={(e) => setDiscountValue(e.target.value)}
+            style={inputStyle}
+          />
 
-          <div>
-            <label>discount_value</label>
-            <input
-              type="number"
-              step="0.01"
-              value={discountValue}
-              onChange={(e) => setDiscountValue(e.target.value)}
-              style={{ width: "100%", padding: 8 }}
-              disabled={creating}
-            />
-          </div>
-
-          <div>
-            <label>min_order_value</label>
-            <input
-              type="number"
-              step="0.01"
-              value={minOrderValue}
-              onChange={(e) => setMinOrderValue(e.target.value)}
-              style={{ width: "100%", padding: 8 }}
-              disabled={creating}
-            />
-          </div>
+          <input
+            type="number"
+            placeholder="Đơn tối thiểu"
+            value={minOrderValue}
+            onChange={(e) => setMinOrderValue(e.target.value)}
+            style={inputStyle}
+          />
 
           <button
             type="submit"
-            disabled={!canCreate || creating}
+            disabled={!canCreate}
             style={{
-              padding: "10px 14px",
-              borderRadius: 6,
-              border: "1px solid #ddd",
-              background: "#ee4d2d",
-              color: "#fff",
-              cursor: !canCreate || creating ? "not-allowed" : "pointer",
+              gridColumn: 'span 2',
+              padding: 12,
+              borderRadius: 10,
+              border: 'none',
+              background: '#ee4d2d',
+              color: 'white',
+              fontWeight: 'bold',
+              cursor: 'pointer',
             }}
           >
-            {creating ? "Đang tạo..." : "Tạo coupon"}
+            {creating ? 'Đang tạo...' : 'Tạo coupon'}
           </button>
         </form>
       </div>
 
-      <div style={{ height: 18 }} />
+      {/* LIST */}
+      <div>
+        <h3>Danh sách coupon</h3>
 
-      <div style={{ background: "#fff", padding: 16, borderRadius: 8 }}>
-        <h3 style={{ marginTop: 0, marginBottom: 12 }}>Danh sách coupon</h3>
+        {coupons.length === 0 && <p>Chưa có coupon</p>}
 
-        {coupons.length === 0 && <p>Chưa có coupon.</p>}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))',
+            gap: 20,
+          }}
+        >
+          {coupons.map((c) => (
+            <div
+              key={c.id}
+              style={{
+                background: 'white',
+                borderRadius: 12,
+                padding: 20,
+                boxShadow: '0 6px 20px rgba(0,0,0,0.05)',
+                position: 'relative',
+              }}
+            >
+              <h3 style={{ color: '#ee4d2d' }}>{c.code}</h3>
 
-        {coupons.length > 0 && (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ textAlign: "left" }}>
-                  <th style={{ borderBottom: "1px solid #eee", padding: 10 }}>
-                    Code
-                  </th>
-                  <th style={{ borderBottom: "1px solid #eee", padding: 10 }}>
-                    Loại giảm
-                  </th>
-                  <th style={{ borderBottom: "1px solid #eee", padding: 10 }}>
-                    Giá trị
-                  </th>
-                  <th style={{ borderBottom: "1px solid #eee", padding: 10 }}>
-                    Min order
-                  </th>
-                  <th style={{ borderBottom: "1px solid #eee", padding: 10 }}>
-                    Hành động
-                  </th>
-                </tr>
-              </thead>
+              <p>
+                Giảm:{' '}
+                <b>
+                  {c.discount_type === 'percent'
+                    ? `${c.discount_value}%`
+                    : `${c.discount_value}đ`}
+                </b>
+              </p>
 
-              <tbody>
-                {coupons.map((c) => (
-                  <tr key={c.id}>
-                    <td style={{ padding: 10, borderBottom: "1px solid #f5f5f5" }}>
-                      <b>{c.code}</b>
-                    </td>
-                    <td style={{ padding: 10, borderBottom: "1px solid #f5f5f5" }}>
-                      {c.discount_type}
-                    </td>
-                    <td style={{ padding: 10, borderBottom: "1px solid #f5f5f5" }}>
-                      {c.discount_type === "percent"
-                        ? `${c.discount_value}%`
-                        : `${c.discount_value}`}
-                    </td>
-                    <td style={{ padding: 10, borderBottom: "1px solid #f5f5f5" }}>
-                      {c.min_order_value}
-                    </td>
-                    <td style={{ padding: 10, borderBottom: "1px solid #f5f5f5" }}>
-                      <button
-                        onClick={() => handleDelete(c.id)}
-                        disabled={deletingId === c.id}
-                        style={{
-                          padding: "6px 10px",
-                          borderRadius: 6,
-                          border: "1px solid #ddd",
-                          background: "#fff",
-                          cursor: deletingId === c.id ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        {deletingId === c.id ? "Đang xóa..." : "Xóa"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              <p>Đơn tối thiểu: {c.min_order_value}đ</p>
+
+              <button
+                onClick={() => handleDelete(c.id)}
+                style={{
+                  position: 'absolute',
+                  top: 10,
+                  right: 10,
+                  background: '#fee2e2',
+                  color: '#dc2626',
+                  border: 'none',
+                  padding: '6px 10px',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                }}
+              >
+                {deletingId === c.id ? '...' : 'Xóa'}
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SellerCouponManagementPage;
+const inputStyle = {
+  padding: 10,
+  borderRadius: 8,
+  border: '1px solid #ddd',
+  outline: 'none',
+}
 
+export default SellerCouponManagementPage
