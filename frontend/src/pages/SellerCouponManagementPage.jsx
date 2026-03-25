@@ -78,7 +78,7 @@ const SellerCouponManagementPage = () => {
 
   return (
     <div style={{ padding: 30 }}>
-      <h2 style={{ marginBottom: 20 }}>🎟 Quản lý mã giảm giá</h2>
+      <h2 style={{ marginBottom: 20 }}>Quản lý mã giảm giá</h2>
 
       {globalError && (
         <div style={{ color: 'red', marginBottom: 10 }}>{globalError}</div>
