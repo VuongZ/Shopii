@@ -19,26 +19,28 @@ class ReviewController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'rating' => 'required|integer|min:1|max:5',
-            'comment' => 'nullable|string',
-            'product_id' => 'required|exists:products,id',
-            'order_id' => 'required|exists:orders,id',
-        ]);
+        'rating' => 'required|integer|min:1|max:5',
+        'comment' => 'nullable|string',
+        'product_id' => 'required|exists:products,id',
+        'order_id' => 'sometimes|nullable|exists:orders,id',
+    ]);
+    $order = Order::find($request->order_id);
+    if ($request->order_id && (!$order || $order->user_id !== auth()->id())) {
+        return response()->json(['message' => 'Invalid order.'], 400);
+    }
 
-        $order = Order::find($request->order_id);
-        if (!$order || $order->user_id !== auth()->id()) {
-            return response()->json(['message' => 'Invalid order.'], 400);
-        }
+    $review = Review::create([
+        'user_id' => auth()->id(),
+        'product_id' => $request->product_id,
+        'order_id' => $request->order_id,
+        'rating' => $request->rating,
+        'comment' => $request->comment,
+    ]);
 
-        $review = Review::create([
-            'user_id' => auth()->id(),
-            'product_id' => $request->product_id,
-            'order_id' => $request->order_id,
-            'rating' => $request->rating,
-            'comment' => $request->comment,
-        ]);
-
-        return response()->json(['message' => 'Đánh Giá Thành Công.', 'review' => $review], 201);
+    return response()->json([
+        'message' => 'Đánh Giá Thành Công.',
+        'review' => $review
+    ], 201);
     }
     public function show($id)
     {

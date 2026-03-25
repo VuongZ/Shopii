@@ -2,9 +2,40 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosClient from "../api/axiosClient"; 
 import Review from "./Review";
+import orderApi from "../api/orderApi";
 
 function ProductDetailPage() {
-  const { id } = useParams();
+    const { id } = useParams();
+  const [orderId, setOrderId] = useState(null);
+useEffect(() => {
+  fetchOrderId();
+}, [id]);
+
+const fetchOrderId = async () => {
+  try {
+    const res = await orderApi.getMyOrders();
+    const orders = res.data;
+
+    console.log("ORDERS:", orders); // debug
+
+    for (const order of orders) {
+      // ⚠️ CHỖ NÀY QUAN TRỌNG
+      const hasProduct = order.items?.some(
+        (item) => item.product_id == id
+      );
+
+      if (hasProduct) {
+        setOrderId(order.id);
+        return;
+      }
+    }
+
+    setOrderId(null);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
   const navigate = useNavigate();
  
   const [product, setProduct] = useState(null);
@@ -64,6 +95,7 @@ function ProductDetailPage() {
     } else {
       displayPrice = `${Number(product.base_price || 0).toLocaleString()} VNĐ`;
     }
+    
   }
 
   return (
@@ -204,7 +236,12 @@ function ProductDetailPage() {
             >
               {displayStock > 0 ? 'Thêm vào giỏ hàng' : 'Hết hàng'}
             </button>
-         <Review productId={id} />
+         <Review
+    productId={id}
+    orderId={orderId}
+    token={localStorage.getItem("token")}
+          />
+         
           </div>
         </div>
 

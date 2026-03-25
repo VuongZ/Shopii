@@ -10,46 +10,45 @@ export default function ReviewSection({ productId, orderId, token }) {
   useEffect(() => {
     fetchReviews();
   }, [productId]);
-
   const fetchReviews = async () => {
     const res = await axiosClient.get("/reviews", {
   params: { product_id: productId }
 });
     setReviews(res.data);
   };
-
   const submitReview = async () => {
     if (!rating || !comment) {
       alert("Vui lòng chọn sao và nhập nhận xét");
       return;
     }
-
     try {
       setLoading(true);
 
-      await  axiosClient.post(
-        "/api/reviews",
-        {
-          product_id: productId,
-          order_id: orderId,
-          rating,
-          comment
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
+     const data = {
+  product_id: productId,
+  rating,
+  comment,
+};
+
+await axiosClient.post("/reviews", data);
+
+if (orderId) {
+  data.order_id = orderId;
+}
+
+await axiosClient.post("/reviews", data);
 
       setRating(0);
       setComment("");
       fetchReviews();
-    } catch (err) {
-      alert(err.response?.data?.message || "Không thể gửi đánh giá");
-    } finally {
-      setLoading(false);
-    }
+  } catch (err) {
+  console.log(err.response.data);
+  console.log(err.response.data.errors);
+  console.log(err.response.data.errors.order_id);
+   alert("Lỗi");
+  } finally {
+    setLoading(false);
+  }
   };
 
   return (

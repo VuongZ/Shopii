@@ -34,38 +34,38 @@ export default function ReviewSection({ productId, orderId, token }) {
     console.error(error);
     setReviews([]);
   }
-};
+  };
   const submitReview = async () => {
-    if (!rating || !comment) {
-      alert("Vui lòng chọn sao và nhập nhận xét");
-      return;
-    }
+  // if (!orderId) {
+  //   alert("Bạn chưa mua sản phẩm này");
+  //   return;
+  // }
 
-    try {
-      setLoading(true);
+  if (!rating || !comment) {
+    alert("Vui lòng chọn sao và nhập nhận xét");
+    return;
+  }
 
-      await axiosClient.post("/reviews", {
-       product_id: productId,
+  try {
+    setLoading(true);
+
+    await axiosClient.post("/reviews", {
+      product_id: productId,
       order_id: orderId,
       rating,
-      comment
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
+      comment,
+    });
 
-      setRating(0);
-      setComment("");
-      fetchReviews();
-    } catch (err) {
-      alert(err.response?.data?.message || "Không thể gửi đánh giá");
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchReviews();
+    setComment("");
+    setRating(0);
+
+  } catch (err) {
+    console.log(err.response?.data);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="review-box">

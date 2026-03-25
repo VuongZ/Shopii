@@ -63,7 +63,6 @@ function App() {
             <Link to="/" className="nav-link">Trang chủ</Link>
             <Link to="/cart" className="nav-link"><ShoppingCart size={20} /></Link>
             <Link to="/orders" className="nav-link">Đơn mua</Link>
-             <Link to="/reviews" className="nav-link">Đánh Giá</Link>
             <Link to="/users" className="nav-link">Users</Link>
 
             {user && (user.role === 'admin' || user.role === 1) && (
