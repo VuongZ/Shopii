@@ -17,6 +17,7 @@ import ResetPassword from './pages/ResetPassword'
 import ForgotPassword from './pages/ForgotPassword'
 import VerifyOTP from './pages/VerifyOTP'
 import CategoriesPage from './pages/CategoriesPage' 
+import Reviews from './pages/Review'
 
 // 1. ĐÃ THÊM IMPORT TRANG SHOP VÀO ĐÂY
 import ShopPage from './pages/ShopPage'
@@ -62,6 +63,7 @@ function App() {
             <Link to="/" className="nav-link">Trang chủ</Link>
             <Link to="/cart" className="nav-link"><ShoppingCart size={20} /></Link>
             <Link to="/orders" className="nav-link">Đơn mua</Link>
+             <Link to="/reviews" className="nav-link">Đánh Giá</Link>
             <Link to="/users" className="nav-link">Users</Link>
 
             {user && (user.role === 'admin' || user.role === 1) && (
@@ -109,7 +111,8 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />
           <Route path="/categories" element={<CategoriesPage />} />
-          
+          <Route path="/reviews" element={<Reviews/>} />
+
           {/* 3. ĐÃ KHAI BÁO ROUTE CHO TRANG SHOP */}
           <Route path="/shop" element={<ShopPage />} />
         </Routes>

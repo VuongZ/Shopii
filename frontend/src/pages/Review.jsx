@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import axiosClient from "../api/axiosClient";
 
 export default function ReviewSection({ productId, orderId, token }) {
   const [rating, setRating] = useState(0);
@@ -43,13 +44,11 @@ export default function ReviewSection({ productId, orderId, token }) {
     try {
       setLoading(true);
 
-      await axios.post(
-        "/api/reviews",
-        {
-          product_id: productId,
-          order_id: orderId,
-          rating,
-          comment
+      await axiosClient.post("/reviews", {
+       product_id: productId,
+      order_id: orderId,
+      rating,
+      comment
         },
         {
           headers: {
@@ -98,7 +97,7 @@ export default function ReviewSection({ productId, orderId, token }) {
 
       {/* Review List */}
       <div className="review-list">
-        <h4>Nhận xét ({Array.isArray(reviews) ? reviews.length : 0})</h4>
+        <h4>Các Lượt Đánh Giá ({Array.isArray(reviews) ? reviews.length : 0})</h4>
         {reviews.map((r) => (
           <div className="review-item" key={r.id}>
             <div className="review-header">

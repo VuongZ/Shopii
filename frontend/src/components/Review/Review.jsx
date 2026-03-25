@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-
+import axiosClient from "../api/axiosClient";
 export default function ReviewSection({ productId, orderId, token }) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -13,9 +12,9 @@ export default function ReviewSection({ productId, orderId, token }) {
   }, [productId]);
 
   const fetchReviews = async () => {
-    const res = await axios.get("/api/reviews", {
-      params: { product_id: productId }
-    });
+    const res = await axiosClient.get("/reviews", {
+  params: { product_id: productId }
+});
     setReviews(res.data);
   };
 
@@ -28,7 +27,7 @@ export default function ReviewSection({ productId, orderId, token }) {
     try {
       setLoading(true);
 
-      await axios.post(
+      await  axiosClient.post(
         "/api/reviews",
         {
           product_id: productId,

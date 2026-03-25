@@ -15,7 +15,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\AdminShopController;
 use App\Http\Controllers\ForgotPasswordController;
-
+use App\Http\Controllers\ReviewController;
 /*
 |--------------------------------------------------------------------------
 | 1. KHU VỰC CÔNG KHAI (Không cần đăng nhập)
@@ -38,6 +38,8 @@ Route::get('/health', function () {
         'status' => 'OK'
     ]);
 });
+    /* ----------------------- Review (USER) ----------------------- */
+    Route::post('/reviews', [ReviewController::class, 'store']);
 
 /*
 |--------------------------------------------------------------------------
@@ -78,6 +80,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/shops', [ShopController::class, 'store']);
     Route::get('/my-shop', [ShopController::class, 'myShop']);
     Route::post('/products', [ProductController::class, 'store']);
+    
+
 
     /*
     |--------------------------------------------------------------------------

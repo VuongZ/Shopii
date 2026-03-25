@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosClient from "../api/axiosClient"; 
+import Review from "./Review";
 
 function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-
+ 
   const [product, setProduct] = useState(null);
   const [mainImage, setMainImage] = useState("");
   
@@ -66,6 +67,7 @@ function ProductDetailPage() {
   }
 
   return (
+    
     <div className="main-content" style={{ padding: '40px', background: '#f8fafc', minHeight: '100vh' }}>
     <button
         className="btn-back"
@@ -202,9 +204,12 @@ function ProductDetailPage() {
             >
               {displayStock > 0 ? 'Thêm vào giỏ hàng' : 'Hết hàng'}
             </button>
+         <Review productId={id} />
           </div>
         </div>
+
       </div>
+         
     </div>
   );
 }
