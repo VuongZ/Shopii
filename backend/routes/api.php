@@ -39,7 +39,7 @@ Route::get('/health', function () {
     ]);
 });
     /* ----------------------- Review (USER) ----------------------- */
-    Route::post('/reviews', [ReviewController::class, 'store']);
+
     Route::get('/reviews', [ReviewController::class, 'index']);
 /*
 |--------------------------------------------------------------------------
@@ -81,9 +81,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/my-shop', [ShopController::class, 'myShop']);
     Route::post('/products', [ProductController::class, 'store']);
     
+        /* ----------------------- Review (USER) ----------------------- */
 
-
-    /*
+        Route::post('/reviews', [ReviewController::class, 'store']);
+        /*
     |--------------------------------------------------------------------------
     | 3. ADMIN ROUTES
     |--------------------------------------------------------------------------
