@@ -14,6 +14,7 @@ class ReviewController extends Controller
             ->where('product_id', $request->product_id)
             ->latest()
             ->get();
+            
     }
     public function store(Request $request)
     {

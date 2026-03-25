@@ -40,7 +40,7 @@ Route::get('/health', function () {
 });
     /* ----------------------- Review (USER) ----------------------- */
     Route::post('/reviews', [ReviewController::class, 'store']);
-
+    Route::get('/reviews', [ReviewController::class, 'index']);
 /*
 |--------------------------------------------------------------------------
 | 2. PROTECTED ROUTES (Cần đăng nhập)
