@@ -23,6 +23,20 @@ export default function HomePage() {
     axiosClient.get("/categories").then((res) => setCategories(res.data)).catch(console.log);
   }, []);
 
+  // === THÊM ĐOẠN NÀY: Xử lý Bấm ra ngoài để tắt Dropdown ===
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      // Nếu click chuột vào vùng không chứa class 'custom-dropdown' thì đóng menu lại
+      if (!e.target.closest('.custom-dropdown')) {
+        setIsCatOpen(false);
+        setIsPriceOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+  // ==========================================================
+
   const handleSearch = () => {
     setActiveSearch(searchInput);
   };
@@ -49,12 +63,12 @@ export default function HomePage() {
         {/* ===================== KHU VỰC 1: TIÊU ĐỀ ===================== */}
         <div style={{ marginBottom: "30px" }}>
           <h2 style={{ margin: 0, color: '#0f172a', fontSize: '28px', fontWeight: '800', position: 'relative', display: 'inline-block' }}>
-              Toàn bộ sản phẩm
+              Gợi Ý Hôm Nay
             <div style={{ position: 'absolute', bottom: '-10px', left: 0, width: '100%', height: '4px', background: '#5a5df0', borderRadius: '4px' }}></div>
           </h2>
         </div>
 
-        {/* ===================== KHU VỰC 2: THANH TÌM KIẾM & BỘ LỌC TÍM NHẠT ===================== */}
+        {/* ===================== KHU VỰC 2: THANH TÌM KIẾM & BỘ LỌC ===================== */}
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -64,7 +78,7 @@ export default function HomePage() {
           marginBottom: '40px',
           paddingBottom: '25px',
           borderBottom: '2px solid #e2e8f0',
-          position: 'relative', // Quan trọng để Dropdown không bị che
+          position: 'relative',
           zIndex: 20 
         }}>
           
@@ -102,7 +116,7 @@ export default function HomePage() {
             >
               <input
                 type="text"
-                placeholder=" Tìm kiếm sản phẩm..."
+                placeholder="🔍 Tìm kiếm sản phẩm..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -139,19 +153,19 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* --- CỤM BỘ LỌC (CUSTOM DROPDOWN CHUYỂN ĐỘNG TUTU) --- */}
+          {/* --- CỤM BỘ LỌC (CUSTOM DROPDOWN) --- */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             
             {/* 1. Nút Danh Mục */}
-            <div style={{ position: 'relative', minWidth: '180px' }} onMouseLeave={() => setIsCatOpen(false)}>
+            <div className="custom-dropdown" style={{ position: 'relative', minWidth: '180px' }}>
               <div 
-                onClick={() => setIsCatOpen(!isCatOpen)}
+                onClick={() => { setIsCatOpen(!isCatOpen); setIsPriceOpen(false); }}
                 style={{
                   height: "48px", boxSizing: 'border-box', padding: "0 20px", 
                   borderRadius: "10px", 
-                  border: "1.5px solid #c7d2fe", // Viền màu tím nhạt
-                  background: "#f5f3ff", // Nền tím siêu nhẹ
-                  color: "#4338ca", // Chữ tím đậm sang trọng
+                  border: "1.5px solid #c7d2fe",
+                  background: "#f5f3ff", 
+                  color: "#4338ca", 
                   cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between",
                   transition: "all 0.3s ease", fontWeight: '600', fontSize: '14px',
                   boxShadow: isCatOpen ? '0 0 0 3px rgba(199, 210, 254, 0.4)' : '0 2px 4px rgba(0,0,0,0.02)'
@@ -164,13 +178,13 @@ export default function HomePage() {
               {/* Menu Danh mục xổ xuống mượt mà */}
               <div style={{
                 position: 'absolute', top: '55px', left: 0, width: '100%',
-                background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(12px)', // Hiệu ứng kính mờ
+                background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(12px)',
                 border: '1px solid #e0e7ff', borderRadius: '10px',
                 boxShadow: '0 10px 25px -5px rgba(90, 93, 240, 0.2)',
                 opacity: isCatOpen ? 1 : 0,
                 visibility: isCatOpen ? 'visible' : 'hidden',
                 transform: isCatOpen ? 'translateY(0) scale(1)' : 'translateY(-15px) scale(0.95)',
-                transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', // Hiệu ứng nảy "tutu"
+                transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', 
                 zIndex: 30, overflow: 'hidden'
               }}>
                 <div 
@@ -201,13 +215,13 @@ export default function HomePage() {
             </div>
 
             {/* 2. Nút Mức Giá */}
-            <div style={{ position: 'relative', minWidth: '180px' }} onMouseLeave={() => setIsPriceOpen(false)}>
+            <div className="custom-dropdown" style={{ position: 'relative', minWidth: '180px' }}>
               <div 
-                onClick={() => setIsPriceOpen(!isPriceOpen)}
+                onClick={() => { setIsPriceOpen(!isPriceOpen); setIsCatOpen(false); }}
                 style={{
                   height: "48px", boxSizing: 'border-box', padding: "0 20px", 
                   borderRadius: "10px", 
-                  border: "1.5px solid #c7d2fe", // Viền màu tím nhạt
+                  border: "1.5px solid #c7d2fe", 
                   background: "#f5f3ff", 
                   color: "#4338ca", 
                   cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -219,7 +233,7 @@ export default function HomePage() {
                   {selectedPriceRange === "under-2m" ? "Dưới 2 Triệu" :
                    selectedPriceRange === "2m-10m" ? "2 - 10 Triệu" :
                    selectedPriceRange === "10m-20m" ? "10 - 20 Triệu" :
-                   selectedPriceRange === "above-20m" ? "Trên 20 Triệu" : "Theo giá trị sản phẩm"}
+                   selectedPriceRange === "above-20m" ? "Trên 20 Triệu" : "Mức Giá"}
                 </span>
                 <span style={{ fontSize: '12px', transform: isPriceOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }}>▼</span>
               </div>
@@ -363,7 +377,7 @@ export default function HomePage() {
             })
           ) : (
             <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "80px 20px" }}>
-              <div style={{ fontSize: '40px', marginBottom: '15px' }}></div>
+              <div style={{ fontSize: '40px', marginBottom: '15px' }}>🔍</div>
               <h3 style={{ color: '#475569', margin: 0 }}>Không tìm thấy sản phẩm nào!</h3>
               <p style={{ color: '#94a3b8', marginTop: '10px' }}>Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm xem sao nhé.</p>
             </div>
