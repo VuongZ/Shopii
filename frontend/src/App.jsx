@@ -18,7 +18,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import VerifyOTP from './pages/VerifyOTP'
 
 import CategoriesPage from './pages/CategoriesPage'
-import Reviews from './pages/Review' 
+import Reviews from './pages/Review'
 import AdminShopsPage from './pages/AdminShopsPage'
 
 // 1. ĐÃ THÊM IMPORT TRANG SHOP VÀO ĐÂY
@@ -28,7 +28,23 @@ import './App.css'
 
 function App() {
   const navigate = useNavigate()
+  const [cartCount, setCartCount] = useState(0)
+  const [cartItems, setCartItems] = useState([])
 
+  useEffect(() => {
+    const loadCart = () => {
+      const cart = JSON.parse(localStorage.getItem('CART')) || []
+      setCartItems(cart)
+
+      const total = cart.reduce((sum, item) => sum + item.quantity, 0)
+      setCartCount(total)
+    }
+
+    loadCart()
+    window.addEventListener('storage', loadCart)
+
+    return () => window.removeEventListener('storage', loadCart)
+  }, [])
   const [user, setUser] = useState(() => {
     const info = localStorage.getItem('USER_INFO')
     return info ? JSON.parse(info) : null
@@ -67,9 +83,37 @@ function App() {
             <Link to="/" className="nav-link">
               Trang chủ
             </Link>
-            <Link to="/cart" className="nav-link">
-              <ShoppingCart size={20} />
-            </Link>
+            <div className="cart-wrapper">
+              <Link to="/cart" className="nav-link cart-icon">
+                <ShoppingCart size={22} />
+
+                {cartCount > 0 && (
+                  <span className="cart-badge">{cartCount}</span>
+                )}
+              </Link>
+
+              <div className="cart-dropdown">
+                {cartItems.length === 0 ? (
+                  <p className="empty-cart-mini">Chưa có sản phẩm</p>
+                ) : (
+                  <>
+                    {cartItems.slice(0, 5).map((item) => (
+                      <div key={item.id} className="mini-item">
+                        <img src={item.image} />
+                        <div>
+                          <p>{item.name}</p>
+                          <span>{item.price}đ</span>
+                        </div>
+                      </div>
+                    ))}
+
+                    <Link to="/cart" className="view-cart-btn">
+                      Xem Giỏ Hàng
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
             <Link to="/orders" className="nav-link">
               Đơn mua
             </Link>
@@ -99,7 +143,6 @@ function App() {
                   Cửa hàng của tôi
                 </Link>
 
-               
                 <Link
                   to="/seller-coupons"
                   className="nav-link"
@@ -158,7 +201,7 @@ function App() {
           {/* shop */}
 
           <Route path="/admin/shops" element={<AdminShopsPage />} />
-          
+
           {/* 3. ĐÃ KHAI BÁO ROUTE CHO TRANG SHOP */}
 
           <Route path="/shop" element={<ShopPage />} />

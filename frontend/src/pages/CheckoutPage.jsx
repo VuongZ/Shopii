@@ -1,112 +1,110 @@
-import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
-import cartApi from "../api/cartApi";
-import couponApi from "../api/couponApi";
-import paymentApi from "../api/paymentApi";
+import cartApi from '../api/cartApi'
+import couponApi from '../api/couponApi'
+import paymentApi from '../api/paymentApi'
 
-import logoVnPay from "../assets/logoVnPay.jpg";
+import logoVnPay from '../assets/logoVnPay.jpg'
 
 const CheckoutPage = () => {
-  const { state } = useLocation();
-  const navigate = useNavigate();
+  const { state } = useLocation()
+  const navigate = useNavigate()
 
-  const selectedItems = state?.selectedItems || [];
+  const selectedItems = state?.selectedItems || []
 
-  const [addresses, setAddresses] = useState([]);
-  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [addresses, setAddresses] = useState([])
+  const [selectedAddress, setSelectedAddress] = useState(null)
 
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState([])
 
-  const [paymentMethod, setPaymentMethod] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState(1)
+  const [loading, setLoading] = useState(false)
 
-  const [coupons, setCoupons] = useState([]);
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [discountAmount, setDiscountAmount] = useState(0);
+  const [coupons, setCoupons] = useState([])
+  const [appliedCoupon, setAppliedCoupon] = useState(null)
+  const [discountAmount, setDiscountAmount] = useState(0)
 
-  const [showCouponModal, setShowCouponModal] = useState(false);
-  const [manualCode, setManualCode] = useState("");
-  const [couponApplying, setCouponApplying] = useState(false);
+  const [showCouponModal, setShowCouponModal] = useState(false)
+  const [manualCode, setManualCode] = useState('')
+  const [couponApplying, setCouponApplying] = useState(false)
 
-  const shippingFeePerShop = 30000;
+  const shippingFeePerShop = 30000
   const shopIdList = Array.from(
-    new Set(cartItems.map((item) => item.shop_id).filter(Boolean)),
-  );
-  const shippingFee = shopIdList.length * shippingFeePerShop;
+    new Set(cartItems.map((item) => item.shop_id).filter(Boolean))
+  )
+  const shippingFee = shopIdList.length * shippingFeePerShop
   const shopSubtotalMap = cartItems.reduce((acc, item) => {
-    const shopId = item.shop_id;
-    if (!shopId) return acc;
-    acc[shopId] = (acc[shopId] ?? 0) + Number(item.price) * item.quantity;
-    return acc;
-  }, {});
-  const singleShopId = shopIdList.length === 1 ? shopIdList[0] : null;
+    const shopId = item.shop_id
+    if (!shopId) return acc
+    acc[shopId] = (acc[shopId] ?? 0) + Number(item.price) * item.quantity
+    return acc
+  }, {})
+  const singleShopId = shopIdList.length === 1 ? shopIdList[0] : null
 
   useEffect(() => {
     if (selectedItems.length === 0) {
-      navigate("/cart");
+      navigate('/cart')
     }
     const fetchData = async () => {
       try {
-        const cartRes = await cartApi.getCart();
-        const addrRes = await cartApi
-          .getAddresses()
-          .catch(() => ({ data: [] }));
+        const cartRes = await cartApi.getCart()
+        const addrRes = await cartApi.getAddresses().catch(() => ({ data: [] }))
 
-        const cartData = cartRes.data || {};
-        const allItems = Object.values(cartData).flat();
+        const cartData = cartRes.data || {}
+        const allItems = Object.values(cartData).flat()
 
         const filtered = allItems.filter((item) =>
-          selectedItems.some((id) => String(id) === String(item.id)),
-        );
+          selectedItems.some((id) => String(id) === String(item.id))
+        )
 
-        setCartItems(filtered);
-        setAppliedCoupon(null);
-        setDiscountAmount(0);
-        setShowCouponModal(false);
+        setCartItems(filtered)
+        setAppliedCoupon(null)
+        setDiscountAmount(0)
+        setShowCouponModal(false)
 
-        const addrList = addrRes.data || [];
-        setAddresses(addrList);
+        const addrList = addrRes.data || []
+        setAddresses(addrList)
 
         if (addrList.length > 0) {
-          const defaultAddr = addrList.find((a) => a.is_default) || addrList[0];
-          setSelectedAddress(defaultAddr);
+          const defaultAddr = addrList.find((a) => a.is_default) || addrList[0]
+          setSelectedAddress(defaultAddr)
         }
 
         const filteredShopIdList = Array.from(
-          new Set(filtered.map((item) => item.shop_id).filter(Boolean)),
-        );
+          new Set(filtered.map((item) => item.shop_id).filter(Boolean))
+        )
         const shopIdForCoupons =
-          filteredShopIdList.length === 1 ? filteredShopIdList[0] : null;
+          filteredShopIdList.length === 1 ? filteredShopIdList[0] : null
 
         const couponRes = await couponApi
           .getCoupons(shopIdForCoupons)
-          .catch(() => ({ data: [] }));
-        setCoupons(couponRes.data || []);
+          .catch(() => ({ data: [] }))
+        setCoupons(couponRes.data || [])
       } catch (error) {
-        console.error("Checkout load error:", error);
+        console.error('Checkout load error:', error)
       }
-    };
+    }
 
     if (selectedItems.length > 0) {
-      fetchData();
+      fetchData()
     }
-  }, [selectedItems, navigate]);
+  }, [selectedItems, navigate])
 
   const totalProductPrice = cartItems.reduce(
     (sum, item) => sum + Number(item.price) * item.quantity,
-    0,
-  );
+    0
+  )
 
   const finalTotal = Math.max(
     0,
-    totalProductPrice + shippingFee - discountAmount,
-  );
+    totalProductPrice + shippingFee - discountAmount
+  )
 
   const handleApplyCoupon = async (code) => {
-    if (couponApplying) return;
+    if (couponApplying) return
     try {
-      setCouponApplying(true);
+      setCouponApplying(true)
 
       const payload = {
         coupon_code: code,
@@ -115,48 +113,48 @@ const CheckoutPage = () => {
         order_total: singleShopId
           ? shopSubtotalMap[singleShopId]
           : totalProductPrice,
-      };
-
-      if (singleShopId) {
-        payload.shop_id = singleShopId;
       }
 
-      const res = await couponApi.applyCoupon(payload);
+      if (singleShopId) {
+        payload.shop_id = singleShopId
+      }
 
-      setAppliedCoupon(res.data);
-      setDiscountAmount(Number(res.data.discount_amount) || 0);
-      setManualCode("");
-      setShowCouponModal(false);
+      const res = await couponApi.applyCoupon(payload)
+
+      setAppliedCoupon(res.data)
+      setDiscountAmount(Number(res.data.discount_amount) || 0)
+      setManualCode('')
+      setShowCouponModal(false)
 
       alert(
-        `Áp dụng thành công. Giảm ${res.data.discount_amount.toLocaleString()}đ`,
-      );
+        `Áp dụng thành công. Giảm ${res.data.discount_amount.toLocaleString()}đ`
+      )
     } catch (err) {
       alert(
         err.response?.data?.message ||
-          "Mã giảm giá không hợp lệ hoặc chưa đủ điều kiện",
-      );
+          'Mã giảm giá không hợp lệ hoặc chưa đủ điều kiện'
+      )
     } finally {
-      setCouponApplying(false);
+      setCouponApplying(false)
     }
-  };
+  }
 
   const handleManualApply = () => {
     if (!manualCode.trim()) {
-      alert("Nhập mã giảm giá");
-      return;
+      alert('Nhập mã giảm giá')
+      return
     }
 
-    handleApplyCoupon(manualCode.trim().toUpperCase());
-  };
+    handleApplyCoupon(manualCode.trim().toUpperCase())
+  }
 
   const handlePlaceOrder = async () => {
     if (!selectedAddress) {
-      alert("Vui lòng chọn địa chỉ");
-      return;
+      alert('Vui lòng chọn địa chỉ')
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
 
     try {
       const orderRes = await cartApi.checkout({
@@ -165,57 +163,61 @@ const CheckoutPage = () => {
         payment_method_id: paymentMethod,
         shipping_method_id: 1,
         coupon_code: appliedCoupon?.code,
-      });
+      })
 
-      const { order_ids, total_amount, message } = orderRes.data;
+      const { order_ids, total_amount, message } = orderRes.data
 
       if (paymentMethod === 2) {
         const payRes = await paymentApi.createPaymentUrl({
-          orderId: order_ids.join("-"),
+          orderId: order_ids[0],
           amount: total_amount,
-        });
+        })
 
-        if (payRes.data.paymentUrl) {
-          window.location.href = payRes.data.paymentUrl;
+        const url = payRes.data.paymentUrl || payRes.data.url
+
+        if (url) {
+          window.location.href = url
+        } else {
+          alert('Không lấy được link thanh toán VNPay')
         }
       } else {
-        alert(message || "Đặt hàng thành công");
-        navigate("/orders");
+        alert(message || 'Đặt hàng thành công')
+        navigate('/orders')
+        localStorage.removeItem('CART')
+        window.dispatchEvent(new Event('storage'))
       }
     } catch (error) {
-      alert(error.response?.data?.message || "Đặt hàng thất bại");
+      alert(error.response?.data?.message || 'Đặt hàng thất bại')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleChangeAddress = () => {
     if (addresses.length === 0) {
-      alert("Chưa có địa chỉ");
-      return;
+      alert('Chưa có địa chỉ')
+      return
     }
 
-    const currentIndex = addresses.findIndex(
-      (a) => a.id === selectedAddress.id,
-    );
+    const currentIndex = addresses.findIndex((a) => a.id === selectedAddress.id)
 
-    const nextIndex = (currentIndex + 1) % addresses.length;
+    const nextIndex = (currentIndex + 1) % addresses.length
 
-    setSelectedAddress(addresses[nextIndex]);
-  };
+    setSelectedAddress(addresses[nextIndex])
+  }
 
   return (
     <div
-      style={{ background: "#f5f5f5", minHeight: "100vh", paddingBottom: 40 }}
+      style={{ background: '#f5f5f5', minHeight: '100vh', paddingBottom: 40 }}
     >
-      <div style={{ background: "#fff", padding: 20, marginBottom: 20 }}>
-        <h2 style={{ color: "#ee4d2d" }}>Thanh toán</h2>
+      <div style={{ background: '#fff', padding: 20, marginBottom: 20 }}>
+        <h2 style={{ color: '#ee4d2d' }}>Thanh toán</h2>
       </div>
 
-      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         {/* ADDRESS */}
 
-        <div style={{ background: "#fff", padding: 20, marginBottom: 15 }}>
+        <div style={{ background: '#fff', padding: 20, marginBottom: 15 }}>
           <h3>Địa chỉ nhận hàng</h3>
 
           {selectedAddress ? (
@@ -226,7 +228,7 @@ const CheckoutPage = () => {
               </b>
 
               <div>
-                {selectedAddress.address_detail}, {selectedAddress.ward},{" "}
+                {selectedAddress.address_detail}, {selectedAddress.ward},{' '}
                 {selectedAddress.district}, {selectedAddress.city}
               </div>
             </div>
@@ -239,13 +241,13 @@ const CheckoutPage = () => {
 
         {/* PRODUCTS */}
 
-        <div style={{ background: "#fff", padding: 20, marginBottom: 15 }}>
+        <div style={{ background: '#fff', padding: 20, marginBottom: 15 }}>
           {cartItems.map((item) => (
             <div
               key={item.id}
               style={{
-                display: "flex",
-                justifyContent: "space-between",
+                display: 'flex',
+                justifyContent: 'space-between',
                 padding: 10,
               }}
             >
@@ -260,34 +262,50 @@ const CheckoutPage = () => {
 
         {/* PAYMENT */}
 
-        <div style={{ background: "#fff", padding: 20, marginBottom: 15 }}>
+        <div style={{ background: '#fff', padding: 20, marginBottom: 15 }}>
           <h3>Phương thức thanh toán</h3>
 
-          <button onClick={() => setPaymentMethod(1)}>
+          <button
+            onClick={() => setPaymentMethod(1)}
+            style={{
+              background: paymentMethod === 1 ? '#ee4d2d' : '#eee',
+              color: paymentMethod === 1 ? 'white' : 'black',
+              padding: '10px 20px',
+              border: 'none',
+              borderRadius: 6,
+            }}
+          >
             Thanh toán khi nhận hàng
           </button>
 
           <button
             onClick={() => setPaymentMethod(2)}
-            style={{ marginLeft: 10 }}
+            style={{
+              marginLeft: 10,
+              background: paymentMethod === 2 ? '#ee4d2d' : '#eee',
+              color: paymentMethod === 2 ? 'white' : 'black',
+              padding: '10px 20px',
+              border: 'none',
+              borderRadius: 6,
+            }}
           >
-            <img src={logoVnPay} alt="" height={20} />
+            <img src={logoVnPay} height={20} />
             VNPay
           </button>
         </div>
 
         {/* VOUCHER */}
 
-        <div style={{ background: "#fff", padding: 20 }}>
+        <div style={{ background: '#fff', padding: 20 }}>
           <h3>Voucher</h3>
           {!singleShopId && (
-            <p style={{ color: "red", marginTop: 5 }}>
+            <p style={{ color: 'red', marginTop: 5 }}>
               Chỉ voucher toàn sàn có thể áp dụng khi mua nhiều shop
             </p>
           )}
           {appliedCoupon && <p>Đã áp dụng: {appliedCoupon.code}</p>}
 
-          <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10 }}>
             <input
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value)}
@@ -304,7 +322,7 @@ const CheckoutPage = () => {
 
         {/* TOTAL */}
 
-        <div style={{ background: "#fff", padding: 20, marginTop: 15 }}>
+        <div style={{ background: '#fff', padding: 20, marginTop: 15 }}>
           <div>Tổng tiền hàng: {totalProductPrice.toLocaleString()} đ</div>
 
           <div>Phí ship: {shippingFee.toLocaleString()} đ</div>
@@ -313,12 +331,12 @@ const CheckoutPage = () => {
             <div>- {discountAmount.toLocaleString()} đ</div>
           )}
 
-          <h2 style={{ color: "#ee4d2d" }}>
+          <h2 style={{ color: '#ee4d2d' }}>
             Tổng thanh toán: {finalTotal.toLocaleString()} đ
           </h2>
 
           <button onClick={handlePlaceOrder} disabled={loading}>
-            {loading ? "Đang xử lý..." : "Đặt hàng"}
+            {loading ? 'Đang xử lý...' : 'Đặt hàng'}
           </button>
         </div>
       </div>
@@ -328,33 +346,51 @@ const CheckoutPage = () => {
       {showCouponModal && (
         <div
           style={{
-            position: "fixed",
+            position: 'fixed',
             inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
           }}
         >
-          <div style={{ background: "#fff", padding: 20, width: 400 }}>
+          <div
+            style={{
+              background: '#fff',
+              padding: 20,
+              width: 420,
+              borderRadius: 10,
+              boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+            }}
+          >
             <h3>Chọn voucher</h3>
 
             {coupons.map((coupon) => (
               <div
                 key={coupon.id}
                 style={{
-                  border: "1px solid #ddd",
+                  border: '1px solid #ddd',
                   padding: 10,
                   marginBottom: 10,
                 }}
               >
                 <b>{coupon.code}</b>
 
-                <div>
-                  Giảm{" "}
-                  {coupon.discount_type === "percent"
-                    ? coupon.discount_value + "%"
-                    : coupon.discount_value + "đ"}
+                <div style={{ fontSize: 13, color: '#555' }}>
+                  Giảm{' '}
+                  {coupon.discount_type === 'percent'
+                    ? coupon.discount_value + '%'
+                    : coupon.discount_value.toLocaleString() + 'đ'}
+                </div>
+
+                <div style={{ fontSize: 12, color: '#888' }}>
+                  SL còn: {coupon.quantity ?? '∞'}
+                </div>
+
+                <div style={{ fontSize: 12, color: '#888' }}>
+                  {coupon.start_date && coupon.end_date
+                    ? `Từ ${new Date(coupon.start_date).toLocaleDateString()} - ${new Date(coupon.end_date).toLocaleDateString()}`
+                    : 'Không giới hạn thời gian'}
                 </div>
 
                 <button
@@ -371,7 +407,7 @@ const CheckoutPage = () => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default CheckoutPage;
+export default CheckoutPage
