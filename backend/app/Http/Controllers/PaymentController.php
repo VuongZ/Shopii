@@ -8,9 +8,9 @@ use App\Models\Order; // Nhớ import model Order
 
 class PaymentController extends Controller
 {
-    public function createMoMoPayment(Request $request)
+   public function createMoMoPayment(Request $request)
 {
-    // 1. HARDCODE luôn Key Test để chống lỗi cấu hình trên Onrender
+    // Cố định Key Test
     $endpoint = "https://test-payment.momo.vn/v2/gateway/api/create";
     $partnerCode = "MOMOBKUN20180529";
     $accessKey = "klm05TvNCzjOaHU1";
@@ -18,17 +18,25 @@ class PaymentController extends Controller
     $redirectUrl = "https://shopii-seven.vercel.app/payment-result";
     $ipnUrl = "https://shopii-seven.vercel.app/payment-result";
     
-    // 2. Ép kiểu Amount về đúng chuẩn số nguyên (bỏ qua mọi số thập phân nếu có)
-    $amountStr = (string)intval($request->amount);
+    // Ép kiểu số tiền
     $amountNum = intval($request->amount);
+    $amountStr = (string)$amountNum;
+
+    // Bắt lỗi nếu chưa nhận được tiền từ React
+    if ($amountNum <= 0) {
+        return response()->json([
+            'message' => 'Lỗi: Số tiền thanh toán không hợp lệ hoặc bằng 0!',
+            'debug_amount_received' => $request->amount
+        ], 400);
+    }
 
     $orderInfo = "Thanh toan don hang " . $request->orderId;
-    $orderId = $request->orderId . "_" . time(); // Tránh trùng mã đơn
+    $orderId = $request->orderId . "_" . time(); 
     $requestId = time() . "";
     $requestType = "captureWallet";
     $extraData = ""; 
 
-    // Tạo chữ ký (Signature)
+    // Tạo chữ ký (Signature) - TUYỆT ĐỐI KHÔNG SỬA KHOẢNG TRẮNG Ở ĐÂY
     $rawHash = "accessKey=" . $accessKey .
         "&amount=" . $amountStr .
         "&extraData=" . $extraData .
@@ -47,7 +55,7 @@ class PaymentController extends Controller
         'partnerName' => "Test",
         "storeId" => "MomoTestStore",
         'requestId' => $requestId,
-        'amount' => $amountNum, // Gửi lên MoMo dạng Number
+        'amount' => $amountNum,
         'orderId' => $orderId,
         'orderInfo' => $orderInfo,
         'redirectUrl' => $redirectUrl,
@@ -58,7 +66,7 @@ class PaymentController extends Controller
         'signature' => $signature
     );
 
-    // Dùng cURL để gọi API của MoMo
+    // Gọi API MoMo
     $ch = curl_init($endpoint);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
@@ -77,9 +85,13 @@ class PaymentController extends Controller
         return response()->json(['paymentUrl' => $jsonResult['payUrl']]);
     }
     
-    return response()->json(['message' => 'Lỗi tạo thanh toán MoMo', 'error' => $jsonResult], 400);
+    // NẾU VẪN LỖI, IN TOÀN BỘ CHỮ KÝ RA ĐỂ SOI
+    return response()->json([
+        'message' => 'Lỗi tạo thanh toán MoMo', 
+        'error' => $jsonResult,
+        'debug_raw_hash' => $rawHash // <--- Thông tin vàng ở đây
+    ], 400);
 }
-
 public function momoCallback(Request $request)
 {
     $secretKey = env('MOMO_SECRET_KEY');
