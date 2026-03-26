@@ -21,7 +21,7 @@ export default function ReviewSection({ productId, orderId, token }) {
 
     console.log("API RESPONSE:", res.data);
 
-    // xử lý mọi trường hợp backend trả về
+
     if (Array.isArray(res.data)) {
       setReviews(res.data);
     } else if (Array.isArray(res.data.data)) {
@@ -36,10 +36,10 @@ export default function ReviewSection({ productId, orderId, token }) {
   }
   };
   const submitReview = async () => {
-  // if (!orderId) {
-  //   alert("Bạn chưa mua sản phẩm này");
-  //   return;
-  // }
+  if (!orderId) {
+    alert("Bạn chưa mua sản phẩm này");
+    return;
+  }
 
   if (!rating || !comment) {
     alert("Vui lòng chọn sao và nhập nhận xét");
@@ -49,19 +49,28 @@ export default function ReviewSection({ productId, orderId, token }) {
   try {
     setLoading(true);
 
-    await axiosClient.post("/reviews", {
-      product_id: productId,
-      order_id: orderId,
-      rating,
-      comment,
-    });
+    await axiosClient.post(
+  "/reviews", 
+  {
+    product_id: productId,
+    order_id: orderId,
+    rating,
+    comment,
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${token}` // Thay đổi format nếu backend yêu cầu khác
+    }
+  }
+);
 
     fetchReviews();
     setComment("");
     setRating(0);
 
   } catch (err) {
-    console.log(err.response?.data);
+  console.error(err);
+  alert("Lỗi khi gửi đánh giá: " + (err.response?.data?.message || err.message));
   } finally {
     setLoading(false);
   }

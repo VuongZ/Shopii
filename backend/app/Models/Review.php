@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ReView extends Model
+class Review extends Model
 {
     use HasFactory;
-    protected $guarded = [];
+    protected $table = 'reviews';
+    protected $fillable = ['user_id', 'product_id', 'order_id', 'rating', 'comment'];
 
     public function user()
     {
