@@ -15,7 +15,10 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\AdminShopController;
 use App\Http\Controllers\ForgotPasswordController;
+
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\StatisticsController;
+
 /*
 |--------------------------------------------------------------------------
 | 1. KHU VỰC CÔNG KHAI (Không cần đăng nhập)
@@ -99,5 +102,11 @@ Route::middleware('auth:sanctum')->group(function () {
         // Shop approve
         Route::get('/admin/shops', [AdminShopController::class, 'index']);
         Route::put('/admin/shops/{id}/approve', [AdminShopController::class, 'approve']);
+
+        // Statistics
+        Route::get('/admin/statistics', [StatisticsController::class, 'adminDashboard']);
     });
+
+    /* ----------------------- SELLER STATISTICS ----------------------- */
+    Route::get('/seller/statistics', [StatisticsController::class, 'sellerDashboard']);
 });
