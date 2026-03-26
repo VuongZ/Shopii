@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axiosClient from "../api/axiosClient"; 
 import Review from "./Review";
 import orderApi from "../api/orderApi";
+import cartApi from "../api/cartApi"; 
 
 function ProductDetailPage() {
     const { id } = useParams();
@@ -97,7 +98,38 @@ const fetchOrderId = async () => {
     }
     
   }
+// === LOGIC THÊM VÀO GIỎ HÀNG ===
+  const handleAddToCart = async () => {
+    // 1. Kiểm tra xem sản phẩm có phân loại (SKU) không
+    const hasVariations = product.skus && product.skus.length > 0 && product.skus[0].sku !== 'Mặc định' && !product.skus[0].sku.startsWith('SKU-');
+    
+    // Nếu có phân loại mà khách chưa click chọn màu/size -> Báo lỗi ngay
+    if (hasVariations && !selectedSku) {
+      alert("Vui lòng chọn phân loại sản phẩm (Màu sắc, Kích thước...) trước khi thêm vào giỏ nhé!");
+      return;
+    }
 
+    // 2. Chốt lại ID của SKU sẽ gửi lên Server
+    const targetSkuId = selectedSku ? selectedSku.id : product.skus[0].id;
+
+    // 3. Gọi API
+    try {
+      // Giả sử api của bạn tên là add (hoặc addToCart tùy bạn định nghĩa trong cartApi.js)
+      await cartApi.add({
+        product_sku_id: targetSkuId,
+        quantity: 1 // Mặc định mỗi lần bấm là thêm 1 cái
+      });
+      alert("Thêm vào giỏ hàng thành công! ");
+    } catch (err) {
+      console.error(err);
+      if (err.response?.status === 401) {
+        alert("Bạn cần đăng nhập để thêm hàng vào giỏ nhé!");
+        navigate("/login");
+      } else {
+        alert("Lỗi: " + (err.response?.data?.message || "Không thể thêm vào giỏ lúc này."));
+      }
+    }
+  };
   return (
     
     <div className="main-content" style={{ padding: '40px', background: '#f8fafc', minHeight: '100vh' }}>
@@ -223,6 +255,7 @@ const fetchOrderId = async () => {
             <button 
               disabled={displayStock === 0} // Hết hàng thì mờ nút đi
               className="btn-add-cart" 
+              onClick={handleAddToCart}
               style={{ 
                 padding: '15px 40px', 
                 background: displayStock > 0 ? '#ee4d2d' : '#cbd5e1', 
