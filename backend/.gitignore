@@ -16,3 +16,7 @@ yarn-error.log
 node_modules/
 .env
 vendor/
+node_modules/
+backend/set_admin.php
+backend/set_admin.sql
+frontend/taita/
