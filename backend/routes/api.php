@@ -36,6 +36,8 @@ Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/categories', [CategoryController::class, 'index']); 
 Route::get('/payment/vnpay-callback', [PaymentController::class, 'vnpayCallback']);
+Route::post('/payment/momo', [PaymentController::class, 'createMoMoPayment']);
+Route::get('/payment/momo-callback', [PaymentController::class, 'momoCallback']);
 Route::get('/health', function () {
     return response()->json([
         'status' => 'OK'

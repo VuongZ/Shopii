@@ -2,11 +2,11 @@ import axiosClient from './axiosClient'
 
 const paymentApi = {
   createPaymentUrl(data) {
-    return axiosClient.post('/payment/vnpay', data)
+    return axiosClient.post('/payment/momo', data)
   },
 
-  vnpayReturn(query) {
-    return axiosClient.get('/payment/vnpay-callback' + query)
+  momoReturn(query) {
+    return axiosClient.get('/payment/momo-callback' + query)
   },
 }
 

@@ -8,6 +8,123 @@ use App\Models\Order; // Nhớ import model Order
 
 class PaymentController extends Controller
 {
+    public function createMoMoPayment(Request $request)
+{
+    $endpoint = env('MOMO_ENDPOINT');
+    $partnerCode = env('MOMO_PARTNER_CODE');
+    $accessKey = env('MOMO_ACCESS_KEY');
+    $secretKey = env('MOMO_SECRET_KEY');
+    $redirectUrl = env('MOMO_REDIRECT_URL');
+    $ipnUrl = env('MOMO_IPN_URL');
+    
+    $orderInfo = "Thanh toan don hang " . $request->orderId;
+    $amount = (string)$request->amount; // MoMo yêu cầu amount là string
+    $orderId = $request->orderId . "_" . time(); // Tránh trùng mã đơn test
+    $requestId = time() . "";
+    $requestType = "captureWallet";
+    $extraData = ""; 
+
+    // Tạo chữ ký (Signature)
+    $rawHash = "accessKey=" . $accessKey .
+        "&amount=" . $amount .
+        "&extraData=" . $extraData .
+        "&ipnUrl=" . $ipnUrl .
+        "&orderId=" . $orderId .
+        "&orderInfo=" . $orderInfo .
+        "&partnerCode=" . $partnerCode .
+        "&redirectUrl=" . $redirectUrl .
+        "&requestId=" . $requestId .
+        "&requestType=" . $requestType;
+        
+    $signature = hash_hmac("sha256", $rawHash, $secretKey);
+
+    $data = array(
+        'partnerCode' => $partnerCode,
+        'partnerName' => "Test",
+        "storeId" => "MomoTestStore",
+        'requestId' => $requestId,
+        'amount' => $amount,
+        'orderId' => $orderId,
+        'orderInfo' => $orderInfo,
+        'redirectUrl' => $redirectUrl,
+        'ipnUrl' => $ipnUrl,
+        'lang' => 'vi',
+        'extraData' => $extraData,
+        'requestType' => $requestType,
+        'signature' => $signature
+    );
+
+    // Dùng cURL để gọi API của MoMo
+    $ch = curl_init($endpoint);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        'Content-Type: application/json',
+        'Content-Length: ' . strlen(json_encode($data))
+    ));
+    
+    $result = curl_exec($ch);
+    curl_close($ch);
+
+    $jsonResult = json_decode($result, true);
+
+    if (isset($jsonResult['payUrl'])) {
+        return response()->json(['paymentUrl' => $jsonResult['payUrl']]);
+    }
+    
+    return response()->json(['message' => 'Lỗi tạo thanh toán MoMo', 'error' => $jsonResult], 400);
+}
+
+public function momoCallback(Request $request)
+{
+    $secretKey = env('MOMO_SECRET_KEY');
+    $accessKey = env('MOMO_ACCESS_KEY');
+    
+    // Check chữ ký MoMo trả về để bảo mật
+    $rawHash = "accessKey=" . $accessKey .
+        "&amount=" . $request->amount .
+        "&extraData=" . $request->extraData .
+        "&message=" . $request->message .
+        "&orderId=" . $request->orderId .
+        "&orderInfo=" . $request->orderInfo .
+        "&orderType=" . $request->orderType .
+        "&partnerCode=" . $request->partnerCode .
+        "&payType=" . $request->payType .
+        "&requestId=" . $request->requestId .
+        "&responseTime=" . $request->responseTime .
+        "&resultCode=" . $request->resultCode .
+        "&transId=" . $request->transId;
+
+    $signature = hash_hmac("sha256", $rawHash, $secretKey);
+
+    if ($signature == $request->signature) {
+        if ($request->resultCode == '0') {
+            // resultCode = 0 là thanh toán thành công
+            // Tách mã đơn hàng gốc (vì lúc gửi đi mình có gắn thêm time())
+            $originalOrderId = explode('_', $request->orderId)[0];
+            
+            // XỬ LÝ UPDATE DATABASE GIỐNG VNPAY Ở ĐÂY
+            $order = \App\Models\Order::find($originalOrderId);
+            if ($order && $order->payment_status != 'paid') {
+                $order->payment_status = 'paid';
+                $order->status = 'confirmed';
+                $order->save();
+                
+                foreach ($order->items as $item) {
+                    $product = $item->product;
+                    if ($product) {
+                        $product->stock = max(0, $product->stock - $item->quantity);
+                        $product->save();
+                    }
+                }
+                return response()->json(['message' => 'Thanh toán thành công']);
+            }
+        }
+        return response()->json(['message' => 'Giao dịch không thành công'], 400);
+    }
+    return response()->json(['message' => 'Chữ ký không hợp lệ'], 400);
+}
     // --- HÀM 1: TẠO URL THANH TOÁN ---
     public function createPayment(Request $request)
     {
@@ -65,6 +182,7 @@ class PaymentController extends Controller
             'paymentUrl' => $vnp_Url
         ]);
     }
+
 
     // --- HÀM 2: XỬ LÝ KẾT QUẢ TRẢ VỀ (CALLBACK) ---
     public function vnpayCallback(Request $request)

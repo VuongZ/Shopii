@@ -9,12 +9,20 @@ const PaymentResult = () => {
   const [isUpdating, setIsUpdating] = useState(false)
   const [updateSuccess, setUpdateSuccess] = useState(false)
 
-  const responseCode = searchParams.get('vnp_ResponseCode')
-  const orderId = searchParams.get('vnp_TxnRef')
+  // Đổi từ vnp_ResponseCode sang resultCode của MoMo
+  const resultCode = searchParams.get('resultCode')
+
+  // Đổi từ vnp_TxnRef sang orderId của MoMo
+  const rawOrderId = searchParams.get('orderId')
+
+  // Lúc tạo link MoMo ở backend, mình có gắn thêm timestamp (ví dụ: 12_17100000) để chống trùng.
+  // Giờ phải cắt bỏ phần timestamp đó đi để hiển thị đúng mã đơn hàng gốc (12)
+  const orderId = rawOrderId ? rawOrderId.split('_')[0] : null
 
   const queryString = window.location.search
 
-  const isSuccess = responseCode === '00'
+  // MoMo quy định resultCode === '0' là giao dịch thành công
+  const isSuccess = resultCode === '0'
 
   const isCalled = useRef(false)
 
@@ -23,7 +31,8 @@ const PaymentResult = () => {
       try {
         setIsUpdating(true)
 
-        const res = await paymentApi.vnpayReturn(queryString)
+        // Đổi hàm gọi API sang momoReturn (nhớ là file paymentApi.js bạn đã cập nhật hàm này nhé)
+        const res = await paymentApi.momoReturn(queryString)
 
         console.log('Update order success:', res)
 
@@ -63,7 +72,8 @@ const PaymentResult = () => {
           boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
         }}
       >
-        {!responseCode ? (
+        {/* Đổi điều kiện check ở đây thành resultCode thay vì responseCode */}
+        {resultCode === null ? (
           <>
             <h2>🚫 Không tìm thấy thông tin giao dịch</h2>
           </>
