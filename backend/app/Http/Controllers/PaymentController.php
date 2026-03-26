@@ -114,6 +114,14 @@ foreach ($orderIds as $id) {
         $order->status = 'confirmed';
         $order->save();
         $updated = true;
+
+        foreach ($order->items as $item) {
+            $product = $item->product;
+            if ($product) {
+                $product->stock = max(0, $product->stock - $item->quantity);
+                $product->save();
+            }
+        }
     }
 }
 

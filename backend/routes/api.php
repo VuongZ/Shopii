@@ -35,7 +35,7 @@ Route::post('/verify-otp', [ForgotPasswordController::class, 'verifyOtp']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/categories', [CategoryController::class, 'index']); 
-
+Route::get('/payment/vnpay-callback', [PaymentController::class, 'vnpayCallback']);
 Route::get('/health', function () {
     return response()->json([
         'status' => 'OK'
@@ -78,7 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/coupons/{id}', [CouponController::class, 'destroy']);
     /* ----------------------- THANH TOÁN ----------------------- */
     Route::post('/payment/vnpay', [PaymentController::class, 'createPayment']);
-    Route::get('/payment/vnpay-callback', [PaymentController::class, 'vnpayCallback']);
+    
 
     /* ----------------------- SHOP (SELLER) ----------------------- */
     Route::post('/shops', [ShopController::class, 'store']);
