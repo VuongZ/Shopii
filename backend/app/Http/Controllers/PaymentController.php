@@ -13,8 +13,8 @@ class PaymentController extends Controller
     // Cố định Key Test
     $endpoint = "https://test-payment.momo.vn/v2/gateway/api/create";
     $partnerCode = "MOMOBKUN20180529";
-    $accessKey = "klm05TvNCzjOaHU1";
-    $secretKey = "at67qH6mk8w5Y1nAwMovdPTITLSAM1wK";
+    $accessKey = "klm05TvNBzhg7h7j"; 
+    $secretKey = "at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa";
     $redirectUrl = "https://shopii-seven.vercel.app/payment-result";
     $ipnUrl = "https://shopii-seven.vercel.app/payment-result";
     
@@ -94,8 +94,8 @@ class PaymentController extends Controller
 }
 public function momoCallback(Request $request)
 {
-    $secretKey = env('MOMO_SECRET_KEY');
-    $accessKey = env('MOMO_ACCESS_KEY');
+   $accessKey = "klm05TvNBzhg7h7j";
+    $secretKey = "at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa";
     
     // Check chữ ký MoMo trả về để bảo mật
     $rawHash = "accessKey=" . $accessKey .
