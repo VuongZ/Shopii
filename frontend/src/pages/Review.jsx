@@ -36,10 +36,10 @@ export default function ReviewSection({ productId, orderId, token }) {
   }
   };
   const submitReview = async () => {
-  // if (!orderId) {
-  //   alert("Bạn chưa mua sản phẩm này");
-  //   return;
-  // }
+  if (!orderId) {
+    alert("Bạn chưa mua sản phẩm này");
+    return;
+  }
 
   if (!rating || !comment) {
     alert("Vui lòng chọn sao và nhập nhận xét");
