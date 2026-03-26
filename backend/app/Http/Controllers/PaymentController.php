@@ -10,23 +10,27 @@ class PaymentController extends Controller
 {
     public function createMoMoPayment(Request $request)
 {
-    $endpoint = env('MOMO_ENDPOINT');
-    $partnerCode = env('MOMO_PARTNER_CODE');
-    $accessKey = env('MOMO_ACCESS_KEY');
-    $secretKey = env('MOMO_SECRET_KEY');
-    $redirectUrl = env('MOMO_REDIRECT_URL');
-    $ipnUrl = env('MOMO_IPN_URL');
+    // 1. HARDCODE luôn Key Test để chống lỗi cấu hình trên Onrender
+    $endpoint = "https://test-payment.momo.vn/v2/gateway/api/create";
+    $partnerCode = "MOMOBKUN20180529";
+    $accessKey = "klm05TvNCzjOaHU1";
+    $secretKey = "at67qH6mk8w5Y1nAwMovdPTITLSAM1wK";
+    $redirectUrl = "https://shopii-seven.vercel.app/payment-result";
+    $ipnUrl = "https://shopii-seven.vercel.app/payment-result";
     
+    // 2. Ép kiểu Amount về đúng chuẩn số nguyên (bỏ qua mọi số thập phân nếu có)
+    $amountStr = (string)intval($request->amount);
+    $amountNum = intval($request->amount);
+
     $orderInfo = "Thanh toan don hang " . $request->orderId;
-    $amount = (string)$request->amount; // MoMo yêu cầu amount là string
-    $orderId = $request->orderId . "_" . time(); // Tránh trùng mã đơn test
+    $orderId = $request->orderId . "_" . time(); // Tránh trùng mã đơn
     $requestId = time() . "";
     $requestType = "captureWallet";
     $extraData = ""; 
 
     // Tạo chữ ký (Signature)
     $rawHash = "accessKey=" . $accessKey .
-        "&amount=" . $amount .
+        "&amount=" . $amountStr .
         "&extraData=" . $extraData .
         "&ipnUrl=" . $ipnUrl .
         "&orderId=" . $orderId .
@@ -43,7 +47,7 @@ class PaymentController extends Controller
         'partnerName' => "Test",
         "storeId" => "MomoTestStore",
         'requestId' => $requestId,
-        'amount' => $amount,
+        'amount' => $amountNum, // Gửi lên MoMo dạng Number
         'orderId' => $orderId,
         'orderInfo' => $orderInfo,
         'redirectUrl' => $redirectUrl,
