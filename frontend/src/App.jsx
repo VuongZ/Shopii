@@ -16,8 +16,12 @@ import SellerCouponManagementPage from './pages/SellerCouponManagementPage'
 import ResetPassword from './pages/ResetPassword'
 import ForgotPassword from './pages/ForgotPassword'
 import VerifyOTP from './pages/VerifyOTP'
+
 import CategoriesPage from './pages/CategoriesPage'
-import Reviews from './pages/Review'
+import Reviews from './pages/Review' 
+import AdminShopsPage from './pages/AdminShopsPage'
+
+// 1. ĐÃ THÊM IMPORT TRANG SHOP VÀO ĐÂY
 import ShopPage from './pages/ShopPage'
 
 import './App.css'
@@ -148,9 +152,15 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />
           <Route path="/categories" element={<CategoriesPage />} />
+
           <Route path="/reviews" element={<Reviews />} />
 
           {/* shop */}
+
+          <Route path="/admin/shops" element={<AdminShopsPage />} />
+          
+          {/* 3. ĐÃ KHAI BÁO ROUTE CHO TRANG SHOP */}
+
           <Route path="/shop" element={<ShopPage />} />
         </Routes>
       </main>
