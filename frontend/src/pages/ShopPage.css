@@ -130,3 +130,36 @@
   background: #c7d2fe;
   cursor: not-allowed;
 }
+/* Coupon Form Grid */
+.coupon-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px 25px;
+}
+
+.input-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-box label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.input-box input,
+.input-box select {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+}
+
+.input-box input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}

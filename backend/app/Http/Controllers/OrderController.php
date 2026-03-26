@@ -45,6 +45,7 @@ class OrderController extends Controller
                     ->where('start_date', '<=', Carbon::now())
                     ->where('end_date', '>=', Carbon::now())
                     ->where('usage_limit', '>', 0)
+                    ->lockForUpdate()
                     ->first();
                 
                 if (!$coupon) {

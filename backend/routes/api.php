@@ -71,7 +71,8 @@ Route::middleware('auth:sanctum')->group(function () {
     /* ----------------------- COUPON ----------------------- */
     Route::get('/coupons', [CouponController::class, 'index']);
     Route::post('/coupons/apply', [CouponController::class, 'apply']);
-
+    Route::post('/coupons', [CouponController::class, 'store']);
+    Route::delete('/coupons/{id}', [CouponController::class, 'destroy']);
     /* ----------------------- THANH TOÁN ----------------------- */
     Route::post('/payment/vnpay', [PaymentController::class, 'createPayment']);
     Route::get('/payment/vnpay-callback', [PaymentController::class, 'vnpayCallback']);

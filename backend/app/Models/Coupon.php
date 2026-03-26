@@ -54,4 +54,11 @@ class Coupon extends Model
 
         return true;
     }
+    // Hàm giảm số lượng mã khi có người dùng thành công
+    public function decrementUsage()
+    {
+        if ($this->usage_limit > 0) {
+            $this->decrement('usage_limit');
+        }
+    }
 }

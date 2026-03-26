@@ -5,32 +5,34 @@ import couponApi from '../api/couponApi'
 const SellerCouponManagementPage = () => {
   const [shop, setShop] = useState(null)
   const [coupons, setCoupons] = useState([])
-
   const [globalError, setGlobalError] = useState('')
 
+  // State Form
   const [code, setCode] = useState('')
   const [discountType, setDiscountType] = useState('fixed')
   const [discountValue, setDiscountValue] = useState('')
   const [minOrderValue, setMinOrderValue] = useState('')
+  const [maxDiscountValue, setMaxDiscountValue] = useState('')
+  const [usageLimit, setUsageLimit] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
 
   const [creating, setCreating] = useState(false)
-  const [deletingId, setDeletingId] = useState(null)
 
   const canCreate = useMemo(() => {
-    return shop && code && discountValue && minOrderValue
-  }, [shop, code, discountValue, minOrderValue])
+    return shop && code && discountValue && usageLimit && startDate && endDate
+  }, [shop, code, discountValue, usageLimit, startDate, endDate])
 
   const loadData = async () => {
     setGlobalError('')
     try {
       const shopRes = await axiosClient.get('/my-shop')
       setShop(shopRes.data)
-
       const couponsRes = await couponApi.getCoupons(shopRes.data.id)
       setCoupons(couponsRes.data || [])
     } catch (err) {
-      setGlobalError('Không tải được dữ liệu');
-      console.log(err);
+      setGlobalError('Không tải được dữ liệu')
+      console.log(err)
     }
   }
 
@@ -41,186 +43,171 @@ const SellerCouponManagementPage = () => {
   const handleCreate = async (e) => {
     e.preventDefault()
     setCreating(true)
-
     try {
-      await axiosClient.post('/coupons', {
+      await couponApi.createCoupon({
         shop_id: shop.id,
         code: code.trim().toUpperCase(),
-        discount_type: discountType,
+        discount_type: discountType === 'percent' ? 'percent' : 'fixed',
         discount_value: Number(discountValue),
-        min_order_value: Number(minOrderValue),
+        min_order_value: Number(minOrderValue) || 0,
+        max_discount_value: Number(maxDiscountValue) || null,
+        usage_limit: Number(usageLimit),
+        start_date: startDate,
+        end_date: endDate,
       })
-
+      // Reset form
       setCode('')
       setDiscountValue('')
       setMinOrderValue('')
+      setMaxDiscountValue('')
+      setUsageLimit('')
+      setStartDate('')
+      setEndDate('')
       await loadData()
-    } catch {
-      setGlobalError('Không thể tạo coupon')
+      alert('Tạo mã thành công!')
+    } catch (err) {
+      setGlobalError(err.response?.data?.message || 'Lỗi khi tạo mã')
     } finally {
       setCreating(false)
     }
   }
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Xóa coupon này?')) return
-
-    setDeletingId(id)
-    try {
-      await axiosClient.delete(`/coupons/${id}`)
-      await loadData()
-    } catch {
-      setGlobalError('Không thể xóa')
-    } finally {
-      setDeletingId(null)
-    }
-  }
-
   return (
-    <div style={{ padding: 30 }}>
-      <h2 style={{ marginBottom: 20 }}>Quản lý mã giảm giá</h2>
+    <div className="seller-content">
+      <div className="shop-header">
+        <h2>Quản lý mã giảm giá</h2>
+        {shop && (
+          <span className={shop.status === 'active' ? 'verified' : 'pending'}>
+            {shop.status === 'active'
+              ? '● Cửa hàng đang hoạt động'
+              : '● Chờ duyệt'}
+          </span>
+        )}
+      </div>
 
       {globalError && (
-        <div style={{ color: 'red', marginBottom: 10 }}>{globalError}</div>
+        <div style={{ color: '#ef4444', marginBottom: '20px' }}>
+          {globalError}
+        </div>
       )}
 
-      {/* CREATE */}
+      
       <div
-        style={{
-          background: '#fff',
-          padding: 20,
-          borderRadius: 12,
-          boxShadow: '0 6px 20px rgba(0,0,0,0.05)',
-          marginBottom: 30,
-        }}
+        className="product-card"
+        style={{ marginBottom: '40px', maxWidth: '800px' }}
       >
-        <h3>Tạo coupon</h3>
-
-        <form
-          onSubmit={handleCreate}
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2,1fr)',
-            gap: 15,
-          }}
-        >
-          <input
-            placeholder="Mã coupon (SALE10)"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            style={inputStyle}
-          />
-
-          <select
-            value={discountType}
-            onChange={(e) => setDiscountType(e.target.value)}
-            style={inputStyle}
-          >
-            <option value="fixed">Giảm tiền</option>
-            <option value="percent">Giảm %</option>
-          </select>
-
-          <input
-            type="number"
-            placeholder="Giá trị giảm"
-            value={discountValue}
-            onChange={(e) => setDiscountValue(e.target.value)}
-            style={inputStyle}
-          />
-
-          <input
-            type="number"
-            placeholder="Đơn tối thiểu"
-            value={minOrderValue}
-            onChange={(e) => setMinOrderValue(e.target.value)}
-            style={inputStyle}
-          />
+        <h3 style={{ marginBottom: '20px', color: '#1e1b4b' }}>Tạo mã mới</h3>
+        <form onSubmit={handleCreate} className="coupon-form-grid">
+          <div className="input-box">
+            <label>Mã Coupon</label>
+            <input
+              placeholder="VD: NHOM10"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
+          </div>
+          <div className="input-box">
+            <label>Loại giảm giá</label>
+            <select
+              value={discountType}
+              onChange={(e) => setDiscountType(e.target.value)}
+            >
+              <option value="fixed">Số tiền cố định (đ)</option>
+              <option value="percent">Phần trăm (%)</option>
+            </select>
+          </div>
+          <div className="input-box">
+            <label>Giá trị giảm</label>
+            <input
+              type="number"
+              value={discountValue}
+              onChange={(e) => setDiscountValue(e.target.value)}
+            />
+          </div>
+          <div className="input-box">
+            <label>Giảm tối đa (nếu chọn %)</label>
+            <input
+              type="number"
+              value={maxDiscountValue}
+              onChange={(e) => setMaxDiscountValue(e.target.value)}
+            />
+          </div>
+          <div className="input-box">
+            <label>Đơn tối thiểu</label>
+            <input
+              type="number"
+              value={minOrderValue}
+              onChange={(e) => setMinOrderValue(e.target.value)}
+            />
+          </div>
+          <div className="input-box">
+            <label>Số lượng phát hành</label>
+            <input
+              type="number"
+              value={usageLimit}
+              onChange={(e) => setUsageLimit(e.target.value)}
+            />
+          </div>
+          <div className="input-box">
+            <label>Ngày bắt đầu</label>
+            <input
+              type="datetime-local"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
+          <div className="input-box">
+            <label>Ngày kết thúc</label>
+            <input
+              type="datetime-local"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
 
           <button
             type="submit"
+            className="add-product-btn"
             disabled={!canCreate}
-            style={{
-              gridColumn: 'span 2',
-              padding: 12,
-              borderRadius: 10,
-              border: 'none',
-              background: '#ee4d2d',
-              color: 'white',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-            }}
+            style={{ gridColumn: 'span 2', marginTop: '10px' }}
           >
-            {creating ? 'Đang tạo...' : 'Tạo coupon'}
+            {creating ? 'Đang xử lý...' : 'Xác nhận tạo mã'}
           </button>
         </form>
       </div>
 
-      {/* LIST */}
-      <div>
-        <h3>Danh sách coupon</h3>
-
-        {coupons.length === 0 && <p>Chưa có coupon</p>}
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))',
-            gap: 20,
-          }}
-        >
-          {coupons.map((c) => (
+      
+      <h3 style={{ marginBottom: '20px' }}>Mã giảm giá đã tạo</h3>
+      <div className="product-grid">
+        {coupons.map((c) => (
+          <div key={c.id} className="product-card">
             <div
-              key={c.id}
-              style={{
-                background: 'white',
-                borderRadius: 12,
-                padding: 20,
-                boxShadow: '0 6px 20px rgba(0,0,0,0.05)',
-                position: 'relative',
-              }}
+              className="price"
+              style={{ fontSize: '20px', marginBottom: '10px' }}
             >
-              <h3 style={{ color: '#ee4d2d' }}>{c.code}</h3>
-
-              <p>
-                Giảm:{' '}
-                <b>
-                  {c.discount_type === 'percent'
-                    ? `${c.discount_value}%`
-                    : `${c.discount_value}đ`}
-                </b>
-              </p>
-
-              <p>Đơn tối thiểu: {c.min_order_value}đ</p>
-
-              <button
-                onClick={() => handleDelete(c.id)}
-                style={{
-                  position: 'absolute',
-                  top: 10,
-                  right: 10,
-                  background: '#fee2e2',
-                  color: '#dc2626',
-                  border: 'none',
-                  padding: '6px 10px',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                }}
-              >
-                {deletingId === c.id ? '...' : 'Xóa'}
-              </button>
+              {c.code}
             </div>
-          ))}
-        </div>
+            <h4 style={{ color: '#111827' }}>
+              Giảm{' '}
+              {c.discount_type === 'percent'
+                ? `${c.discount_value}%`
+                : `${Number(c.discount_value).toLocaleString()}đ`}
+            </h4>
+            <div className="stock">
+              Đơn tối thiểu: {Number(c.min_order_value).toLocaleString()}đ
+            </div>
+            <div className="stock">Số lượng còn lại: {c.usage_limit}</div>
+            <div
+              className="stock"
+              style={{ marginTop: '5px', color: '#6366f1' }}
+            >
+              Hết hạn: {new Date(c.end_date).toLocaleDateString('vi-VN')}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )
-}
-
-const inputStyle = {
-  padding: 10,
-  borderRadius: 8,
-  border: '1px solid #ddd',
-  outline: 'none',
 }
 
 export default SellerCouponManagementPage
