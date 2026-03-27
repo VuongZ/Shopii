@@ -346,4 +346,32 @@ class OrderController extends Controller
             'auto_confirm' => $isAuto
         ]);
     }
+    public function confirmReceipt($id)
+    {
+        $user = Auth::user();
+        
+        // Tìm đơn hàng của user này đang ở trạng thái đang giao
+        $order = Order::where('id', $id)
+                      ->where('user_id', $user->id)
+                      ->where('status', 'shipping')
+                      ->first();
+                      
+        if (!$order) {
+            return response()->json(['message' => 'Không thể cập nhật đơn hàng này'], 400);
+        }
+
+        // Chuyển sang hoàn thành và đánh dấu đã trả tiền (dù là COD hay MoMo)
+        $order->status = 'completed';
+        $order->payment_status = 'paid';
+        $order->save();
+
+        // Ghi lại lịch sử
+        \App\Models\OrderHistory::create([
+            'order_id' => $order->id,
+            'status' => 'completed',
+            'note' => 'Khách hàng đã xác nhận nhận hàng'
+        ]);
+
+        return response()->json(['message' => 'Cảm ơn bạn đã mua sắm!']);
+    }
 }
