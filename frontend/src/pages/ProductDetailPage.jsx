@@ -109,6 +109,13 @@ function ProductDetailPage() {
   }
   // === LOGIC THÊM VÀO GIỎ HÀNG ===
   const handleAddToCart = async () => {
+    //kiem tra dang nhap
+    const token = localStorage.getItem('token')
+    if (!token) {
+      alert('Bạn cần đăng nhập để thêm hàng vào giỏ nhé!')
+      navigate('/login')
+      return // Dừng lại luôn, không chạy xuống dưới nữa
+    }
     // 1. Kiểm tra xem sản phẩm có phân loại (SKU) không
     const hasVariations =
       product.skus &&
