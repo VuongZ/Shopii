@@ -166,6 +166,22 @@ const SellerOrderManagementPage = () => {
                     {order.payment_status === 'paid'
                       ? '✅ Đã thanh toán'
                       : '⏳ Chưa thanh toán'}
+                    {/* Hiển thị thêm tên phương thức nếu có */}
+                    {order.payment_method && (
+                      <span
+                        style={{
+                          marginLeft: '8px',
+                          color: '#6366f1',
+                          fontWeight: '500',
+                          fontSize: '13px',
+                          background: '#e0e7ff',
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                        }}
+                      >
+                        {order.payment_method.name}
+                      </span>
+                    )}
                   </p>
                   <p>
                     <b>Tổng tiền:</b>{' '}
