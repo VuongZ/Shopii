@@ -33,7 +33,7 @@ class PaymentController extends Controller
     $orderInfo = "Thanh toan don hang " . $request->orderId;
     $orderId = $request->orderId . "_" . time(); 
     $requestId = time() . "";
-    $requestType = "payWithATM";
+    $requestType = "captureWallet";
     $extraData = ""; 
 
     // Tạo chữ ký (Signature) - TUYỆT ĐỐI KHÔNG SỬA KHOẢNG TRẮNG Ở ĐÂY
