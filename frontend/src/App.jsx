@@ -51,12 +51,26 @@ function App() {
   })
 
   useEffect(() => {
-    const handleStorage = () => {
-      const info = localStorage.getItem('USER_INFO')
-      setUser(info ? JSON.parse(info) : null)
+    const loadCart = () => {
+      const cart = JSON.parse(localStorage.getItem('CART')) || []
+      setCartItems(cart)
+
+      // Ép kiểu Number để đảm bảo nó cộng toán học, không bị cộng chuỗi
+      const total = cart.reduce((sum, item) => sum + Number(item.quantity), 0)
+      setCartCount(total)
     }
-    window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
+
+    loadCart()
+
+    // Lắng nghe sự kiện mặc định (khi user mở nhiều tab)
+    window.addEventListener('storage', loadCart)
+    // Lắng nghe sự kiện "Tự chế" của chúng ta (ngay trong cùng 1 tab)
+    window.addEventListener('cartUpdated', loadCart)
+
+    return () => {
+      window.removeEventListener('storage', loadCart)
+      window.removeEventListener('cartUpdated', loadCart)
+    }
   }, [])
 
   const handleLogout = async () => {

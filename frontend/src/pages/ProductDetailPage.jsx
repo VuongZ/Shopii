@@ -135,7 +135,7 @@ function ProductDetailPage() {
       })
 
       // ==========================================
-      // BẮT ĐẦU: ĐOẠN THÊM MỚI ĐỂ CẬP NHẬT SỐ LƯỢNG ICON REAL-TIME
+      // BẮT ĐẦU: ĐOẠN ĐỒNG BỘ GIỎ HÀNG
       // ==========================================
       const response = await cartApi.getCart()
       const data = response.data || {}
@@ -147,14 +147,15 @@ function ProductDetailPage() {
           name: item.product_name || item.name,
           price: item.price,
           image: item.image || '',
-          quantity: item.quantity,
+          quantity: Number(item.quantity), // Ép chắc chắn là số
         }))
 
-      // Lưu giỏ hàng mới vào LocalStorage và phát tín hiệu cho App.js
+      // Lưu giỏ hàng mới vào LocalStorage
       localStorage.setItem('CART', JSON.stringify(flatCart))
-      window.dispatchEvent(new Event('storage'))
+
+      // BẮN SỰ KIỆN CUSTOM DO MÌNH TỰ ĐỊNH NGHĨA
+      window.dispatchEvent(new Event('cartUpdated'))
       // ==========================================
-      // KẾT THÚC: ĐOẠN THÊM MỚI
 
       alert('Thêm vào giỏ hàng thành công rồi! ')
     } catch (err) {
