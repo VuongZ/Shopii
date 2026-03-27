@@ -96,6 +96,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/seller/statistics', [StatisticsController::class, 'sellerDashboard']);
     Route::get('/seller/settings/auto-confirm', [OrderController::class, 'getAutoConfirmSetting']);
     Route::post('/seller/settings/auto-confirm', [OrderController::class, 'toggleAutoConfirm']);
+    // của AI văn Nhân 
+    Route::get('/seller/products/{id}/forecast', [StatisticsController::class, 'getProductForecast']);
     
         /* ----------------------- Review (USER) ----------------------- */
 

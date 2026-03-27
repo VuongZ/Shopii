@@ -13,6 +13,7 @@ import PaymentResult from './pages/PaymentResult'
 import OrderHistoryPage from './pages/OrderHistoryPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import SellerCouponManagementPage from './pages/SellerCouponManagementPage'
+import SellerProductDetail from './pages/SellerProductDetail'
 import ResetPassword from './pages/ResetPassword'
 import ForgotPassword from './pages/ForgotPassword'
 import VerifyOTP from './pages/VerifyOTP'
@@ -131,7 +132,7 @@ function App() {
             <Link to="/orders" className="nav-link">
               Đơn mua
             </Link>
-            
+
             {/* <Link to="/users" className="nav-link">
               Users
             </Link> */}
@@ -220,6 +221,11 @@ function App() {
           {/* 3. ĐÃ KHAI BÁO ROUTE CHO TRANG SHOP */}
 
           <Route path="/shop" element={<ShopPage />} />
+
+          <Route
+            path="/seller/products/:id"
+            element={<SellerProductDetail />}
+          />
         </Routes>
       </main>
     </div>
