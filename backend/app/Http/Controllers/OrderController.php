@@ -11,14 +11,31 @@ use App\Models\OrderItem;
 use App\Models\Coupon;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
+use App\Models\ShippingMethod;
+use App\Models\PaymentMethod;
 
 class OrderController extends Controller
 {
+    // 1. API lấy danh sách Đơn vị vận chuyển
+    public function getShippingMethods()
+    {
+        $methods = ShippingMethod::all();
+        return response()->json($methods);
+    }
+
+    // 2. API lấy danh sách Phương thức thanh toán
+    public function getPaymentMethods()
+    {
+        // Chỉ lấy các phương thức đang được active
+        $methods = PaymentMethod::where('is_active', 1)->get();
+        return response()->json($methods);
+    }
     public function checkout(Request $request) {
         // 1. Validate dữ liệu
         $request->validate([
             'cart_item_ids' => 'required|array',
             'address_id' => 'required|exists:user_addresses,id',
+            'shipping_method_id' => 'required|exists:shipping_methods,id',
             'payment_method_id' => 'required|exists:payment_methods,id',
             'coupon_code' => 'nullable|string|exists:coupons,code',
         ]);
@@ -144,7 +161,9 @@ class OrderController extends Controller
                     }
                 }
 
-                $shippingFee = 30000; 
+                $shippingMethod = ShippingMethod::find($request->shipping_method_id);
+                $shippingFee = $shippingMethod ? $shippingMethod->base_fee : 30000; 
+                
                 $finalTotal = $shopTotal + $shippingFee - $discountAmount;
                 if ($finalTotal < 0) $finalTotal = 0;
 

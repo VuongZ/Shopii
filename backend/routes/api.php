@@ -63,6 +63,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/cart/add', [CartController::class, 'addToCart']);
     Route::put('/cart/update', [CartController::class, 'updateCart']);
     Route::delete('/cart/{id}', [CartController::class, 'removeItem']);
+    Route::get('/shipping-methods', [OrderController::class, 'getShippingMethods']);
+    Route::get('/payment-methods', [OrderController::class, 'getPaymentMethods']);
 
     /* ----------------------- ĐƠN HÀNG ----------------------- */
     Route::post('/checkout', [OrderController::class, 'checkout']);
