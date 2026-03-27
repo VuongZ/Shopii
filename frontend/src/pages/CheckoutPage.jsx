@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import cartApi from '../api/cartApi'
 import couponApi from '../api/couponApi'
 import paymentApi from '../api/paymentApi'
-import axiosClient from '../api/axiosClient' // <--- Đã thêm import này để gọi API Vận chuyển
+import axiosClient from '../api/axiosClient'
 
 import logoVnPay from '../assets/logoVnPay.jpg'
 
@@ -19,13 +19,13 @@ const CheckoutPage = () => {
 
   const [cartItems, setCartItems] = useState([])
 
+  // --- STATE THANH TOÁN (Mặc định là 1 - COD) ---
   const [paymentMethod, setPaymentMethod] = useState(1)
   const [loading, setLoading] = useState(false)
 
-  // --- STATE VẬN CHUYỂN ---
   const [shippingMethods, setShippingMethods] = useState([])
   const [selectedShippingId, setSelectedShippingId] = useState(null)
-  const [shippingFee, setShippingFee] = useState(0) // Phí ship động
+  const [shippingFee, setShippingFee] = useState(0)
 
   const [coupons, setCoupons] = useState([])
   const [appliedCoupon, setAppliedCoupon] = useState(null)
@@ -57,7 +57,6 @@ const CheckoutPage = () => {
         const cartRes = await cartApi.getCart()
         const addrRes = await cartApi.getAddresses().catch(() => ({ data: [] }))
 
-        // Gọi API lấy phương thức vận chuyển
         const shipRes = await axiosClient
           .get('/shipping-methods')
           .catch(() => ({ data: [] }))
@@ -74,7 +73,6 @@ const CheckoutPage = () => {
         setDiscountAmount(0)
         setShowCouponModal(false)
 
-        // Set danh sách địa chỉ
         const addrList = addrRes.data || []
         setAddresses(addrList)
         if (addrList.length > 0) {
@@ -82,7 +80,6 @@ const CheckoutPage = () => {
           setSelectedAddress(defaultAddr)
         }
 
-        // Set danh sách vận chuyển và chọn mặc định cái đầu tiên
         const shipList = shipRes.data || []
         setShippingMethods(shipList)
         if (shipList.length > 0) {
@@ -115,7 +112,6 @@ const CheckoutPage = () => {
     0
   )
 
-  // Tổng tiền sẽ cộng với shippingFee động do khách chọn
   const finalTotal = Math.max(
     0,
     totalProductPrice + shippingFee - discountAmount
@@ -170,6 +166,9 @@ const CheckoutPage = () => {
     handleApplyCoupon(manualCode.trim().toUpperCase())
   }
 
+  // ========================================================
+  // XỬ LÝ ĐẶT HÀNG VÀ CHỌN CỔNG THANH TOÁN TƯƠNG ỨNG
+  // ========================================================
   const handlePlaceOrder = async () => {
     if (!selectedAddress) {
       alert('Vui lòng chọn địa chỉ')
@@ -183,30 +182,46 @@ const CheckoutPage = () => {
     setLoading(true)
 
     try {
+      // 1. Gửi request tạo đơn hàng lưu vào DB
       const orderRes = await cartApi.checkout({
         cart_item_ids: selectedItems,
         address_id: selectedAddress.id,
         payment_method_id: paymentMethod,
-        shipping_method_id: selectedShippingId, // <--- Gửi ID vận chuyển
+        shipping_method_id: selectedShippingId,
         coupon_code: appliedCoupon?.code,
       })
 
       const { order_ids, total_amount, message } = orderRes.data
 
+      // 2. Rẽ nhánh thanh toán dựa theo lựa chọn của người dùng
       if (paymentMethod === 2) {
-        const payRes = await paymentApi.createPaymentUrl({
+        // --- CHỌN MOMO ---
+        // Lưu ý: Đảm bảo trong paymentApi.js bạn có hàm createMoMoUrl gọi đến route /payment/momo
+        const payRes = await paymentApi.createMoMoUrl({
           orderId: order_ids[0],
           amount: total_amount,
         })
-
         const url = payRes.data.paymentUrl || payRes.data.url
-
+        if (url) {
+          window.location.href = url
+        } else {
+          alert('Không lấy được link thanh toán MoMo')
+        }
+      } else if (paymentMethod === 3) {
+        // --- CHỌN VNPAY ---
+        
+        const payRes = await paymentApi.createVNPayUrl({
+          orderId: order_ids[0],
+          amount: total_amount,
+        })
+        const url = payRes.data.paymentUrl || payRes.data.url
         if (url) {
           window.location.href = url
         } else {
           alert('Không lấy được link thanh toán VNPay')
         }
       } else {
+        // --- CHỌN COD ---
         alert(message || 'Đặt hàng thành công')
         navigate('/orders')
         localStorage.removeItem('CART')
@@ -281,7 +296,6 @@ const CheckoutPage = () => {
                 borderBottom: '1px solid #f5f5f5',
               }}
             >
-              {/* Cột trái: Ảnh + Thông tin */}
               <div
                 style={{ display: 'flex', alignItems: 'center', gap: '15px' }}
               >
@@ -313,7 +327,6 @@ const CheckoutPage = () => {
                 </div>
               </div>
 
-              {/* Cột phải: Giá tiền */}
               <div
                 style={{
                   color: '#ee4d2d',
@@ -327,9 +340,7 @@ const CheckoutPage = () => {
           ))}
         </div>
 
-        {/* ========================================================= */}
         {/* SHIPPING */}
-        {/* ========================================================= */}
         <div style={{ background: '#fff', padding: 20, marginBottom: 15 }}>
           <h3 style={{ marginBottom: '15px' }}>Phương thức vận chuyển</h3>
 
@@ -366,7 +377,6 @@ const CheckoutPage = () => {
                   {Number(method.base_fee).toLocaleString()} đ
                 </div>
 
-                {/* Dấu tích cam khi được chọn */}
                 {selectedShippingId === method.id && (
                   <div
                     style={{
@@ -398,37 +408,81 @@ const CheckoutPage = () => {
         </div>
 
         {/* PAYMENT */}
-
         <div style={{ background: '#fff', padding: 20, marginBottom: 15 }}>
           <h3>Phương thức thanh toán</h3>
 
-          <button
-            onClick={() => setPaymentMethod(1)}
+          <div
             style={{
-              background: paymentMethod === 1 ? '#ee4d2d' : '#eee',
-              color: paymentMethod === 1 ? 'white' : 'black',
-              padding: '10px 20px',
-              border: 'none',
-              borderRadius: 6,
+              display: 'flex',
+              gap: '15px',
+              marginTop: '15px',
+              flexWrap: 'wrap',
             }}
           >
-            Thanh toán khi nhận hàng
-          </button>
+            {/* 1. Nút COD */}
+            <button
+              onClick={() => setPaymentMethod(1)}
+              style={{
+                background: paymentMethod === 1 ? '#ee4d2d' : '#f5f5f5',
+                color: paymentMethod === 1 ? 'white' : '#333',
+                padding: '10px 20px',
+                border:
+                  paymentMethod === 1 ? '1px solid #ee4d2d' : '1px solid #ddd',
+                borderRadius: 4,
+                cursor: 'pointer',
+                fontWeight: paymentMethod === 1 ? 'bold' : 'normal',
+              }}
+            >
+              Thanh toán khi nhận hàng (COD)
+            </button>
 
-          <button
-            onClick={() => setPaymentMethod(2)}
-            style={{
-              marginLeft: 10,
-              background: paymentMethod === 2 ? '#ee4d2d' : '#eee',
-              color: paymentMethod === 2 ? 'white' : 'black',
-              padding: '10px 20px',
-              border: 'none',
-              borderRadius: 6,
-            }}
-          >
-            <img src={logoVnPay} height={20} alt="VNPay" />
-            VNPay
-          </button>
+            {/* 2. Nút MoMo */}
+            <button
+              onClick={() => setPaymentMethod(2)}
+              style={{
+                background: paymentMethod === 2 ? '#ee4d2d' : '#f5f5f5',
+                color: paymentMethod === 2 ? 'white' : '#333',
+                padding: '10px 20px',
+                border:
+                  paymentMethod === 2 ? '1px solid #ee4d2d' : '1px solid #ddd',
+                borderRadius: 4,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontWeight: paymentMethod === 2 ? 'bold' : 'normal',
+              }}
+            >
+              <img
+                src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png"
+                height={20}
+                alt="MoMo"
+                style={{ borderRadius: '4px' }}
+              />
+              Ví MoMo
+            </button>
+
+            {/* 3. Nút VNPay */}
+            <button
+              onClick={() => setPaymentMethod(3)}
+              style={{
+                background: paymentMethod === 3 ? '#ee4d2d' : '#f5f5f5',
+                color: paymentMethod === 3 ? 'white' : '#333',
+                padding: '10px 20px',
+                border:
+                  paymentMethod === 3 ? '1px solid #ee4d2d' : '1px solid #ddd',
+                borderRadius: 4,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontWeight: paymentMethod === 3 ? 'bold' : 'normal',
+              }}
+            >
+              <img src={logoVnPay} height={20} alt="VNPay" />
+              VNPay
+            </button>
+          </div>
         </div>
 
         {/* VOUCHER */}
@@ -478,6 +532,7 @@ const CheckoutPage = () => {
           </button>
         </div>
       </div>
+
       {/* COUPON MODAL */}
       {showCouponModal && (
         <div

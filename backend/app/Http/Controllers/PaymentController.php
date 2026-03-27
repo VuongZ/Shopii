@@ -141,13 +141,12 @@ public function momoCallback(Request $request)
     }
     return response()->json(['message' => 'Chữ ký không hợp lệ'], 400);
 }
-    // --- HÀM 1: TẠO URL THANH TOÁN ---
     public function createPayment(Request $request)
     {
         $vnp_TmnCode = env('VNP_TMN_CODE');
         $vnp_HashSecret = env('VNP_HASH_SECRET');
         $vnp_Url = env('VNP_URL');
-        $vnp_Returnurl = env('VNP_RETURN_URL');
+        $vnp_Returnurl = env('APP_URL') . '/api/payment/vnpay-callback'; // Bắt buộc trỏ về Backend
 
         $vnp_TxnRef = $request->orderId; 
         $vnp_Amount = $request->amount * 100;
@@ -168,10 +167,6 @@ public function momoCallback(Request $request)
             "vnp_ReturnUrl" => $vnp_Returnurl,
             "vnp_TxnRef" => $vnp_TxnRef,
         );
-
-        if ($request->bankCode) {
-            $inputData['vnp_BankCode'] = $request->bankCode;
-        }
 
         ksort($inputData);
         $query = "";
@@ -199,23 +194,21 @@ public function momoCallback(Request $request)
         ]);
     }
 
-
-    // --- HÀM 2: XỬ LÝ KẾT QUẢ TRẢ VỀ (CALLBACK) ---
+    // XỬ LÝ CALLBACK VÀ ĐÁ KHÁCH VỀ LẠI REACT
     public function vnpayCallback(Request $request)
     {
         $vnp_HashSecret = env('VNP_HASH_SECRET');
+        $frontendRedirectUrl = env('FRONTEND_URL') . '/payment-result'; // Trang kết quả bên React
+
         $inputData = array();
-        
-        // Lấy tất cả tham số vnp_ từ URL
         foreach ($request->all() as $key => $value) {
             if (substr($key, 0, 4) == "vnp_") {
                 $inputData[$key] = $value;
             }
         }
         
-        // Lấy chữ ký secure hash từ URL ra
         $vnp_SecureHash = $inputData['vnp_SecureHash'] ?? '';
-        unset($inputData['vnp_SecureHash']); // Loại bỏ nó khỏi mảng dữ liệu để tính toán lại
+        unset($inputData['vnp_SecureHash']); 
         
         ksort($inputData);
         $i = 0;
@@ -229,49 +222,30 @@ public function momoCallback(Request $request)
             }
         }
         
-        // Tính toán lại chữ ký
         $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
 
-        // So sánh chữ ký
+        // NẾU CHỮ KÝ ĐÚNG
         if ($secureHash == $vnp_SecureHash) {
             if ($request->vnp_ResponseCode == '00') {
-                // Giao dịch thành công -> Cập nhật DB
-               $orderIds = explode('-', $request->vnp_TxnRef);
-
-$updated = false;
-
-foreach ($orderIds as $id) {
-    $order = Order::find($id);
-
-    if ($order && $order->payment_status != 'paid') {
-        $order->payment_status = 'paid';
-        $order->status = 'confirmed';
-        $order->save();
-        $updated = true;
-
-        foreach ($order->items as $item) {
-            $product = $item->product;
-            if ($product) {
-                $product->stock = max(0, $product->stock - $item->quantity);
-                $product->save();
+                // 1. THANH TOÁN THÀNH CÔNG -> UPDATE DB
+                $orderIds = explode('-', $request->vnp_TxnRef);
+                foreach ($orderIds as $id) {
+                    $order = Order::find($id);
+                    if ($order && $order->payment_status != 'paid') {
+                        $order->payment_status = 'paid';
+                        $order->status = 'confirmed';
+                        $order->save();
+                    }
+                }
+                // 2. REDIRECT VỀ REACT BÁO THÀNH CÔNG
+                return redirect($frontendRedirectUrl . '?status=success');
+            } else {
+                // THANH TOÁN LỖI (KHÁCH HỦY) -> REDIRECT VỀ REACT BÁO LỖI
+                return redirect($frontendRedirectUrl . '?status=failed');
             }
-        }
-    }
-}
-
-if ($updated) {
-    return response()->json([
-        'message' => 'Thanh toán thành công'
-    ]);
-}
-
-return response()->json([
-    'message' => 'Không tìm thấy đơn hàng'
-], 404);
-            }
-            return response()->json(['message' => 'Giao dịch không thành công'], 400);
         } else {
-            return response()->json(['message' => 'Chữ ký không hợp lệ'], 400);
+            // CHỮ KÝ SAI -> REDIRECT BÁO LỖI
+            return redirect($frontendRedirectUrl . '?status=invalid');
         }
     }
 }

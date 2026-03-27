@@ -31,10 +31,10 @@ class CouponController extends Controller
     // 2. Seller tạo Coupon mới với đầy đủ thông tin
     public function store(Request $request)
     {
-        // Validate cực kỳ chặt chẽ để khớp với ENUM và DECIMAL trong DB
+    
         $validated = $request->validate([
             'code'               => 'required|string|unique:coupons,code',
-            'discount_type'      => 'required|in:fixed,percent', // Khớp với ENUM trong DB
+            'discount_type'      => 'required|in:fixed,percent', 
             'discount_value'     => 'required|numeric|min:0',
             'min_order_value'    => 'nullable|numeric|min:0',
             'max_discount_value' => 'nullable|numeric|min:0',
@@ -70,7 +70,7 @@ class CouponController extends Controller
         return response()->json(['message' => 'Đã xóa mã giảm giá thành công']);
     }
 
-    // 4. Logic áp dụng Coupon (Giữ nguyên cho User mua hàng)
+    // 4. Logic áp dụng Coupon 
     public function apply(Request $request)
     {
         $request->validate([
