@@ -131,9 +131,10 @@ function App() {
             <Link to="/orders" className="nav-link">
               Đơn mua
             </Link>
-            <Link to="/users" className="nav-link">
+            
+            {/* <Link to="/users" className="nav-link">
               Users
-            </Link>
+            </Link> */}
 
             {/* ADMIN */}
             {user && (user.role === 'admin' || user.role === 1) && (
