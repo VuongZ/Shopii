@@ -251,9 +251,7 @@ export default function ShopPage() {
                     <p className="price">{price.toLocaleString()} VNĐ</p>
                     <p className="stock">Tồn kho: {stock}</p>
                     {/* Thêm một icon bút chì nhỏ cho thân thiện UX */}
-                    <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.8)', padding: '5px', borderRadius: '50%' }}>
-                      ✏️
-                    </div>
+                    
                   </div>
                 )
               })}
@@ -301,11 +299,21 @@ export default function ShopPage() {
                 {/* Nút XÓA chỉ hiện khi đang ở chế độ Chỉnh sửa */}
                 {editingProductId && (
                   <button 
+                    type="button"
                     onClick={handleDeleteProduct}
                     disabled={isSubmitting}
                     style={{
-                      background: '#fee2e2', color: '#ef4444', border: 'none', 
-                      padding: '8px 15px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer'
+                      background: 'white', color: '#5a5df0', border: '1.5px solid #5a5df0', 
+                      padding: '8px 15px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer',
+                      transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', gap: '5px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = '#f5f3ff';
+                      e.target.style.boxShadow = '0 2px 8px rgba(90, 93, 240, 0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'white';
+                      e.target.style.boxShadow = 'none';
                     }}
                   >
                     🗑️ Xóa sản phẩm
@@ -624,22 +632,17 @@ export default function ShopPage() {
                   />
                 </div>
 
-                <div
-                  style={{ display: 'flex', gap: '10px', marginTop: '10px' }}
-                >
+                <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
                   <button
                     type="button"
-                    onClick={closeModal} // Đổi thành gọi hàm closeModal
+                    onClick={closeModal}
                     style={{
-                      flex: 1,
-                      padding: '12px',
-                      background: '#f1f5f9',
-                      color: '#475569',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
+                      flex: 1, padding: '12px', background: '#f1f5f9', color: '#475569',
+                      border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer',
+                      transition: 'all 0.2s ease'
                     }}
+                    onMouseEnter={(e) => e.target.style.background = '#e2e8f0'}
+                    onMouseLeave={(e) => e.target.style.background = '#f1f5f9'}
                   >
                     Hủy
                   </button>
@@ -647,14 +650,25 @@ export default function ShopPage() {
                     type="submit"
                     disabled={isSubmitting}
                     style={{
-                      flex: 2,
-                      padding: '12px',
-                      background: '#ee4d2d',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: 'bold',
+                      flex: 2, padding: '12px', background: '#5a5df0', color: 'white',
+                      border: 'none', borderRadius: '8px', fontWeight: 'bold', 
                       cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                      boxShadow: '0 4px 12px rgba(90, 93, 240, 0.3)',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSubmitting) {
+                        e.target.style.background = '#4346de';
+                        e.target.style.transform = 'translateY(-2px)';
+                        e.target.style.boxShadow = '0 6px 16px rgba(90, 93, 240, 0.4)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSubmitting) {
+                        e.target.style.background = '#5a5df0';
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = '0 4px 12px rgba(90, 93, 240, 0.3)';
+                      }
                     }}
                   >
                     {isSubmitting ? 'Đang lưu...' : (editingProductId ? 'Cập nhật sản phẩm' : 'Đăng sản phẩm')}
