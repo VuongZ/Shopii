@@ -86,6 +86,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/shops', [ShopController::class, 'store']);
     Route::get('/my-shop', [ShopController::class, 'myShop']);
     Route::post('/products', [ProductController::class, 'store']);
+    Route::get('/seller/orders', [OrderController::class, 'getSellerOrders']);
+    Route::put('/seller/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
+    Route::get('/seller/statistics', [StatisticsController::class, 'sellerDashboard']);
+    Route::get('/seller/settings/auto-confirm', [OrderController::class, 'getAutoConfirmSetting']);
+    Route::post('/seller/settings/auto-confirm', [OrderController::class, 'toggleAutoConfirm']);
     
         /* ----------------------- Review (USER) ----------------------- */
 
@@ -109,6 +114,5 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/statistics', [StatisticsController::class, 'adminDashboard']);
     });
 
-    /* ----------------------- SELLER STATISTICS ----------------------- */
-    Route::get('/seller/statistics', [StatisticsController::class, 'sellerDashboard']);
+    
 });

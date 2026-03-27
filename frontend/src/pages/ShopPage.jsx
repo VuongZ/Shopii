@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import axiosClient from '../api/axiosClient'
 import './ShopPage.css'
 import SellerCouponManagementPage from './SellerCouponManagementPage'
+import SellerOrderManagementPage from './SellerOrderManagementPage'
 
 export default function ShopPage() {
   const [shop, setShop] = useState(null)
@@ -116,7 +117,12 @@ export default function ShopPage() {
           >
             Quản lý Sản phẩm
           </li>
-
+          <li
+            className={activeTab === 'orders' ? 'active' : ''}
+            onClick={() => setActiveTab('orders')}
+          >
+            Quản lý Đơn hàng
+          </li>
           <li
             className={activeTab === 'coupons' ? 'active' : ''}
             onClick={() => setActiveTab('coupons')}
@@ -173,6 +179,8 @@ export default function ShopPage() {
             </div>
           </>
         )}
+        {/* ================= TAB ĐƠN HÀNG ================= */}
+        {activeTab === 'orders' && <SellerOrderManagementPage />}
         {/* ================= TAB COUPONS ================= */}
         {activeTab === 'coupons' && <SellerCouponManagementPage />}
 
