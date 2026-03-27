@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import cartApi from '../api/cartApi'
 import couponApi from '../api/couponApi'
 import paymentApi from '../api/paymentApi'
+import axiosClient from '../api/axiosClient' // <--- Đã thêm import này để gọi API Vận chuyển
 
 import logoVnPay from '../assets/logoVnPay.jpg'
 
@@ -21,6 +22,11 @@ const CheckoutPage = () => {
   const [paymentMethod, setPaymentMethod] = useState(1)
   const [loading, setLoading] = useState(false)
 
+  // --- STATE VẬN CHUYỂN ---
+  const [shippingMethods, setShippingMethods] = useState([])
+  const [selectedShippingId, setSelectedShippingId] = useState(null)
+  const [shippingFee, setShippingFee] = useState(0) // Phí ship động
+
   const [coupons, setCoupons] = useState([])
   const [appliedCoupon, setAppliedCoupon] = useState(null)
   const [discountAmount, setDiscountAmount] = useState(0)
@@ -29,17 +35,17 @@ const CheckoutPage = () => {
   const [manualCode, setManualCode] = useState('')
   const [couponApplying, setCouponApplying] = useState(false)
 
-  const shippingFeePerShop = 30000
   const shopIdList = Array.from(
     new Set(cartItems.map((item) => item.shop_id).filter(Boolean))
   )
-  const shippingFee = shopIdList.length * shippingFeePerShop
+
   const shopSubtotalMap = cartItems.reduce((acc, item) => {
     const shopId = item.shop_id
     if (!shopId) return acc
     acc[shopId] = (acc[shopId] ?? 0) + Number(item.price) * item.quantity
     return acc
   }, {})
+
   const singleShopId = shopIdList.length === 1 ? shopIdList[0] : null
 
   useEffect(() => {
@@ -50,6 +56,11 @@ const CheckoutPage = () => {
       try {
         const cartRes = await cartApi.getCart()
         const addrRes = await cartApi.getAddresses().catch(() => ({ data: [] }))
+
+        // Gọi API lấy phương thức vận chuyển
+        const shipRes = await axiosClient
+          .get('/shipping-methods')
+          .catch(() => ({ data: [] }))
 
         const cartData = cartRes.data || {}
         const allItems = Object.values(cartData).flat()
@@ -63,12 +74,20 @@ const CheckoutPage = () => {
         setDiscountAmount(0)
         setShowCouponModal(false)
 
+        // Set danh sách địa chỉ
         const addrList = addrRes.data || []
         setAddresses(addrList)
-
         if (addrList.length > 0) {
           const defaultAddr = addrList.find((a) => a.is_default) || addrList[0]
           setSelectedAddress(defaultAddr)
+        }
+
+        // Set danh sách vận chuyển và chọn mặc định cái đầu tiên
+        const shipList = shipRes.data || []
+        setShippingMethods(shipList)
+        if (shipList.length > 0) {
+          setSelectedShippingId(shipList[0].id)
+          setShippingFee(Number(shipList[0].base_fee))
         }
 
         const filteredShopIdList = Array.from(
@@ -96,10 +115,16 @@ const CheckoutPage = () => {
     0
   )
 
+  // Tổng tiền sẽ cộng với shippingFee động do khách chọn
   const finalTotal = Math.max(
     0,
     totalProductPrice + shippingFee - discountAmount
   )
+
+  const handleShippingChange = (method) => {
+    setSelectedShippingId(method.id)
+    setShippingFee(Number(method.base_fee))
+  }
 
   const handleApplyCoupon = async (code) => {
     if (couponApplying) return
@@ -108,8 +133,6 @@ const CheckoutPage = () => {
 
       const payload = {
         coupon_code: code,
-        // If the cart selection is within a single shop, backend expects
-        // shop-scoped coupons to be validated against that shop subtotal.
         order_total: singleShopId
           ? shopSubtotalMap[singleShopId]
           : totalProductPrice,
@@ -144,13 +167,16 @@ const CheckoutPage = () => {
       alert('Nhập mã giảm giá')
       return
     }
-
     handleApplyCoupon(manualCode.trim().toUpperCase())
   }
 
   const handlePlaceOrder = async () => {
     if (!selectedAddress) {
       alert('Vui lòng chọn địa chỉ')
+      return
+    }
+    if (!selectedShippingId) {
+      alert('Vui lòng chọn phương thức vận chuyển')
       return
     }
 
@@ -161,7 +187,7 @@ const CheckoutPage = () => {
         cart_item_ids: selectedItems,
         address_id: selectedAddress.id,
         payment_method_id: paymentMethod,
-        shipping_method_id: 1,
+        shipping_method_id: selectedShippingId, // <--- Gửi ID vận chuyển
         coupon_code: appliedCoupon?.code,
       })
 
@@ -200,7 +226,6 @@ const CheckoutPage = () => {
     }
 
     const currentIndex = addresses.findIndex((a) => a.id === selectedAddress.id)
-
     const nextIndex = (currentIndex + 1) % addresses.length
 
     setSelectedAddress(addresses[nextIndex])
@@ -260,6 +285,76 @@ const CheckoutPage = () => {
           ))}
         </div>
 
+        {/* ========================================================= */}
+        {/* SHIPPING */}
+        {/* ========================================================= */}
+        <div style={{ background: '#fff', padding: 20, marginBottom: 15 }}>
+          <h3 style={{ marginBottom: '15px' }}>Phương thức vận chuyển</h3>
+
+          <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+            {shippingMethods.map((method) => (
+              <div
+                key={method.id}
+                onClick={() => handleShippingChange(method)}
+                style={{
+                  padding: '12px 20px',
+                  border:
+                    selectedShippingId === method.id
+                      ? '1px solid #ee4d2d'
+                      : '1px solid #e1e1e1',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  backgroundColor:
+                    selectedShippingId === method.id ? '#fffafa' : 'white',
+                  minWidth: '200px',
+                }}
+              >
+                <div
+                  style={{
+                    color:
+                      selectedShippingId === method.id ? '#ee4d2d' : '#333',
+                    fontWeight: 'bold',
+                    marginBottom: '5px',
+                  }}
+                >
+                  {method.name}
+                </div>
+                <div style={{ color: '#888', fontSize: '14px' }}>
+                  {Number(method.base_fee).toLocaleString()} đ
+                </div>
+
+                {/* Dấu tích cam khi được chọn */}
+                {selectedShippingId === method.id && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      bottom: 0,
+                      width: 0,
+                      height: 0,
+                      borderBottom: '20px solid #ee4d2d',
+                      borderLeft: '20px solid transparent',
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        right: '2px',
+                        bottom: '-18px',
+                        color: 'white',
+                        fontSize: '10px',
+                      }}
+                    >
+                      ✓
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* PAYMENT */}
 
         <div style={{ background: '#fff', padding: 20, marginBottom: 15 }}>
@@ -289,7 +384,7 @@ const CheckoutPage = () => {
               borderRadius: 6,
             }}
           >
-            <img src={logoVnPay} height={20} />
+            <img src={logoVnPay} height={20} alt="VNPay" />
             VNPay
           </button>
         </div>
@@ -325,6 +420,7 @@ const CheckoutPage = () => {
         <div style={{ background: '#fff', padding: 20, marginTop: 15 }}>
           <div>Tổng tiền hàng: {totalProductPrice.toLocaleString()} đ</div>
 
+          {/* Phí ship hiển thị linh động */}
           <div>Phí ship: {shippingFee.toLocaleString()} đ</div>
 
           {discountAmount > 0 && (
