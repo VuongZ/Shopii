@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import axiosClient from '../api/axiosClient'
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axiosClient from "../api/axiosClient";
 import './ShopPage.css'
 import SellerCouponManagementPage from './SellerCouponManagementPage'
 import SellerOrderManagementPage from './SellerOrderManagementPage'
@@ -12,6 +13,9 @@ export default function ShopPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // STATE MỚI: Lưu ID của sản phẩm đang được chỉnh sửa (null = Thêm mới)
+  const [editingProductId, setEditingProductId] = useState(null)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -59,6 +63,60 @@ export default function ShopPage() {
 
   const removeSkuRow = (index) => setSkus(skus.filter((_, i) => i !== index))
 
+  // HÀM MỚI: Reset form và Đóng Modal
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setEditingProductId(null)
+    setFormData({
+      name: '', category_id: '', base_price: '', stock: '', description: '', image_url: '',
+    })
+    setHasVariations(false)
+    setSkus([{ sku_code: '', price: '', stock: '' }])
+  }
+
+  // HÀM MỚI: Mở Modal Chỉnh Sửa và Điền dữ liệu cũ vào
+  const openEditModal = (product) => {
+    setEditingProductId(product.id)
+    
+    // Tìm ảnh đầu tiên
+    let imageUrl = '';
+    if (product.product_images && product.product_images.length > 0) {
+      imageUrl = product.product_images[0].image_url || product.product_images[0].image_path || '';
+    }
+
+    setFormData({
+      name: product.name || '',
+      category_id: product.category_id || '',
+      base_price: product.base_price || '',
+      stock: product.stock || '',
+      description: product.description || '',
+      image_url: imageUrl,
+    })
+
+    // Kiểm tra xem sản phẩm có phân loại (SKU) không
+    const hasRealSkus = product.skus && product.skus.length > 0 && product.skus[0].sku !== 'Mặc định' && !product.skus[0].sku.startsWith('SKU-');
+    
+    if (hasRealSkus) {
+      setHasVariations(true)
+      // Chuyển đổi dữ liệu SKU từ Backend để render lên Form
+      const loadedSkus = product.skus.map(s => ({
+        id: s.id, // Lưu lại ID để update
+        sku_code: s.sku || '',
+        price: s.price || '',
+        stock: s.stock || 0
+      }))
+      setSkus(loadedSkus)
+    } else {
+      setHasVariations(false)
+      setSkus([{ sku_code: '', price: '', stock: '' }])
+      // Nếu không có phân loại, gán tồn kho của sản phẩm (hoặc SKU mặc định) vào form
+      setFormData(prev => ({ ...prev, stock: product.skus?.[0]?.stock || product.stock || 0 }))
+    }
+
+    setIsModalOpen(true)
+  }
+
+  // CẬP NHẬT: Xử lý Submit cho cả THÊM MỚI và CẬP NHẬT
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -69,31 +127,39 @@ export default function ShopPage() {
     }
 
     try {
-      const res = await axiosClient.post('/products', dataToSend)
-      alert(res.data.message || 'Thêm sản phẩm thành công!')
+      if (editingProductId) {
+        // GỌI API CẬP NHẬT (PUT)
+        const res = await axiosClient.put(`/products/${editingProductId}`, dataToSend)
+        alert(res.data.message || 'Cập nhật sản phẩm thành công!')
+      } else {
+        // GỌI API THÊM MỚI (POST)
+        const res = await axiosClient.post('/products', dataToSend)
+        alert(res.data.message || 'Thêm sản phẩm thành công!')
+      }
 
-      setIsModalOpen(false)
-      setFormData({
-        name: '',
-        category_id: '',
-        base_price: '',
-        stock: '',
-        description: '',
-        image_url: '',
-      })
-      setHasVariations(false)
-      setSkus([{ sku_code: '', price: '', stock: '' }])
-
+      closeModal()
       fetchShop()
     } catch (err) {
-      alert(
-        'Lỗi: ' +
-          (err.response?.data?.error ||
-            err.response?.data?.message ||
-            'Không thể thêm sản phẩm')
-      )
+      alert('Lỗi: ' + (err.response?.data?.error || err.response?.data?.message || 'Có lỗi xảy ra'))
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // HÀM MỚI: Xử lý Xóa Sản Phẩm
+  const handleDeleteProduct = async () => {
+    if (!window.confirm(`Bạn có chắc chắn muốn XÓA VĨNH VIỄN sản phẩm "${formData.name}" không? Hành động này không thể hoàn tác!`)) return;
+
+    setIsSubmitting(true);
+    try {
+      await axiosClient.delete(`/products/${editingProductId}`);
+      alert("Xóa sản phẩm thành công!");
+      closeModal();
+      fetchShop();
+    } catch (err) {
+      alert('Lỗi: ' + (err.response?.data?.error || err.response?.data?.message || 'Không thể xóa sản phẩm'));
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -143,7 +209,10 @@ export default function ShopPage() {
               <button
                 className="add-product-btn"
                 disabled={!shop.is_verified}
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => {
+                  closeModal(); // Đảm bảo form trống trơn
+                  setIsModalOpen(true);
+                }}
               >
                 + Thêm sản phẩm
               </button>
@@ -168,11 +237,23 @@ export default function ShopPage() {
                 const stock = product.skus?.[0]?.stock ?? 0
 
                 return (
-                  <div key={product.id} className="product-card">
+                  <div 
+                    key={product.id} 
+                    className="product-card"
+                    onClick={() => openEditModal(product)} // BẤM VÀO ĐỂ SỬA
+                    style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                    title="Bấm vào để chỉnh sửa"
+                  >
                     <img src={image} alt={product.name} />
                     <h4>{product.name}</h4>
                     <p className="price">{price.toLocaleString()} VNĐ</p>
                     <p className="stock">Tồn kho: {stock}</p>
+                    {/* Thêm một icon bút chì nhỏ cho thân thiện UX */}
+                    <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.8)', padding: '5px', borderRadius: '50%' }}>
+                      ✏️
+                    </div>
                   </div>
                 )
               })}
@@ -184,7 +265,7 @@ export default function ShopPage() {
         {/* ================= TAB COUPONS ================= */}
         {activeTab === 'coupons' && <SellerCouponManagementPage />}
 
-        {/* ================= MODAL THÊM SẢN PHẨM ================= */}
+        {/* ================= MODAL THÊM / SỬA SẢN PHẨM ================= */}
         {isModalOpen && (
           <div
             style={{
@@ -209,13 +290,28 @@ export default function ShopPage() {
                 maxWidth: '90%',
                 maxHeight: '90vh',
                 overflowY: 'auto',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
               }}
             >
-              <h2
-                style={{ marginTop: 0, marginBottom: '20px', color: '#1e293b' }}
-              >
-                Thêm sản phẩm mới
-              </h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ margin: 0, color: '#1e293b' }}>
+                  {editingProductId ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
+                </h2>
+                
+                {/* Nút XÓA chỉ hiện khi đang ở chế độ Chỉnh sửa */}
+                {editingProductId && (
+                  <button 
+                    onClick={handleDeleteProduct}
+                    disabled={isSubmitting}
+                    style={{
+                      background: '#fee2e2', color: '#ef4444', border: 'none', 
+                      padding: '8px 15px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer'
+                    }}
+                  >
+                    🗑️ Xóa sản phẩm
+                  </button>
+                )}
+              </div>
 
               <form
                 onSubmit={handleSubmit}
@@ -246,6 +342,7 @@ export default function ShopPage() {
                       padding: '10px',
                       borderRadius: '6px',
                       border: '1px solid #cbd5e1',
+                      boxSizing: 'border-box'
                     }}
                   />
                 </div>
@@ -270,6 +367,7 @@ export default function ShopPage() {
                       padding: '10px',
                       borderRadius: '6px',
                       border: '1px solid #cbd5e1',
+                      boxSizing: 'border-box'
                     }}
                   >
                     <option value="">-- Chọn danh mục --</option>
@@ -303,6 +401,7 @@ export default function ShopPage() {
                       padding: '10px',
                       borderRadius: '6px',
                       border: '1px solid #cbd5e1',
+                      boxSizing: 'border-box'
                     }}
                   />
                 </div>
@@ -362,6 +461,7 @@ export default function ShopPage() {
                           padding: '10px',
                           borderRadius: '6px',
                           border: '1px solid #cbd5e1',
+                          boxSizing: 'border-box'
                         }}
                       />
                     </div>
@@ -494,6 +594,7 @@ export default function ShopPage() {
                       padding: '10px',
                       borderRadius: '6px',
                       border: '1px solid #cbd5e1',
+                      boxSizing: 'border-box'
                     }}
                   ></textarea>
                 </div>
@@ -518,6 +619,7 @@ export default function ShopPage() {
                       padding: '10px',
                       borderRadius: '6px',
                       border: '1px solid #cbd5e1',
+                      boxSizing: 'border-box'
                     }}
                   />
                 </div>
@@ -527,7 +629,7 @@ export default function ShopPage() {
                 >
                   <button
                     type="button"
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={closeModal} // Đổi thành gọi hàm closeModal
                     style={{
                       flex: 1,
                       padding: '12px',
@@ -555,7 +657,7 @@ export default function ShopPage() {
                       cursor: isSubmitting ? 'not-allowed' : 'pointer',
                     }}
                   >
-                    {isSubmitting ? 'Đang lưu...' : 'Đăng sản phẩm'}
+                    {isSubmitting ? 'Đang lưu...' : (editingProductId ? 'Cập nhật sản phẩm' : 'Đăng sản phẩm')}
                   </button>
                 </div>
               </form>
