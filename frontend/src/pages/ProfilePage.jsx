@@ -131,7 +131,11 @@ function ProfilePage() {
         const formData = new FormData()
         formData.append('avatar', avatar)
 
-        await axiosClient.post('/user/update-avatar', formData)
+        await axiosClient.post('/user/update-avatar', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
       }
 
       alert('Cập nhật thành công')
@@ -158,17 +162,16 @@ function ProfilePage() {
 
       setName(res.data.name)
       setEmail(res.data.email)
-      if (res.data.phone) {
-        setPhone(res.data.phone)
-      } else if (res.data.addresses && res.data.addresses.length > 0) {
-        setPhone(res.data.addresses[0].recipient_phone)
-      } else {
-        setPhone('')
+      if (res.data.avatar) {
+        const avatarUrl = res.data.avatar.startsWith('http')
+          ? res.data.avatar
+          : `http://localhost:8000/storage/${res.data.avatar}`
+        setPreview(avatarUrl)
       }
-
-      setAddresses(res.data.addresses || [])
+      setPhone(res.data.phone)
     }
     fetchUser()
+    fetchAddresses()
     const fetchProvinces = async () => {
       try {
         const res = await axios.get('https://provinces.open-api.vn/api/p/')
@@ -242,6 +245,14 @@ function ProfilePage() {
     const selected = wards.find((w) => w.code == code)
     setWard(code)
     setWardName(selected?.name || '')
+  }
+  const fetchAddresses = async () => {
+    try {
+      const res = await axiosClient.get('/user/addresses')
+      setAddresses(Array.isArray(res.data) ? res.data : [])
+    } catch (err) {
+      console.error(err)
+    }
   }
   const addAddress = async (data) => {
     try {
@@ -420,6 +431,7 @@ function ProfilePage() {
                     <img
                       src={preview}
                       alt="avatar"
+                      value={avatar}
                       style={{
                         width: '100%',
                         height: '100%',
@@ -788,16 +800,22 @@ function ProfilePage() {
             <input
               type="password"
               placeholder="Mật khẩu cũ"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
               style={inputStyle}
             />
             <input
               type="password"
               placeholder="Mật khẩu mới"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
               style={inputStyle}
             />
             <input
               type="password"
               placeholder="Xác nhận mật khẩu"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               style={inputStyle}
             />
 

@@ -209,7 +209,7 @@ const CheckoutPage = () => {
         }
       } else if (paymentMethod === 3) {
         // --- CHỌN VNPAY ---
-        
+
         const payRes = await paymentApi.createVNPayUrl({
           orderId: order_ids[0],
           amount: total_amount,
@@ -263,7 +263,7 @@ const CheckoutPage = () => {
             <div>
               <b>
                 {selectedAddress.recipient_name} (+84)
-                {selectedAddress.recipient_phone}
+                {selectedAddress.recipient_phone.replace(/^0/, '')}
               </b>
 
               <div>

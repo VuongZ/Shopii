@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import axiosClient from '../api/axiosClient'
+import userApi from '../api/userApi'
 import { useNavigate, Link } from 'react-router-dom'
 
 export default function Register() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
   const [error, setError] = useState(null)
@@ -18,9 +17,8 @@ export default function Register() {
       return
     }
     try {
-      const response = await axiosClient.post('/register', {
-        name: name,
-        email: email,
+      const response = await userApi.register({
+        identifier: identifier,
         password: password,
         password_confirmation: passwordConfirmation,
       })
@@ -29,8 +27,8 @@ export default function Register() {
       localStorage.setItem('ACCESS_TOKEN', response.data.token)
       localStorage.setItem('USER_INFO', JSON.stringify(response.data.user))
 
-      alert('Đăng ký thành công!')
-      navigate('/')
+      alert('Đăng ký tài khoản thành công!')
+      navigate('/login')
     } catch (err) {
       console.error(err)
       if (err.response && err.response.data.errors) {
@@ -93,8 +91,8 @@ export default function Register() {
           <div style={{ marginBottom: '22px', position: 'relative' }}>
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               required
               placeholder=" "
               style={{
@@ -112,17 +110,17 @@ export default function Register() {
               style={{
                 position: 'absolute',
                 left: '10px',
-                top: email ? '-8px' : '50%',
-                transform: email ? 'translateY(0)' : 'translateY(-50%)',
+                top: identifier ? '-8px' : '50%',
+                transform: identifier ? 'translateY(0)' : 'translateY(-50%)',
                 background: '#fff',
                 padding: '0 6px',
-                fontSize: email ? '12px' : '14px',
-                color: email ? '#5a5df0' : '#999',
+                fontSize: identifier ? '12px' : '14px',
+                color: identifier ? '#5a5df0' : '#999',
                 transition: '0.2s',
                 pointerEvents: 'none',
               }}
             >
-              Email / Số điện thoại
+              Email
             </label>
           </div>
 

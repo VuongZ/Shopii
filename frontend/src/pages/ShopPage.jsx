@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axiosClient from '../api/axiosClient'
+import productApi from '../api/productApi'
 import './ShopPage.css'
 import SellerCouponManagementPage from './SellerCouponManagementPage'
 import SellerOrderManagementPage from './SellerOrderManagementPage'
@@ -8,6 +9,7 @@ import SellerOrderManagementPage from './SellerOrderManagementPage'
 export default function ShopPage() {
   const navigate = useNavigate()
   const [shop, setShop] = useState(null)
+
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('products')
@@ -31,7 +33,7 @@ export default function ShopPage() {
 
   const fetchShop = async () => {
     try {
-      const res = await axiosClient.get('/my-shop')
+      const res = await productApi.getCate()
       setShop(res.data)
     } catch (err) {
       console.error(err)
@@ -43,27 +45,31 @@ export default function ShopPage() {
   useEffect(() => {
     const checkShopStatus = async () => {
       try {
-        // Gọi API kiểm tra xem user này đã có shop chưa
         const res = await axiosClient.get('/my-shop')
 
-        // Nếu API trả về dữ liệu shop thành công
         if (res.data) {
-          setHasShop(true)
+          setShop(res.data)
         } else {
-          setHasShop(false)
+          setShop(false)
         }
       } catch (error) {
-        // Nếu API trả về lỗi (ví dụ 404 Not Found do chưa tạo shop)
-        setHasShop(false)
+        setShop(false)
       } finally {
         setLoading(false)
       }
     }
-
+    const fetchCategories = async () => {
+      try {
+        const res = await axiosClient.get('/categories')
+        setCategories(res.data || [])
+      } catch (err) {
+        console.error('Lỗi tải danh mục:', err)
+      }
+    }
     checkShopStatus()
+    fetchCategories()
   }, [])
 
-  // 1. Màn hình chờ khi đang check API
   if (loading) {
     return (
       <div style={{ textAlign: 'center', marginTop: '50px' }}>
@@ -72,7 +78,6 @@ export default function ShopPage() {
     )
   }
 
-  // 2. MÀN HÌNH NẾU USER CHƯA LÀ SELLER
   if (!shop) {
     return (
       <div
@@ -94,10 +99,10 @@ export default function ShopPage() {
           bản để đăng ký trở thành Người Bán và bắt đầu kinh doanh ngay hôm nay!
         </p>
         <button
-          onClick={() => navigate('/seller/register')} // Nút chuyển hướng sang form đăng ký
+          onClick={() => navigate('/seller/register')}
           style={{
             padding: '12px 30px',
-            background: '#0e2ece', // Màu cam Shopee
+            background: '#0e2ece',
             color: '#fff',
             border: 'none',
             borderRadius: '4px',
