@@ -103,9 +103,6 @@ function App() {
                 Kênh người bán
               </Link>
             )}
-            <Link to="/cart" className="nav-link">
-              <ShoppingCart size={20} />
-            </Link>
 
             <div className="cart-wrapper">
               <Link to="/cart" className="nav-link cart-icon">
