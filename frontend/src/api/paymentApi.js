@@ -1,13 +1,20 @@
-import axiosClient from "./axiosClient";
+import axiosClient from './axiosClient'
 
 const paymentApi = {
-  createPaymentUrl(data) {
-    return axiosClient.post("/payment/vnpay", data);
+  // 1. Gọi API tạo link thanh toán MoMo
+  createMoMoUrl(data) {
+    return axiosClient.post('/payment/momo', data)
   },
 
-  vnpayReturn(query) {
-    return axiosClient.get(`/payment/vnpay-callback${query}`);
+  // 2. Gọi API tạo link thanh toán VNPay
+  createVNPayUrl(data) {
+    return axiosClient.post('/payment/vnpay', data)
   },
-};
 
-export default paymentApi;
+  // 3. Xử lý Return URL của MoMo 
+  momoReturn(query) {
+    return axiosClient.get('/payment/momo-callback' + query)
+  },
+}
+
+export default paymentApi

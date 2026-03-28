@@ -1,9 +1,10 @@
 import axios from 'axios'
 
 const axiosClient = axios.create({
-  // https://shopii-backend-latest.onrender.com/api/
-  // http://localhost:8000/api/
+  //http://localhost:8000/api/
+  //https://shopii-backend-latest.onrender.com/api/
   baseURL: 'https://shopii-backend-latest.onrender.com/api/',
+
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',

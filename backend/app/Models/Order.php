@@ -19,4 +19,18 @@ class Order extends Model
     {
         return $this->belongsTo(Shop::class);
     }
+
+    public function userAddress()
+    {
+        return $this->belongsTo(UserAddress::class, 'user_address_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+    public function paymentMethod()
+    {
+        return $this->belongsTo(PaymentMethod::class, 'payment_method_id');
+    }
 }

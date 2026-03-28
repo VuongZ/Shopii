@@ -10,7 +10,7 @@ use App\Models\ProductSku;
 
 class CartController extends Controller
 {
-    // 1. Thêm sản phẩm vào giỏ (Logic cũ của bạn - OK)
+    // Thêm sản phẩm vào giỏ 
     public function addToCart(Request $request) {
         $user = Auth::user();
         
@@ -37,7 +37,7 @@ class CartController extends Controller
         return response()->json(['message' => 'Thêm vào giỏ hàng thành công']);
     }
 
-    // 2. Lấy danh sách giỏ hàng (ĐÃ SỬA: Format dữ liệu đẹp cho React)
+    //Lấy danh sách giỏ hàng
     public function getCart() {
         $user = Auth::user();
         
@@ -100,7 +100,19 @@ class CartController extends Controller
 
     // 4. Xóa sản phẩm
     public function removeItem($id) {
-        CartItem::destroy($id);
+        $user = Auth::user();
+
+        $item = CartItem::where('id', $id)
+            ->whereHas('cart', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })
+            ->first();
+
+        if (!$item) {
+            return response()->json(['message' => 'Sản phẩm không tồn tại trong giỏ'], 404);
+        }
+
+        $item->delete();
         return response()->json(['message' => 'Đã xóa sản phẩm']);
     }
 }

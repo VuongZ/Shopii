@@ -12,26 +12,39 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserAddressController;
 use App\Http\Controllers\CouponController;  
-// 1. KHU VỰC CÔNG KHAI (Không cần đăng nhập)
-
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\AdminShopController;
 use App\Http\Controllers\ForgotPasswordController;
+
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\StatisticsController;
+
+/*
+|--------------------------------------------------------------------------
+| 1. KHU VỰC CÔNG KHAI (Không cần đăng nhập)
+|--------------------------------------------------------------------------
+*/
 // Auth
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/forgot-password', [ForgotPasswordController::class, 'forgotPassword']);
 Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword']);
 Route::post('/verify-otp', [ForgotPasswordController::class, 'verifyOtp']);
-// Products
+
+// Products & Categories (Ai cũng xem được)
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
+Route::get('/categories', [CategoryController::class, 'index']); 
+Route::get('/payment/vnpay-callback', [PaymentController::class, 'vnpayCallback']);
+Route::post('/payment/momo', [PaymentController::class, 'createMoMoPayment']);
+Route::get('/payment/momo-callback', [PaymentController::class, 'momoCallback']);
 Route::get('/health', function () {
     return response()->json([
         'status' => 'OK'
     ]);
 });
+
     
 // SHOP(REGISTER   SELLER)
 Route::get('/provinces', function () {
@@ -44,12 +57,16 @@ Route::get('/provinces/{code}', function ($code) {
 Route::get('/districts/{code}', function ($code) {
     return Http::get("https://provinces.open-api.vn/api/d/$code?depth=2")->json();
 });
+
+    /* ----------------------- Review (USER) ----------------------- */
+
+    Route::get('/reviews', [ReviewController::class, 'index']);
+
 /*
 |--------------------------------------------------------------------------
 | 2. PROTECTED ROUTES (Cần đăng nhập)
 |--------------------------------------------------------------------------
 */
-
 Route::middleware('auth:sanctum')->group(function () {
 
     // Lấy thông tin user
@@ -57,70 +74,62 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
-    /*
-    -----------------------
-    GIỎ HÀNG
-    -----------------------
-    */
+    /* ----------------------- GIỎ HÀNG ----------------------- */
     Route::get('/cart', [CartController::class, 'getCart']);
     Route::post('/cart/add', [CartController::class, 'addToCart']);
     Route::put('/cart/update', [CartController::class, 'updateCart']);
     Route::delete('/cart/{id}', [CartController::class, 'removeItem']);
+    Route::get('/shipping-methods', [OrderController::class, 'getShippingMethods']);
+    Route::get('/payment-methods', [OrderController::class, 'getPaymentMethods']);
 
-    /*
-    -----------------------
-    ĐƠN HÀNG
-    -----------------------
-    */
+    /* ----------------------- ĐƠN HÀNG ----------------------- */
     Route::post('/checkout', [OrderController::class, 'checkout']);
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::put('/orders/{id}/complete', [OrderController::class, 'confirmReceipt']);
 
-    /*
-    -----------------------
-    ĐỊA CHỈ
-    -----------------------
-    */
+    /* ----------------------- ĐỊA CHỈ ----------------------- */
     Route::get('/user/addresses', [UserAddressController::class, 'index']);
     Route::post('/user/addresses', [UserAddressController::class, 'store']);
     Route::put('/user/addresses/{id}', [UserAddressController::class, 'update']);
     Route::delete('/user/addresses/{id}', [UserAddressController::class, 'destroy']);
     Route::put('/user/addresses/{id}/default', [UserAddressController::class, 'setDefault']);
 
-    /*
-    -----------------------
-    COUPON
-    -----------------------
-    */
+    /* ----------------------- COUPON ----------------------- */
     Route::get('/coupons', [CouponController::class, 'index']);
     Route::post('/coupons/apply', [CouponController::class, 'apply']);
-
-    /*
-    -----------------------
-    THANH TOÁN
-    -----------------------
-    */
+    Route::post('/coupons', [CouponController::class, 'store']);
+    Route::delete('/coupons/{id}', [CouponController::class, 'destroy']);
+    /* ----------------------- THANH TOÁN ----------------------- */
     Route::post('/payment/vnpay', [PaymentController::class, 'createPayment']);
-    Route::get('/payment/vnpay-callback', [PaymentController::class, 'vnpayCallback']);
+    
 
-    /*
-    -----------------------
-    SHOP (SELLER)
-    -----------------------
-    */
+    /* ----------------------- SHOP (SELLER) ----------------------- */
     Route::post('/shops', [ShopController::class, 'store']);
     Route::get('/my-shop', [ShopController::class, 'myShop']);
-
+    Route::post('/products', [ProductController::class, 'store']);
+    Route::put('/products/{id}', [ProductController::class, 'update']);
+    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+    Route::get('/seller/orders', [OrderController::class, 'getSellerOrders']);
+    Route::put('/seller/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
+    Route::get('/seller/statistics', [StatisticsController::class, 'sellerDashboard']);
+    Route::get('/seller/settings/auto-confirm', [OrderController::class, 'getAutoConfirmSetting']);
+    Route::post('/seller/settings/auto-confirm', [OrderController::class, 'toggleAutoConfirm']);
+    // của AI văn Nhân 
+    Route::get('/seller/products/{id}/forecast', [StatisticsController::class, 'getProductForecast']);
     
-    /*
+        /* ----------------------- Review (USER) ----------------------- */
+
+
+        Route::post('/reviews', [ReviewController::class, 'store']);
+        /*
+
     |--------------------------------------------------------------------------
     | 3. ADMIN ROUTES
     |--------------------------------------------------------------------------
     */
     Route::middleware('admin')->group(function () {
-
-        // Categories
-        Route::get('/categories', [CategoryController::class, 'index']);
+        // Admin quản lý Categories
         Route::post('/categories', [CategoryController::class, 'store']);
         Route::put('/categories/{id}', [CategoryController::class, 'update']);
         Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
@@ -128,6 +137,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // Shop approve
         Route::get('/admin/shops', [AdminShopController::class, 'index']);
         Route::put('/admin/shops/{id}/approve', [AdminShopController::class, 'approve']);
+
+        // Statistics
+        Route::get('/admin/statistics', [StatisticsController::class, 'adminDashboard']);
     });
 
+    
 });

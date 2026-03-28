@@ -8,16 +8,34 @@ use Illuminate\Support\Facades\DB;
 use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Coupon; // <--- Nhớ import Model Coupon
+use App\Models\Coupon;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use App\Models\ShippingMethod;
+use App\Models\PaymentMethod;
 
 class OrderController extends Controller
 {
+    // 1. API lấy danh sách Đơn vị vận chuyển
+    public function getShippingMethods()
+    {
+        $methods = ShippingMethod::all();
+        return response()->json($methods);
+    }
+
+    // 2. API lấy danh sách Phương thức thanh toán
+    public function getPaymentMethods()
+    {
+        // Chỉ lấy các phương thức đang được active
+        $methods = PaymentMethod::where('is_active', 1)->get();
+        return response()->json($methods);
+    }
     public function checkout(Request $request) {
         // 1. Validate dữ liệu
         $request->validate([
             'cart_item_ids' => 'required|array',
             'address_id' => 'required|exists:user_addresses,id',
+            'shipping_method_id' => 'required|exists:shipping_methods,id',
             'payment_method_id' => 'required|exists:payment_methods,id',
             'coupon_code' => 'nullable|string|exists:coupons,code',
         ]);
@@ -38,13 +56,14 @@ class OrderController extends Controller
                 return response()->json(['message' => 'Vui lòng chọn sản phẩm hợp lệ'], 400);
             }
 
-            // --- LOGIC COUPON (MỚI) ---
+            // --- LOGIC COUPON ---
             $coupon = null;
             if ($request->has('coupon_code')) {
                 $coupon = Coupon::where('code', $request->coupon_code)
                     ->where('start_date', '<=', Carbon::now())
                     ->where('end_date', '>=', Carbon::now())
                     ->where('usage_limit', '>', 0)
+                    ->lockForUpdate()
                     ->first();
                 
                 if (!$coupon) {
@@ -59,11 +78,64 @@ class OrderController extends Controller
                 return $item->sku->product->shop_id;
             });
 
-            $createdOrderIds = []; 
-            $grandTotal = 0; 
-            
-            // Biến cờ để đảm bảo mã giảm giá chỉ áp dụng 1 lần (nếu là mã toàn sàn)
-            $couponApplied = false; 
+            // Pre-compute shop totals for coupon validation/discount base.
+            $shopTotals = $itemsByShop->map(function ($shopItems) {
+                return $shopItems->sum(function ($item) {
+                    return $item->sku->price * $item->quantity;
+                });
+            });
+
+            $createdOrderIds = [];
+            $grandTotal = 0;
+
+            // Coupon logic
+            $couponDiscountAmount = 0;
+            $couponTargetShopId = null;
+            $couponWillBeApplied = false;
+            $couponRemainingDiscountAmount = 0;
+
+            if ($coupon) {
+                $cartProductTotal = (float) $shopTotals->sum();
+                if ($coupon->shop_id === null) {
+                    $couponBaseTotal = $cartProductTotal;
+                    if ($couponBaseTotal >= (float) $coupon->min_order_value) {
+                        if ($coupon->discount_type === 'fixed') {
+                            $couponDiscountAmount = min((float) $coupon->discount_value, $couponBaseTotal);
+                        } else {
+                            $couponDiscountAmount = ($couponBaseTotal * (float) $coupon->discount_value) / 100;
+                            if ($coupon->max_discount_value && $couponDiscountAmount > (float) $coupon->max_discount_value) {
+                                $couponDiscountAmount = (float) $coupon->max_discount_value;
+                            }
+                            if ($couponDiscountAmount > $couponBaseTotal) {
+                                $couponDiscountAmount = $couponBaseTotal;
+                            }
+                        }
+
+                        $couponWillBeApplied = $couponDiscountAmount > 0;
+                        $couponRemainingDiscountAmount = (float) $couponDiscountAmount;
+                    }
+                } else {
+                    $targetShopId = (int) $coupon->shop_id;
+                    $couponBaseTotal = (float) ($shopTotals->get($targetShopId) ?? 0);
+                    if ($couponBaseTotal >= (float) $coupon->min_order_value && $shopTotals->has($targetShopId)) {
+                        if ($coupon->discount_type === 'fixed') {
+                            $couponDiscountAmount = min((float) $coupon->discount_value, $couponBaseTotal);
+                        } else {
+                            $couponDiscountAmount = ($couponBaseTotal * (float) $coupon->discount_value) / 100;
+                            if ($coupon->max_discount_value && $couponDiscountAmount > (float) $coupon->max_discount_value) {
+                                $couponDiscountAmount = (float) $coupon->max_discount_value;
+                            }
+                            if ($couponDiscountAmount > $couponBaseTotal) {
+                                $couponDiscountAmount = $couponBaseTotal;
+                            }
+                        }
+
+                        $couponWillBeApplied = $couponDiscountAmount > 0;
+                        $couponTargetShopId = $targetShopId;
+                        $couponRemainingDiscountAmount = 0;
+                    }
+                }
+            }
 
             foreach ($itemsByShop as $shopId => $shopItems) {
                 $shopTotal = 0;
@@ -77,39 +149,31 @@ class OrderController extends Controller
                     }
                 }
 
-                // --- TÍNH GIẢM GIÁ CHO ĐƠN HÀNG NÀY ---
                 $discountAmount = 0;
-                if ($coupon && !$couponApplied) {
-                    // Logic: 
-                    // 1. Nếu Coupon của Shop (shop_id trùng khớp) -> Áp dụng
-                    // 2. Nếu Coupon sàn (shop_id null) -> Áp dụng cho đơn đầu tiên hoặc chia đều (ở đây mình làm đơn giản là áp dụng cho đơn đầu tiên thỏa mãn)
-                    
-                    $isValidShop = ($coupon->shop_id === null) || ($coupon->shop_id == $shopId);
-                    $isMinOrderReached = $shopTotal >= $coupon->min_order_value;
-
-                    if ($isValidShop && $isMinOrderReached) {
-                        if ($coupon->discount_type == 'fixed') {
-                            $discountAmount = $coupon->discount_value;
-                        } else {
-                            $discountAmount = ($shopTotal * $coupon->discount_value) / 100;
-                            if ($coupon->max_discount_value && $discountAmount > $coupon->max_discount_value) {
-                                $discountAmount = $coupon->max_discount_value;
-                            }
+                if ($couponWillBeApplied) {
+                    if ($coupon->shop_id === null) {
+                        if ($couponRemainingDiscountAmount > 0) {
+                            $discountAmount = min((float) $couponRemainingDiscountAmount, (float) $shopTotal);
+                            $couponRemainingDiscountAmount -= $discountAmount;
                         }
-                        
-                        // Đảm bảo không giảm âm tiền
-                        if ($discountAmount > $shopTotal) $discountAmount = $shopTotal;
-                        
-                        $couponApplied = true; // Đánh dấu đã dùng mã
+                    } elseif ($couponTargetShopId !== null && (int) $shopId === (int) $couponTargetShopId) {
+                        $discountAmount = (float) $couponDiscountAmount;
                     }
                 }
-                // ---------------------------------------
 
-                $shippingFee = 30000; 
-                $finalTotal = $shopTotal + $shippingFee - $discountAmount; // Trừ giảm giá
+                $shippingMethod = ShippingMethod::find($request->shipping_method_id);
+                $shippingFee = $shippingMethod ? $shippingMethod->base_fee : 30000; 
+                
+                $finalTotal = $shopTotal + $shippingFee - $discountAmount;
                 if ($finalTotal < 0) $finalTotal = 0;
 
                 $grandTotal += $finalTotal;
+
+                // ========================================================
+                // KIỂM TRA SHOP CÓ BẬT AUTO DUYỆT KHÔNG BẰNG CACHE
+                // ========================================================
+                $isAutoConfirm = Cache::get('shop_auto_confirm_' . $shopId, false);
+                $initialStatus = $isAutoConfirm ? 'confirmed' : 'pending';
 
                 // 4. Tạo Order
                 $order = Order::create([
@@ -117,16 +181,26 @@ class OrderController extends Controller
                     'shop_id' => $shopId,
                     'total_product_price' => $shopTotal,
                     'shipping_fee' => $shippingFee,
-                    'discount_amount' => $discountAmount, // <--- Lưu số tiền giảm
+                    'discount_amount' => $discountAmount,
                     'final_total' => $finalTotal,
                     'user_address_id' => $request->address_id,
                     'payment_method_id' => $request->payment_method_id,
                     'shipping_method_id' => $request->shipping_method_id ?? 1, 
-                    'status' => 'pending',
+                    'status' => $initialStatus, // <--- Gán trạng thái đã check
                     'payment_status' => 'unpaid' 
                 ]);
 
                 $createdOrderIds[] = $order->id;
+
+                // LƯU LỊCH SỬ NẾU AUTO CONFIRM
+                if ($isAutoConfirm) {
+                    \App\Models\OrderHistory::create([
+                        'order_id' => $order->id,
+                        'status' => 'confirmed',
+                        'note' => 'Hệ thống tự động duyệt đơn'
+                    ]);
+                }
+                // ========================================================
 
                 // 5. Lưu Order Items và Trừ kho
                 foreach ($shopItems as $item) {
@@ -143,7 +217,7 @@ class OrderController extends Controller
             }
             
             // --- TRỪ LƯỢT DÙNG COUPON ---
-            if ($couponApplied && $coupon) {
+            if ($couponWillBeApplied && $coupon) {
                 $coupon->decrement('usage_limit');
             }
             // -----------------------------
@@ -163,20 +237,19 @@ class OrderController extends Controller
             return response()->json(['message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
+
     public function index(Request $request)
     {
         $user = Auth::user();
 
-        // Lấy đơn hàng kèm theo Shop và các sản phẩm bên trong
-        $orders = Order::with(['shop', 'items.sku.product'])
+        $orders = Order::with(['items.sku.product', 'userAddress', 'paymentMethod'])
             ->where('user_id', $user->id)
-            ->orderBy('created_at', 'desc') // Mới nhất lên đầu
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json($orders);
     }
     
-    // Xem chi tiết một đơn hàng (Dùng khi bấm vào xem chi tiết)
     public function show($id)
     {
         $user = Auth::user();
@@ -186,5 +259,119 @@ class OrderController extends Controller
             ->firstOrFail();
 
         return response()->json($order);
+    }
+
+    // =========================================================
+    // KHU VỰC API DÀNH CHO SELLER (QUẢN LÝ ĐƠN HÀNG CỦA SHOP)
+    // =========================================================
+
+    // 1. Lấy danh sách đơn hàng mà Shop nhận được
+    public function getSellerOrders(Request $request)
+    {
+        $user = Auth::user();
+        
+        $shop = \App\Models\Shop::where('user_id', $user->id)->first();
+        if (!$shop) {
+            return response()->json(['message' => 'Bạn chưa có cửa hàng'], 403);
+        }
+
+        $orders = Order::with(['items.sku.product', 'userAddress'])
+            ->leftJoin('users', 'orders.user_id', '=', 'users.id')
+            ->where('orders.shop_id', $shop->id)
+            ->orderBy('orders.created_at', 'desc')
+            ->select('orders.*', 'users.name as user_name')
+            ->get();
+
+        return response()->json($orders);
+    }
+
+    // 2. Chủ shop cập nhật trạng thái đơn hàng (Duyệt, Hủy, Giao hàng...)
+    public function updateOrderStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,confirmed,shipping,completed,cancelled'
+        ]);
+
+        $user = Auth::user();
+        $shop = \App\Models\Shop::where('user_id', $user->id)->first();
+        if (!$shop) {
+            return response()->json(['message' => 'Bạn chưa có cửa hàng'], 403);
+        }
+
+        $order = Order::where('id', $id)->where('shop_id', $shop->id)->first();
+        
+        if (!$order) {
+            return response()->json(['message' => 'Không tìm thấy đơn hàng'], 404);
+        }
+
+        $order->status = $request->status;
+        $order->save();
+
+        \App\Models\OrderHistory::create([
+            'order_id' => $order->id,
+            'status' => $request->status,
+            'note' => 'Shop cập nhật trạng thái'
+        ]);
+
+        return response()->json(['message' => 'Cập nhật trạng thái đơn hàng thành công', 'order' => $order]);
+    }
+
+    // =========================================================
+    // KHU VỰC CẤU HÌNH AUTO CONFIRM (DÙNG CACHE)
+    // =========================================================
+
+    // Lấy trạng thái Auto Confirm hiện tại của Shop
+    public function getAutoConfirmSetting()
+    {
+        $shop = \App\Models\Shop::where('user_id', Auth::id())->first();
+        if (!$shop) return response()->json(['auto_confirm' => false]);
+
+        $isAuto = Cache::get('shop_auto_confirm_' . $shop->id, false);
+        return response()->json(['auto_confirm' => $isAuto]);
+    }
+
+    // Shop Bật/Tắt Auto Confirm
+    public function toggleAutoConfirm(Request $request)
+    {
+        $shop = \App\Models\Shop::where('user_id', Auth::id())->first();
+        if (!$shop) return response()->json(['message' => 'Lỗi'], 403);
+
+        $isAuto = $request->auto_confirm; // true hoặc false
+        
+        // Dùng Cache::forever để lưu cấu hình này vô thời hạn
+        Cache::forever('shop_auto_confirm_' . $shop->id, $isAuto);
+
+        return response()->json([
+            'message' => 'Cập nhật cấu hình thành công!',
+            'auto_confirm' => $isAuto
+        ]);
+    }
+    public function confirmReceipt($id)
+    {
+        $user = Auth::user();
+        
+        // Tìm đơn hàng của user này đang ở trạng thái đang giao
+        $order = Order::where('id', $id)
+                      ->where('user_id', $user->id)
+                      ->where('status', 'shipping')
+                      ->first();
+                      
+        if (!$order) {
+            return response()->json(['message' => 'Không thể cập nhật đơn hàng này'], 400);
+        }
+
+        // Chuyển sang hoàn thành và đánh dấu đã trả tiền (dù là COD hay MoMo)
+        $order->status = 'completed';
+        $order->payment_status = 'paid';
+        $order->save();
+
+        // Ghi lại lịch sử
+        \App\Models\OrderHistory::create([
+            'order_id' => $order->id,
+            'status' => 'completed',
+            'note' => 'Khách hàng đã xác nhận nhận hàng'
+        ]);
+
+        return response()->json(['message' => 'Cảm ơn bạn đã mua sắm!']);
     }
 }

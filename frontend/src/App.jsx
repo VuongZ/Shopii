@@ -3,7 +3,6 @@ import { Routes, Route, Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart } from 'lucide-react'
 
 import userApi from './api/userApi'
-
 import UsersPage from './pages/UsersPage'
 import Home from './pages/HomePage'
 import Login from './pages/Login'
@@ -13,87 +12,94 @@ import CheckoutPage from './pages/CheckoutPage'
 import PaymentResult from './pages/PaymentResult'
 import OrderHistoryPage from './pages/OrderHistoryPage'
 import ProductDetailPage from './pages/ProductDetailPage'
+import SellerCouponManagementPage from './pages/SellerCouponManagementPage'
+import SellerProductDetail from './pages/SellerProductDetail'
 import ResetPassword from './pages/ResetPassword'
 import ForgotPassword from './pages/ForgotPassword'
 import VerifyOTP from './pages/VerifyOTP'
+
 import SellerRegister from './pages/SellerRegister'
 import ProfilePage from './pages/ProfilePage'
+
+import CategoriesPage from './pages/CategoriesPage'
+import Reviews from './pages/Review'
+import AdminShopsPage from './pages/AdminShopsPage'
+
+import ShopPage from './pages/ShopPage'
 
 import './App.css'
 
 function App() {
   const navigate = useNavigate()
+  const [cartCount, setCartCount] = useState(0)
+  const [cartItems, setCartItems] = useState([])
 
-  const [searchKeyword, setSearchKeyword] = useState('')
+  useEffect(() => {
+    const loadCart = () => {
+      const cart = JSON.parse(localStorage.getItem('CART')) || []
+      setCartItems(cart)
 
-  // Load user từ localStorage khi khởi tạo
+      const total = cart.reduce((sum, item) => sum + item.quantity, 0)
+      setCartCount(total)
+    }
+
+    loadCart()
+    window.addEventListener('storage', loadCart)
+
+    return () => window.removeEventListener('storage', loadCart)
+  }, [])
   const [user, setUser] = useState(() => {
     const info = localStorage.getItem('USER_INFO')
     return info ? JSON.parse(info) : null
   })
 
-  // Lắng nghe thay đổi localStorage
   useEffect(() => {
-    const handleStorage = () => {
-      const info = localStorage.getItem('USER_INFO')
-      setUser(info ? JSON.parse(info) : null)
+    const loadCart = () => {
+      const cart = JSON.parse(localStorage.getItem('CART')) || []
+      setCartItems(cart)
+
+      const total = cart.reduce((sum, item) => sum + Number(item.quantity), 0)
+      setCartCount(total)
     }
 
-    window.addEventListener('storage', handleStorage)
+    loadCart()
+
+    window.addEventListener('storage', loadCart)
+    window.addEventListener('cartUpdated', loadCart)
 
     return () => {
-      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener('storage', loadCart)
+      window.removeEventListener('cartUpdated', loadCart)
     }
   }, [])
 
-  // Logout
   const handleLogout = async () => {
     try {
       await userApi.logout()
     } catch (err) {
       console.log('Logout error:', err)
     }
-
     localStorage.removeItem('ACCESS_TOKEN')
     localStorage.removeItem('USER_INFO')
-
     setUser(null)
-
     navigate('/login')
   }
 
   return (
     <div className="app-container">
-      {/* ================= NAVBAR ================= */}
       <header className="shopee-header">
         <div className="header-content">
-          {/* LOGO */}
           <Link to="/" className="logo">
             Shopii
           </Link>
 
-          {/* SEARCH */}
-          <input
-            type="text"
-            placeholder="Tìm sản phẩm..."
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            style={{
-              marginLeft: '40px',
-              padding: '6px 10px',
-              width: '300px',
-              borderRadius: '6px',
-              border: '1px solid #ddd',
-            }}
-          />
-
-          {/* NAV MENU */}
           <nav className="nav-menu">
             <Link to="/" className="nav-link">
               Trang chủ
             </Link>
-            {user && (
-              <Link to="/seller/register" className="nav-link">
+
+            {user && user.role !== 'seller' && user.role !== 2 && (
+              <Link to="/seller" className="nav-link">
                 Kênh người bán
               </Link>
             )}
@@ -101,20 +107,75 @@ function App() {
               <ShoppingCart size={20} />
             </Link>
 
-            <Link to="/orders" className="nav-link">
-              Đơn mua
-            </Link>
+            <div className="cart-wrapper">
+              {/* <Link to="/cart" className="nav-link cart-icon">
+                <ShoppingCart size={22} />
 
-            <Link to="/users" className="nav-link">
-              Users
-            </Link>
+                {cartCount > 0 && (
+                  <span className="cart-badge">{cartCount}</span>
+                )}
+              </Link> */}
+
+              <div className="cart-dropdown">
+                {cartItems.length === 0 ? (
+                  <p className="empty-cart-mini">Chưa có sản phẩm</p>
+                ) : (
+                  <>
+                    {cartItems.slice(0, 5).map((item) => (
+                      <div key={item.id} className="mini-item">
+                        <img src={item.image} />
+                        <div>
+                          <p>{item.name}</p>
+                          <span>{item.price}đ</span>
+                        </div>
+                      </div>
+                    ))}
+
+                    <Link to="/cart" className="view-cart-btn">
+                      Xem Giỏ Hàng
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* ADMIN */}
+            {user && (user.role === 'admin' || user.role === 1) && (
+              <Link
+                to="/categories"
+                className="nav-link"
+                style={{ color: '#3b82f6', fontWeight: 'bold' }}
+              >
+                Categories
+              </Link>
+            )}
+
+            {/* SELLER */}
+            {user && (user.role === 'seller' || user.role === 2) && (
+              <>
+                <Link
+                  to="/shop"
+                  className="nav-link"
+                  style={{ color: '#ee4d2d', fontWeight: 'bold' }}
+                >
+                  Cửa hàng của tôi
+                </Link>
+
+                <Link
+                  to="/seller-coupons"
+                  className="nav-link"
+                  style={{ color: 'green', fontWeight: 'bold' }}
+                >
+                  Coupons
+                </Link>
+              </>
+            )}
 
             {!user ? (
               <>
                 <Link to="/login" className="nav-link">
                   Đăng nhập
                 </Link>
-
                 <Link to="/register" className="nav-link">
                   Đăng ký
                 </Link>
@@ -131,13 +192,16 @@ function App() {
                   </div>
 
                   <div className="dropdown-menu">
-                    <Link to="/profile" className="dropdown-item">
-                      Tài khoản của tôi
-                    </Link>
-
-                    <Link to="/orders" className="dropdown-item">
-                      Đơn mua
-                    </Link>
+                    {user.role !== 'seller' && user.role !== 2 && (
+                      <>
+                        <Link to="/profile" className="dropdown-item">
+                          Tài khoản của tôi
+                        </Link>
+                        <Link to="/orders" className="dropdown-item">
+                          Đơn mua
+                        </Link>
+                      </>
+                    )}
 
                     <div
                       className="dropdown-item logout"
@@ -153,36 +217,42 @@ function App() {
         </div>
       </header>
 
-      {/* ================= MAIN ================= */}
       <main className="main-content">
         <Routes>
-          <Route path="/" element={<Home searchKeyword={searchKeyword} />} />
-
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
-
           <Route path="/register" element={<Register />} />
-
           <Route path="/cart" element={<CartPage />} />
-
           <Route path="/checkout" element={<CheckoutPage />} />
-
           <Route path="/payment-result" element={<PaymentResult />} />
-
           <Route path="/orders" element={<OrderHistoryPage />} />
-
           <Route path="/users" element={<UsersPage />} />
-
           <Route path="/product/:id" element={<ProductDetailPage />} />
-
+          <Route
+            path="/seller-coupons"
+            element={<SellerCouponManagementPage />}
+          />
           <Route path="/reset-password" element={<ResetPassword />} />
-
           <Route path="/forgot-password" element={<ForgotPassword />} />
-
           <Route path="/verify-otp" element={<VerifyOTP />} />
 
           <Route path="/seller/register" element={<SellerRegister />} />
 
           <Route path="/profile" element={<ProfilePage />} />
+
+          <Route path="/categories" element={<CategoriesPage />} />
+
+          <Route path="/reviews" element={<Reviews />} />
+
+          <Route path="/admin/shops" element={<AdminShopsPage />} />
+
+          <Route path="/shop" element={<ShopPage />} />
+
+          <Route path="/seller" element={<ShopPage />} />
+          <Route
+            path="/seller/products/:id"
+            element={<SellerProductDetail />}
+          />
         </Routes>
       </main>
     </div>

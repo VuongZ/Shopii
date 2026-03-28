@@ -8,82 +8,109 @@ use Carbon\Carbon;
 
 class CouponController extends Controller
 {
-    // Lấy danh sách mã giảm giá còn hiệu lực
+    // 1. Lấy danh sách Coupon (Seller lấy mã của shop, User lấy mã sàn)
     public function index(Request $request)
     {
-        $now = Carbon::now();
-        
-        
-        $query = Coupon::where('start_date', '<=', $now)
-            ->where('end_date', '>=', $now)
-            ->where('usage_limit', '>', 0); 
+        $query = Coupon::query();
 
         if ($request->has('shop_id')) {
-            $query->where(function($q) use ($request) {
-                $q->where('shop_id', $request->shop_id) // Mã của Shop
-                  ->orWhereNull('shop_id');             // Hoặc mã toàn sàn
-            });
+            // Seller xem danh sách mã của chính họ
+            $query->where('shop_id', $request->shop_id);
         } else {
-            $query->whereNull('shop_id'); // Mặc định lấy mã sàn
+            // User xem mã đang còn hạn và còn lượt dùng trên toàn sàn
+            $now = Carbon::now();
+            $query->where('start_date', '<=', $now)
+                  ->where('end_date', '>=', $now)
+                  ->where('usage_limit', '>', 0)
+                  ->whereNull('shop_id');
         }
 
-        $coupons = $query->get();
-        return response()->json($coupons);
+        return response()->json($query->orderBy('created_at', 'desc')->get());
     }
+
+    // 2. Seller tạo Coupon mới với đầy đủ thông tin
+    public function store(Request $request)
+    {
+    
+        $validated = $request->validate([
+            'code'               => 'required|string|unique:coupons,code',
+            'discount_type'      => 'required|in:fixed,percent', 
+            'discount_value'     => 'required|numeric|min:0',
+            'min_order_value'    => 'nullable|numeric|min:0',
+            'max_discount_value' => 'nullable|numeric|min:0',
+            'usage_limit'        => 'required|integer|min:1',
+            'start_date'         => 'required|date',
+            'end_date'           => 'required|date|after:start_date',
+            'shop_id'            => 'required|integer'
+        ]);
+
+        try {
+            $coupon = Coupon::create($validated);
+            return response()->json([
+                'message' => 'Tạo coupon thành công!',
+                'data' => $coupon
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Lỗi DB: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // 3. Xóa Coupon (Dành cho Seller)
+    public function destroy($id)
+    {
+        $coupon = Coupon::find($id);
+        
+        if (!$coupon) {
+            return response()->json(['message' => 'Không tìm thấy mã này'], 404);
+        }
+
+        $coupon->delete();
+        return response()->json(['message' => 'Đã xóa mã giảm giá thành công']);
+    }
+
+    // 4. Logic áp dụng Coupon 
     public function apply(Request $request)
     {
         $request->validate([
             'coupon_code' => 'required|string',
-            'order_total' => 'required|numeric',
+            'order_total' => 'required|numeric|min:0',
+            'shop_id'     => 'nullable|integer',
         ]);
 
-        $code = $request->coupon_code;
-        $total = $request->order_total;
         $now = Carbon::now();
-
-        $coupon = Coupon::where('code', $code)
+        $coupon = Coupon::where('code', $request->coupon_code)
             ->where('start_date', '<=', $now)
             ->where('end_date', '>=', $now)
+            ->where('usage_limit', '>', 0)
             ->first();
 
         if (!$coupon) {
-            return response()->json(['message' => 'Mã giảm giá không tồn tại hoặc đã hết hạn'], 400);
+            return response()->json(['message' => 'Mã không tồn tại hoặc hết hạn'], 400);
         }
 
-        if ($coupon->usage_limit <= 0) {
-             return response()->json(['message' => 'Mã giảm giá đã hết lượt sử dụng'], 400);
+        // Kiểm tra đơn hàng tối thiểu
+        if ($request->order_total < $coupon->min_order_value) {
+            return response()->json(['message' => 'Chưa đủ giá trị đơn hàng tối thiểu'], 400);
         }
 
-        if ($total < $coupon->min_order_value) {
-            return response()->json([
-                'message' => 'Đơn hàng chưa đạt giá trị tối thiểu: ' . number_format($coupon->min_order_value) . 'đ'
-            ], 400);
-        }
-
-        // Tính toán số tiền được giảm
-        $discountAmount = 0;
-        if ($coupon->discount_type == 'fixed') {
-            $discountAmount = $coupon->discount_value;
+        // Tính toán số tiền giảm
+        $discount = 0;
+        if ($coupon->discount_type === 'fixed') {
+            $discount = $coupon->discount_value;
         } else {
-            // Loại phần trăm
-            $discountAmount = ($total * $coupon->discount_value) / 100;
-            // Kiểm tra giảm tối đa
-            if ($coupon->max_discount_value && $discountAmount > $coupon->max_discount_value) {
-                $discountAmount = $coupon->max_discount_value;
+            $discount = ($request->order_total * $coupon->discount_value) / 100;
+            // Áp dụng mức giảm tối đa nếu có (max_discount_value)
+            if ($coupon->max_discount_value && $discount > $coupon->max_discount_value) {
+                $discount = $coupon->max_discount_value;
             }
         }
 
-        // Đảm bảo không giảm quá số tiền đơn hàng
-        if ($discountAmount > $total) {
-            $discountAmount = $total;
-        }
-
         return response()->json([
-            'message' => 'Áp dụng mã thành công',
-            'coupon_id' => $coupon->id,
-            'code' => $coupon->code,
-            'discount_amount' => $discountAmount,
-            'final_total' => $total - $discountAmount
+            'message' => 'Áp dụng thành công',
+            'discount_amount' => min($discount, $request->order_total),
+            'coupon_id' => $coupon->id
         ]);
     }
 }
