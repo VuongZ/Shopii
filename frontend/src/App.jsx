@@ -33,41 +33,29 @@ function App() {
   const navigate = useNavigate()
   const [cartCount, setCartCount] = useState(0)
   const [cartItems, setCartItems] = useState([])
-
-  useEffect(() => {
-    const loadCart = () => {
-      const cart = JSON.parse(localStorage.getItem('CART')) || []
-      setCartItems(cart)
-
-      const total = cart.reduce((sum, item) => sum + item.quantity, 0)
-      setCartCount(total)
-    }
-
-    loadCart()
-    window.addEventListener('storage', loadCart)
-
-    return () => window.removeEventListener('storage', loadCart)
-  }, [])
   const [user, setUser] = useState(() => {
     const info = localStorage.getItem('USER_INFO')
     return info ? JSON.parse(info) : null
   })
+  const loadCart = () => {
+    const cart = JSON.parse(localStorage.getItem('CART')) || []
+    setCartItems(cart)
 
-  useEffect(() => {
-    const loadCart = () => {
-      const cart = JSON.parse(localStorage.getItem('CART')) || []
-      setCartItems(cart)
-
-      const total = cart.reduce((sum, item) => sum + Number(item.quantity), 0)
-      setCartCount(total)
-    }
-
-    loadCart()
-
+    const total = cart.reduce((sum, item) => sum + item.quantity, 0)
+    setCartCount(total)
     window.addEventListener('storage', loadCart)
     window.addEventListener('cartUpdated', loadCart)
+  }
+  useEffect(() => {
+    loadCart()
 
+    const handleUserUpdate = () => {
+      const info = localStorage.getItem('USER_INFO')
+      setUser(info ? JSON.parse(info) : null)
+    }
+    window.addEventListener('userUpdated', handleUserUpdate)
     return () => {
+      window.removeEventListener('userUpdated', handleUserUpdate)
       window.removeEventListener('storage', loadCart)
       window.removeEventListener('cartUpdated', loadCart)
     }
@@ -82,7 +70,7 @@ function App() {
     localStorage.removeItem('ACCESS_TOKEN')
     localStorage.removeItem('USER_INFO')
     setUser(null)
-    navigate('/login')
+    navigate('/')
   }
 
   return (
@@ -108,13 +96,13 @@ function App() {
             </Link>
 
             <div className="cart-wrapper">
-              {/* <Link to="/cart" className="nav-link cart-icon">
+              <Link to="/cart" className="nav-link cart-icon">
                 <ShoppingCart size={22} />
 
                 {cartCount > 0 && (
                   <span className="cart-badge">{cartCount}</span>
                 )}
-              </Link> */}
+              </Link>
 
               <div className="cart-dropdown">
                 {cartItems.length === 0 ? (
@@ -123,7 +111,13 @@ function App() {
                   <>
                     {cartItems.slice(0, 5).map((item) => (
                       <div key={item.id} className="mini-item">
-                        <img src={item.image} />
+                        <img
+                          src={
+                            item.image ||
+                            'https://placehold.co/50x50?text=No+Image'
+                          }
+                          alt={item.name}
+                        />
                         <div>
                           <p>{item.name}</p>
                           <span>{item.price}đ</span>
