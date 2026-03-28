@@ -73,8 +73,7 @@ class ShopController extends Controller
             'district' => $addr['district'],
             'ward' => $addr['ward']
         ]);
-        
-        $user->role = 'seller';
+        $user->phone=$addr['phone'];
         $user->save();
         return response()->json([
             'message' => 'Đăng ký shop thành công, vui lòng chờ duyệt',

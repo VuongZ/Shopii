@@ -95,6 +95,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/addresses/{id}', [UserAddressController::class, 'update']);
     Route::delete('/user/addresses/{id}', [UserAddressController::class, 'destroy']);
     Route::put('/user/addresses/{id}/default', [UserAddressController::class, 'setDefault']);
+    Route::post('/user/change-password', [UserController::class, 'changePassword']);
 
     /* ----------------------- COUPON ----------------------- */
     Route::get('/coupons', [CouponController::class, 'index']);

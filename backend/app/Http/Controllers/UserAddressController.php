@@ -10,12 +10,11 @@ class UserAddressController extends Controller
 {
     public function index()
     {
-        $user = auth()->user()->load(['addresses' => function ($query) {
-        $query->orderBy('is_default', 'desc')
-              ->orderBy('created_at', 'desc');
-    }]);
-
-    return response()->json($user);
+        $addresses = UserAddress::where('user_id', auth()->id())
+                    ->orderBy('is_default', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+        return response()->json($addresses);
     }
 
     public function store(Request $request)
@@ -43,7 +42,8 @@ class UserAddressController extends Controller
             'ward' => $request->ward,
             'is_default' => $isFirst ? 1 : 0
         ]);
-
+        $user->phone=$request->recipient_phone;
+        $user->save();
         return response()->json(['message' => 'Thêm địa chỉ thành công', 'data' => $address]);
     }
     public function update(Request $request, $id)
