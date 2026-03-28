@@ -16,7 +16,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\AdminShopController;
 use App\Http\Controllers\ForgotPasswordController;
-
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\StatisticsController;
 
@@ -73,7 +73,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-
+    Route::put('/user/update', [UserController::class, 'updateProfile']);
+    Route::post('/user/update-avatar', [UserController::class, 'updateAvatar']);
     /* ----------------------- GIỎ HÀNG ----------------------- */
     Route::get('/cart', [CartController::class, 'getCart']);
     Route::post('/cart/add', [CartController::class, 'addToCart']);
