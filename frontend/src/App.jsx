@@ -91,9 +91,6 @@ function App() {
                 Kênh người bán
               </Link>
             )}
-            <Link to="/cart" className="nav-link">
-              <ShoppingCart size={20} />
-            </Link>
 
             <div className="cart-wrapper">
               <Link to="/cart" className="nav-link cart-icon">
@@ -124,10 +121,6 @@ function App() {
                         </div>
                       </div>
                     ))}
-
-                    <Link to="/cart" className="view-cart-btn">
-                      Xem Giỏ Hàng
-                    </Link>
                   </>
                 )}
               </div>

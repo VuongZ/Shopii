@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import axiosClient from '../api/axiosClient'
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 function ProfilePage() {
   const [tab, setTab] = useState('profile')
   const [name, setName] = useState('')
@@ -9,7 +10,7 @@ function ProfilePage() {
   const [addresses, setAddresses] = useState([])
   const [avatar, setAvatar] = useState(null)
   const [preview, setPreview] = useState(null)
-
+  const navigate = useNavigate()
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -309,14 +310,20 @@ function ProfilePage() {
         new_password: newPassword,
       })
 
-      alert('Đổi mật khẩu thành công')
-
+      alert('Đổi mật khẩu thành công. Vui lòng đăng nhập lại.')
+      navigate('/login')
       setOldPassword('')
       setNewPassword('')
       setConfirmPassword('')
     } catch (err) {
       console.error(err)
-      alert('Sai mật khẩu cũ hoặc lỗi hệ thống')
+      if (err.response && err.response.status === 422) {
+        const errors = err.response.data.errors
+        const errorMessages = Object.values(errors).flat().join('\n')
+        alert(errorMessages)
+      } else {
+        alert('Đã xảy ra lỗi hệ thống, vui lòng thử lại sau.')
+      }
     }
   }
   const menuItem = (key, label) => (
