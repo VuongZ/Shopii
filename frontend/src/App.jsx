@@ -16,6 +16,9 @@ import ProductDetailPage from './pages/ProductDetailPage'
 import ResetPassword from './pages/ResetPassword'
 import ForgotPassword from './pages/ForgotPassword'
 import VerifyOTP from './pages/VerifyOTP'
+import SellerRegister from './pages/SellerRegister'
+import ProfilePage from './pages/ProfilePage'
+
 import './App.css'
 
 function App() {
@@ -89,7 +92,11 @@ function App() {
             <Link to="/" className="nav-link">
               Trang chủ
             </Link>
-
+            {user && (
+              <Link to="/seller/register" className="nav-link">
+                Kênh người bán
+              </Link>
+            )}
             <Link to="/cart" className="nav-link">
               <ShoppingCart size={20} />
             </Link>
@@ -114,13 +121,32 @@ function App() {
               </>
             ) : (
               <>
-                <span style={{ marginLeft: '10px' }}>
-                  Xin chào <b>{user.name}</b>
-                </span>
+                <div className="user-menu">
+                  <div className="user-trigger">
+                    <div className="avatar">
+                      {user.name?.charAt(0).toUpperCase()}
+                    </div>
 
-                <button className="btn-logout" onClick={handleLogout}>
-                  Logout
-                </button>
+                    <span>{user.name}</span>
+                  </div>
+
+                  <div className="dropdown-menu">
+                    <Link to="/profile" className="dropdown-item">
+                      Tài khoản của tôi
+                    </Link>
+
+                    <Link to="/orders" className="dropdown-item">
+                      Đơn mua
+                    </Link>
+
+                    <div
+                      className="dropdown-item logout"
+                      onClick={handleLogout}
+                    >
+                      Đăng xuất
+                    </div>
+                  </div>
+                </div>
               </>
             )}
           </nav>
@@ -153,6 +179,10 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
           <Route path="/verify-otp" element={<VerifyOTP />} />
+
+          <Route path="/seller/register" element={<SellerRegister />} />
+
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </main>
     </div>

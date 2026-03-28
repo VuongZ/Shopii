@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 // Controllers
@@ -31,7 +32,18 @@ Route::get('/health', function () {
         'status' => 'OK'
     ]);
 });
+    
+// SHOP(REGISTER   SELLER)
+Route::get('/provinces', function () {
+    return Http::get("https://provinces.open-api.vn/api/p")->json();
+});   
+Route::get('/provinces/{code}', function ($code) {
+    return Http::get("https://provinces.open-api.vn/api/p/$code?depth=2")->json();
+});
 
+Route::get('/districts/{code}', function ($code) {
+    return Http::get("https://provinces.open-api.vn/api/d/$code?depth=2")->json();
+});
 /*
 |--------------------------------------------------------------------------
 | 2. PROTECTED ROUTES (Cần đăng nhập)
@@ -71,6 +83,9 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::get('/user/addresses', [UserAddressController::class, 'index']);
     Route::post('/user/addresses', [UserAddressController::class, 'store']);
+    Route::put('/user/addresses/{id}', [UserAddressController::class, 'update']);
+    Route::delete('/user/addresses/{id}', [UserAddressController::class, 'destroy']);
+    Route::put('/user/addresses/{id}/default', [UserAddressController::class, 'setDefault']);
 
     /*
     -----------------------
@@ -96,7 +111,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/shops', [ShopController::class, 'store']);
     Route::get('/my-shop', [ShopController::class, 'myShop']);
 
-
+    
     /*
     |--------------------------------------------------------------------------
     | 3. ADMIN ROUTES
