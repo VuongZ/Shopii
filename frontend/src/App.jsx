@@ -108,13 +108,13 @@ function App() {
             </Link>
 
             <div className="cart-wrapper">
-              {/* <Link to="/cart" className="nav-link cart-icon">
+              <Link to="/cart" className="nav-link cart-icon">
                 <ShoppingCart size={22} />
 
                 {cartCount > 0 && (
                   <span className="cart-badge">{cartCount}</span>
                 )}
-              </Link> */}
+              </Link>
 
               <div className="cart-dropdown">
                 {cartItems.length === 0 ? (
@@ -130,10 +130,6 @@ function App() {
                         </div>
                       </div>
                     ))}
-
-                    <Link to="/cart" className="view-cart-btn">
-                      Xem Giỏ Hàng
-                    </Link>
                   </>
                 )}
               </div>
