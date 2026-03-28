@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Shop;
+use App\Models\UserAddress;
 use Illuminate\Support\Str;
 
 class ShopController extends Controller
@@ -15,92 +16,93 @@ class ShopController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->role !== 'seller') {
+        if (!in_array($user->role, ['user', 'seller'])) {
             return response()->json([
-                'message' => 'Chỉ seller mới được tạo shop'
+                'message' => 'Không có quyền'
             ], 403);
         }
-
-        // kiểm tra đã có shop chưa
-        $existingShop = Shop::where('user_id', $user->id)->first();
-
-        if ($existingShop) {
+        if (Shop::where('user_id', $user->id)->exists()) {
             return response()->json([
                 'message' => 'Bạn đã có shop rồi'
             ], 400);
         }
 
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'logo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'addresses' => 'nullable|string'
+        ]);
+
+        $slug = Str::slug($data['name']);
+        $originalSlug = $slug;
+        $count = 1;
+
+        while (Shop::where('slug', $slug)->exists()) {
+            $slug = $originalSlug . '-' . $count++;
+        }
+
+        $logoPath = null;
+        if ($request->hasFile('logo')) {
+            $logoPath = $request->file('logo')->store('shops', 'public');
+        }
+
         $shop = Shop::create([
             'user_id' => $user->id,
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'description' => $request->description,
-            'is_verified' => 0
+            'name' => $data['name'],
+            'slug' => $slug,
+            'description' => $data['description'] ?? null,
+            'logo' => $logoPath,
+            'rating' => 0,        
+            'is_verified' => 0    
         ]);
+        $addresses = json_decode($request->addresses, true);
 
+        if (!$addresses || count($addresses) == 0) {
+            return response()->json(['message' => 'Thiếu địa chỉ'], 400);
+        }
+
+        $addr = $addresses[0];
+
+        UserAddress::create([
+            'user_id' => $user->id,
+            'recipient_name' => $addr['receiver'],
+            'recipient_phone' => $addr['phone'],
+            'address_detail' => $addr['detail'],
+            'city' => $addr['province'],
+            'district' => $addr['district'],
+            'ward' => $addr['ward']
+        ]);
+        
+        $user->role = 'seller';
+        $user->save();
         return response()->json([
-            'message' => 'Tạo shop thành công, chờ admin duyệt',
+            'message' => 'Đăng ký shop thành công, vui lòng chờ duyệt',
             'shop' => $shop
-        ]);
+        ], 201);
     }
 
     // ==============================
-    // ADMIN XEM SHOP CHỜ DUYỆT
+    // LẤY SHOP CỦA TÔI
     // ==============================
-    public function pending()
-    {
-        $user = auth()->user();
-
-        if ($user->role !== 'admin') {
-            return response()->json([
-                'message' => 'Không có quyền'
-            ], 403);
-        }
-
-        return Shop::with('user')
-            ->where('is_verified', 0)
-            ->get();
-    }
-
-    // ==============================
-    // ADMIN DUYỆT SHOP
-    // ==============================
-    public function approve($id)
-    {
-        $user = auth()->user();
-
-        if ($user->role !== 'admin') {
-            return response()->json([
-                'message' => 'Không có quyền'
-            ], 403);
-        }
-
-        $shop = Shop::findOrFail($id);
-        $shop->is_verified = 1;
-        $shop->save();
-
-        return response()->json([
-            'message' => 'Shop đã được duyệt'
-        ]);
-    }
     public function myShop()
-{
-    $user = auth()->user();
+    {
+        $user = auth()->user();
 
-    $shop = Shop::where('user_id', $user->id)
-        ->with([
-            'products.product_images',
-            'products.skus',
-            'products.category'
-        ])
-        ->first();
+        $shop = Shop::where('user_id', $user->id)
+            ->with([
+                'products.product_images',
+                'products.skus',
+                'products.category'
+            ])
+            ->first();
 
-    if (!$shop) {
-        return response()->json([
-            'message' => 'Bạn chưa có shop'
-        ], 404);
+        if (!$shop) {
+            return response()->json([
+                'message' => 'Bạn chưa có shop'
+            ], 404);
+        }
+
+        return response()->json($shop);
     }
-
-    return response()->json($shop);
-}
 }
