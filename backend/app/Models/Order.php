@@ -19,4 +19,9 @@ class Order extends Model
     {
         return $this->belongsTo(Shop::class);
     }
+
+    public function histories()
+    {
+        return $this->hasMany(OrderHistory::class);
+    }
 }

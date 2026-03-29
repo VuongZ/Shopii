@@ -16,6 +16,9 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\AdminShopController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\OrderProcessingController;
+use App\Http\Controllers\ProductReviewController;
+use App\Http\Controllers\ChatController;
 /*
 |--------------------------------------------------------------------------
 | 1. KHU VỰC CÔNG KHAI (Không cần đăng nhập)
@@ -63,6 +66,33 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/checkout', [OrderController::class, 'checkout']);
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
+
+    /* ----------------------- ORDER HISTORIES (User) ----------------------- */
+    Route::middleware('user')->group(function () {
+        Route::get('/order-histories', [OrderProcessingController::class, 'userIndex']);
+        Route::get('/order-histories/{orderId}', [OrderProcessingController::class, 'userShow']);
+        Route::post('/conversations', [ChatController::class, 'createConversation']);
+
+        /* ----------------------- PRODUCT REVIEWS (User) ----------------------- */
+        Route::get('/product-reviews', [ProductReviewController::class, 'index']);
+        Route::post('/product-reviews', [ProductReviewController::class, 'store']);
+        Route::put('/product-reviews/{reviewId}', [ProductReviewController::class, 'update']);
+        Route::delete('/product-reviews/{reviewId}', [ProductReviewController::class, 'destroy']);
+    });
+
+    /* ----------------------- CHAT (User & Seller) ----------------------- */
+    Route::get('/conversations', [ChatController::class, 'listConversations']);
+    Route::get('/conversations/{conversationId}/messages', [ChatController::class, 'listMessages']);
+    Route::post('/conversations/{conversationId}/messages', [ChatController::class, 'sendMessage']);
+
+    /* ----------------------- SELLER ORDER MANAGEMENT ----------------------- */
+    Route::middleware('seller')->group(function () {
+        Route::get('/seller/orders', [OrderProcessingController::class, 'sellerIndex']);
+        Route::post('/seller/orders/{orderId}/confirm', [OrderProcessingController::class, 'confirm']);
+        Route::post('/seller/orders/{orderId}/shipping', [OrderProcessingController::class, 'shipping']);
+        Route::post('/seller/orders/{orderId}/complete', [OrderProcessingController::class, 'completed']);
+        Route::post('/seller/orders/{orderId}/cancel', [OrderProcessingController::class, 'cancelled']);
+    });
 
     /* ----------------------- ĐỊA CHỈ ----------------------- */
     Route::get('/user/addresses', [UserAddressController::class, 'index']);

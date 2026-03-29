@@ -34,4 +34,9 @@ class Product extends Model
     {
         return $this->hasMany(ProductSku::class);
     }
+
+    public function product_reviews()
+    {
+        return $this->hasMany(ProductReview::class, 'product_id');
+    }
 }

@@ -46,4 +46,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserAddress::class, 'user_id');
     }
+
+    public function product_reviews()
+    {
+        return $this->hasMany(ProductReview::class, 'user_id');
+    }
 }

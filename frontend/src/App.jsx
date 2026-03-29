@@ -10,7 +10,7 @@ import Register from './pages/Register'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import PaymentResult from './pages/PaymentResult'
-import OrderHistoryPage from './pages/OrderHistoryPage'
+import OrderHistoryPageV2 from './pages/OrderHistoryPageV2'
 import ProductDetailPage from './pages/ProductDetailPage'
 import SellerCouponManagementPage from './pages/SellerCouponManagementPage'
 import ResetPassword from './pages/ResetPassword'
@@ -19,6 +19,8 @@ import VerifyOTP from './pages/VerifyOTP'
 import CategoriesPage from './pages/CategoriesPage'
 import Reviews from './pages/Review'
 import ShopPage from './pages/ShopPage'
+import SellerOrderManagementPage from './pages/SellerOrderManagementPage'
+import ChatPage from './pages/ChatPage'
 
 import './App.css'
 
@@ -69,6 +71,11 @@ function App() {
             <Link to="/orders" className="nav-link">
               Đơn mua
             </Link>
+            {user && (
+              <Link to="/chat" className="nav-link">
+                Chat
+              </Link>
+            )}
             <Link to="/users" className="nav-link">
               Users
             </Link>
@@ -102,6 +109,14 @@ function App() {
                   style={{ color: 'green', fontWeight: 'bold' }}
                 >
                   Coupons
+                </Link>
+
+                <Link
+                  to="/seller-orders"
+                  className="nav-link"
+                  style={{ color: '#3b82f6', fontWeight: 'bold' }}
+                >
+                  Quản lý đơn
                 </Link>
               </>
             )}
@@ -137,9 +152,11 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/payment-result" element={<PaymentResult />} />
-          <Route path="/orders" element={<OrderHistoryPage />} />
+          <Route path="/orders" element={<OrderHistoryPageV2 />} />
           <Route path="/users" element={<UsersPage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/seller-orders" element={<SellerOrderManagementPage />} />
+          <Route path="/chat" element={<ChatPage />} />
           <Route
             path="/seller-coupons"
             element={<SellerCouponManagementPage />}

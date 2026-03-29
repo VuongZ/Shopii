@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosClient from "../api/axiosClient"; 
-import Review from "./Review";
 import orderApi from "../api/orderApi";
+import ReviewForm from "../components/Review/ReviewForm";
 
 function ProductDetailPage() {
     const { id } = useParams();
-  const [orderId, setOrderId] = useState(null);
+  const [reviewOrderId, setReviewOrderId] = useState(null);
+  const [canReview, setCanReview] = useState(false);
 useEffect(() => {
   fetchOrderId();
 }, [id]);
@@ -19,18 +20,32 @@ const fetchOrderId = async () => {
     console.log("ORDERS:", orders); // debug
 
     for (const order of orders) {
-      // ⚠️ CHỖ NÀY QUAN TRỌNG
-      const hasProduct = order.items?.some(
-        (item) => item.product_id == id
-      );
+      const hasProduct = order.items?.some((item) => {
+        const productId = item?.sku?.product?.id;
+        return String(productId) === String(id);
+      });
 
-      if (hasProduct) {
-        setOrderId(order.id);
+      if (!hasProduct) continue;
+
+      // Only allow review when the order is completed
+      if (order.status === "completed") {
+        setReviewOrderId(order.id);
+        setCanReview(true);
         return;
+      }
+
+      // Remember any matching order, but disable review
+      if (!reviewOrderId) {
+        setReviewOrderId(order.id);
+        setCanReview(false);
       }
     }
 
-    setOrderId(null);
+    // No order contains this product
+    if (!reviewOrderId) {
+      setReviewOrderId(null);
+      setCanReview(false);
+    }
   } catch (err) {
     console.error(err);
   }
@@ -236,11 +251,11 @@ const fetchOrderId = async () => {
             >
               {displayStock > 0 ? 'Thêm vào giỏ hàng' : 'Hết hàng'}
             </button>
-         <Review
+         <ReviewForm
     productId={id}
-    orderId={orderId}
-    token={localStorage.getItem("token")}
-          />
+    orderId={reviewOrderId}
+    canReview={canReview}
+/>
          
           </div>
         </div>
