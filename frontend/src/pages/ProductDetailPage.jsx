@@ -1,3 +1,18 @@
+<<<<<<< HEAD
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import axiosClient from "../api/axiosClient"; 
+import orderApi from "../api/orderApi";
+import ReviewForm from "../components/Review/ReviewForm";
+
+function ProductDetailPage() {
+    const { id } = useParams();
+  const [reviewOrderId, setReviewOrderId] = useState(null);
+  const [canReview, setCanReview] = useState(false);
+useEffect(() => {
+  fetchOrderId();
+}, [id]);
+=======
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axiosClient from '../api/axiosClient'
@@ -11,6 +26,7 @@ function ProductDetailPage() {
   useEffect(() => {
     fetchOrderId()
   }, [id])
+>>>>>>> cbd0a3bf9099cb1d16b1cfcb7fc0ead8091cd1ec
 
   const fetchOrderId = async () => {
     try {
@@ -19,6 +35,37 @@ function ProductDetailPage() {
 
       console.log('ORDERS:', orders) // debug
 
+<<<<<<< HEAD
+    for (const order of orders) {
+      const hasProduct = order.items?.some((item) => {
+        const productId = item?.sku?.product?.id;
+        return String(productId) === String(id);
+      });
+
+      if (!hasProduct) continue;
+
+      // Only allow review when the order is completed
+      if (order.status === "completed") {
+        setReviewOrderId(order.id);
+        setCanReview(true);
+        return;
+      }
+
+      // Remember any matching order, but disable review
+      if (!reviewOrderId) {
+        setReviewOrderId(order.id);
+        setCanReview(false);
+      }
+    }
+
+    // No order contains this product
+    if (!reviewOrderId) {
+      setReviewOrderId(null);
+      setCanReview(false);
+    }
+  } catch (err) {
+    console.error(err);
+=======
       for (const order of orders) {
         // ⚠️ CHỖ NÀY QUAN TRỌNG
         const hasProduct = order.items?.some((item) => item.product_id == id)
@@ -33,6 +80,7 @@ function ProductDetailPage() {
     } catch (err) {
       console.error(err)
     }
+>>>>>>> cbd0a3bf9099cb1d16b1cfcb7fc0ead8091cd1ec
   }
 
   const navigate = useNavigate()
@@ -398,11 +446,20 @@ function ProductDetailPage() {
             >
               {displayStock > 0 ? 'Thêm vào giỏ hàng' : 'Hết hàng'}
             </button>
+<<<<<<< HEAD
+         <ReviewForm
+    productId={id}
+    orderId={reviewOrderId}
+    canReview={canReview}
+/>
+         
+=======
             <Review
               productId={id}
               orderId={orderId}
               token={localStorage.getItem('token')}
             />
+>>>>>>> cbd0a3bf9099cb1d16b1cfcb7fc0ead8091cd1ec
           </div>
         </div>
       </div>

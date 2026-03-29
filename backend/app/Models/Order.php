@@ -20,6 +20,11 @@ class Order extends Model
         return $this->belongsTo(Shop::class);
     }
 
+
+    public function histories()
+    {
+        return $this->hasMany(OrderHistory::class);
+    }
     public function userAddress()
     {
         return $this->belongsTo(UserAddress::class, 'user_address_id');
@@ -32,5 +37,6 @@ class Order extends Model
     public function paymentMethod()
     {
         return $this->belongsTo(PaymentMethod::class, 'payment_method_id');
+
     }
 }

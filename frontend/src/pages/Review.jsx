@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import axiosClient from "../api/axiosClient";
 
 export default function ReviewSection({ productId, orderId, token }) {
@@ -15,12 +14,12 @@ export default function ReviewSection({ productId, orderId, token }) {
 
  const fetchReviews = async () => {
   try {
-    const res = await axios.get("/api/reviews", {
+    // Đổi axios thành axiosClient và sửa lại route (bỏ /api/ đi nếu axiosClient đã có sẵn)
+    const res = await axiosClient.get("reviews", {
       params: { product_id: productId }
     });
 
     console.log("API RESPONSE:", res.data);
-
 
     if (Array.isArray(res.data)) {
       setReviews(res.data);
@@ -31,7 +30,7 @@ export default function ReviewSection({ productId, orderId, token }) {
     }
 
   } catch (error) {
-    console.error(error);
+    console.error("Lỗi khi tải đánh giá:", error);
     setReviews([]);
   }
   };
