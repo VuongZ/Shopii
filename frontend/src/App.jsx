@@ -87,9 +87,6 @@ function App() {
             <Link to="/" className="nav-link">
               Trang chủ
             </Link>
-            <Link to="/cart" className="nav-link">
-              <ShoppingCart size={20} />
-            </Link>
             <Link to="/orders" className="nav-link">
               Đơn mua
             </Link>
@@ -98,9 +95,6 @@ function App() {
                 Chat
               </Link>
             )}
-            <Link to="/users" className="nav-link">
-              Users
-            </Link>
             {user && user.role !== 'seller' && user.role !== 2 && (
               <Link to="/seller" className="nav-link">
                 Kênh người bán
@@ -111,8 +105,8 @@ function App() {
               <Link to="/cart" className="nav-link cart-icon">
                 <ShoppingCart size={22} />
 
-                {cartCount > 0 && (
-                  <span className="cart-badge">{cartCount}</span>
+                {user && user.cartCount > 0 && (
+                  <span className="cart-badge">{user.cartCount}</span>
                 )}
               </Link>
 
