@@ -87,7 +87,6 @@ function App() {
             <Link to="/" className="nav-link">
               Trang chủ
             </Link>
-<<<<<<< HEAD
             <Link to="/cart" className="nav-link">
               <ShoppingCart size={20} />
             </Link>
@@ -102,8 +101,6 @@ function App() {
             <Link to="/users" className="nav-link">
               Users
             </Link>
-=======
-
             {user && user.role !== 'seller' && user.role !== 2 && (
               <Link to="/seller" className="nav-link">
                 Kênh người bán

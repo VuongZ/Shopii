@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import axiosClient from "../api/axiosClient";
 
 export default function ReviewSection({ productId, orderId, token }) {
@@ -16,7 +15,7 @@ export default function ReviewSection({ productId, orderId, token }) {
  const fetchReviews = async () => {
   try {
     // Đổi axios thành axiosClient và sửa lại route (bỏ /api/ đi nếu axiosClient đã có sẵn)
-    const res = await axiosClient.get("/reviews", {
+    const res = await axiosClient.get("reviews", {
       params: { product_id: productId }
     });
 
