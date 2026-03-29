@@ -1,93 +1,93 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react'
 
-const API = "https://shopii-backend-latest.onrender.com";
+const API = 'https://shopii-backend-latest.onrender.com'
 
 function UsersPage() {
-  const [users, setUsers] = useState([]);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [users, setUsers] = useState([])
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
 
   const loadUsers = async () => {
-    const res = await fetch(API + "/users");
-    const html = await res.text();
+    const res = await fetch(API + '/users')
+    const html = await res.text()
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(html, 'text/html')
 
-    const rows = doc.querySelectorAll("table tr");
+    const rows = doc.querySelectorAll('table tr')
 
-    const list = [];
+    const list = []
 
     for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
+      const row = rows[i]
 
-      const id = row.children[0]?.innerText.trim();
+      const id = row.children[0]?.innerText.trim()
 
-      const nameInput = row.querySelector("input[name='name']");
-      const emailInput = row.querySelector("input[name='email']");
+      const nameInput = row.querySelector("input[name='name']")
+      const emailInput = row.querySelector("input[name='email']")
 
-      const name = nameInput ? nameInput.value : "";
-      const email = emailInput ? emailInput.value : "";
+      const name = nameInput ? nameInput.value : ''
+      const email = emailInput ? emailInput.value : ''
 
       if (id) {
-        list.push({ id, name, email });
+        list.push({ id, name, email })
       }
     }
 
-    setUsers(list);
-  };
+    setUsers(list)
+  }
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    loadUsers()
+  }, [])
 
   // CREATE
   const createUser = async () => {
-    await fetch(API + "/users", {
-      method: "POST",
+    await fetch(API + '/users', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: `name=${name}&email=${email}`,
-    });
+    })
 
-    setName("");
-    setEmail("");
+    setName('')
+    setEmail('')
 
-    loadUsers();
-  };
+    loadUsers()
+  }
 
   // UPDATE
   const updateUser = async (id) => {
-    const name = document.getElementById("name" + id).value;
-    const email = document.getElementById("email" + id).value;
+    const name = document.getElementById('name' + id).value
+    const email = document.getElementById('email' + id).value
 
     await fetch(API + `/users/${id}/update`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: `name=${name}&email=${email}`,
-    });
+    })
 
-    loadUsers();
-  };
+    loadUsers()
+  }
 
   // DELETE
   const deleteUser = async (id) => {
     await fetch(API + `/users/${id}/delete`, {
-      method: "POST",
-    });
+      method: 'POST',
+    })
 
-    loadUsers();
-  };
+    loadUsers()
+  }
 
   return (
     <div style={{ padding: 40 }}>
       <h1>Users CRUD</h1>
-  <p style={{ color: "#555", marginBottom: 20 }}>
+      <p style={{ color: '#555', marginBottom: 20 }}>
         <b>Note:</b> Chỉnh sửa thông tin trên từng dòng trong table và bấm
-         <b>Update</b> lưu thay đổi.
+        <b>Update</b> để lưu thay đổi.
       </p>
       {/* CREATE */}
 
@@ -126,11 +126,11 @@ function UsersPage() {
               <td>{u.id}</td>
 
               <td>
-                <input defaultValue={u.name} id={"name" + u.id} />
+                <input defaultValue={u.name} id={'name' + u.id} />
               </td>
 
               <td>
-                <input defaultValue={u.email} id={"email" + u.id} />
+                <input defaultValue={u.email} id={'email' + u.id} />
               </td>
 
               <td>
@@ -143,7 +143,7 @@ function UsersPage() {
         </tbody>
       </table>
     </div>
-  );
+  )
 }
 
-export default UsersPage;
+export default UsersPage
