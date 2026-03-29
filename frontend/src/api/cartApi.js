@@ -4,6 +4,9 @@ const cartApi = {
   getCart() {
     return axiosClient.get("/cart");
   },
+  add(data) {
+    return axiosClient.post("/cart/add", data); 
+  },
 
   update(data) {
     return axiosClient.put("/cart/update", data);

@@ -13,11 +13,18 @@ import PaymentResult from './pages/PaymentResult'
 import OrderHistoryPageV2 from './pages/OrderHistoryPageV2'
 import ProductDetailPage from './pages/ProductDetailPage'
 import SellerCouponManagementPage from './pages/SellerCouponManagementPage'
+import SellerProductDetail from './pages/SellerProductDetail'
 import ResetPassword from './pages/ResetPassword'
 import ForgotPassword from './pages/ForgotPassword'
 import VerifyOTP from './pages/VerifyOTP'
+
+import SellerRegister from './pages/SellerRegister'
+import ProfilePage from './pages/ProfilePage'
+
 import CategoriesPage from './pages/CategoriesPage'
 import Reviews from './pages/Review'
+import AdminShopsPage from './pages/AdminShopsPage'
+
 import ShopPage from './pages/ShopPage'
 import SellerOrderManagementPage from './pages/SellerOrderManagementPage'
 import ChatPage from './pages/ChatPage'
@@ -26,19 +33,34 @@ import './App.css'
 
 function App() {
   const navigate = useNavigate()
-
+  const [cartCount, setCartCount] = useState(0)
+  const [cartItems, setCartItems] = useState([])
   const [user, setUser] = useState(() => {
     const info = localStorage.getItem('USER_INFO')
     return info ? JSON.parse(info) : null
   })
+  const loadCart = () => {
+    const cart = JSON.parse(localStorage.getItem('CART')) || []
+    setCartItems(cart)
 
+    const total = cart.reduce((sum, item) => sum + item.quantity, 0)
+    setCartCount(total)
+    window.addEventListener('storage', loadCart)
+    window.addEventListener('cartUpdated', loadCart)
+  }
   useEffect(() => {
-    const handleStorage = () => {
+    loadCart()
+
+    const handleUserUpdate = () => {
       const info = localStorage.getItem('USER_INFO')
       setUser(info ? JSON.parse(info) : null)
     }
-    window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
+    window.addEventListener('userUpdated', handleUserUpdate)
+    return () => {
+      window.removeEventListener('userUpdated', handleUserUpdate)
+      window.removeEventListener('storage', loadCart)
+      window.removeEventListener('cartUpdated', loadCart)
+    }
   }, [])
 
   const handleLogout = async () => {
@@ -50,7 +72,7 @@ function App() {
     localStorage.removeItem('ACCESS_TOKEN')
     localStorage.removeItem('USER_INFO')
     setUser(null)
-    navigate('/login')
+    navigate('/')
   }
 
   return (
@@ -65,6 +87,7 @@ function App() {
             <Link to="/" className="nav-link">
               Trang chủ
             </Link>
+<<<<<<< HEAD
             <Link to="/cart" className="nav-link">
               <ShoppingCart size={20} />
             </Link>
@@ -79,6 +102,48 @@ function App() {
             <Link to="/users" className="nav-link">
               Users
             </Link>
+=======
+
+            {user && user.role !== 'seller' && user.role !== 2 && (
+              <Link to="/seller" className="nav-link">
+                Kênh người bán
+              </Link>
+            )}
+
+            <div className="cart-wrapper">
+              <Link to="/cart" className="nav-link cart-icon">
+                <ShoppingCart size={22} />
+
+                {cartCount > 0 && (
+                  <span className="cart-badge">{cartCount}</span>
+                )}
+              </Link>
+
+              <div className="cart-dropdown">
+                {cartItems.length === 0 ? (
+                  <p className="empty-cart-mini">Chưa có sản phẩm</p>
+                ) : (
+                  <>
+                    {cartItems.slice(0, 5).map((item) => (
+                      <div key={item.id} className="mini-item">
+                        <img
+                          src={
+                            item.image ||
+                            'https://placehold.co/50x50?text=No+Image'
+                          }
+                          alt={item.name}
+                        />
+                        <div>
+                          <p>{item.name}</p>
+                          <span>{item.price}đ</span>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            </div>
+>>>>>>> cbd0a3bf9099cb1d16b1cfcb7fc0ead8091cd1ec
 
             {/* ADMIN */}
             {user && (user.role === 'admin' || user.role === 1) && (
@@ -102,7 +167,6 @@ function App() {
                   Cửa hàng của tôi
                 </Link>
 
-               
                 <Link
                   to="/seller-coupons"
                   className="nav-link"
@@ -132,12 +196,35 @@ function App() {
               </>
             ) : (
               <>
-                <span style={{ marginLeft: '10px' }}>
-                  Xin chào <b>{user.name}</b>
-                </span>
-                <button className="btn-logout" onClick={handleLogout}>
-                  Logout
-                </button>
+                <div className="user-menu">
+                  <div className="user-trigger">
+                    <div className="avatar">
+                      {user.name?.charAt(0).toUpperCase()}
+                    </div>
+
+                    <span>{user.name}</span>
+                  </div>
+
+                  <div className="dropdown-menu">
+                    {user.role !== 'seller' && user.role !== 2 && (
+                      <>
+                        <Link to="/profile" className="dropdown-item">
+                          Tài khoản của tôi
+                        </Link>
+                        <Link to="/orders" className="dropdown-item">
+                          Đơn mua
+                        </Link>
+                      </>
+                    )}
+
+                    <div
+                      className="dropdown-item logout"
+                      onClick={handleLogout}
+                    >
+                      Đăng xuất
+                    </div>
+                  </div>
+                </div>
               </>
             )}
           </nav>
@@ -164,11 +251,24 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />
+
+          <Route path="/seller/register" element={<SellerRegister />} />
+
+          <Route path="/profile" element={<ProfilePage />} />
+
           <Route path="/categories" element={<CategoriesPage />} />
+
           <Route path="/reviews" element={<Reviews />} />
 
-          {/* shop */}
+          <Route path="/admin/shops" element={<AdminShopsPage />} />
+
           <Route path="/shop" element={<ShopPage />} />
+
+          <Route path="/seller" element={<ShopPage />} />
+          <Route
+            path="/seller/products/:id"
+            element={<SellerProductDetail />}
+          />
         </Routes>
       </main>
     </div>

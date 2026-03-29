@@ -163,3 +163,156 @@
   border-color: #6366f1;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
+/* ---- ORDER MANAGEMENT CSS ---- */
+.order-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 10px;
+  overflow-x: auto;
+}
+
+.order-tab-btn {
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.order-tab-btn:hover {
+  background: #f3f4f6;
+}
+
+.order-tab-btn.active {
+  color: #4f46e5;
+  background: #e0e7ff;
+}
+
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.order-card {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dashed #e5e7eb;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  font-size: 15px;
+}
+
+.order-card-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-info p {
+  margin: 4px 0;
+  color: #374151;
+}
+
+.order-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 130px;
+}
+
+.btn-confirm,
+.btn-ship,
+.btn-cancel {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: center;
+  transition: 0.2s;
+}
+
+.btn-confirm {
+  background: #3b82f6;
+  color: white;
+}
+.btn-confirm:hover {
+  background: #2563eb;
+}
+
+.btn-ship {
+  background: #8b5cf6;
+  color: white;
+}
+.btn-ship:hover {
+  background: #7c3aed;
+}
+
+.btn-cancel {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #f87171;
+}
+.btn-cancel:hover {
+  background: #fee2e2;
+}
+
+/* Toggle Switch cho Auto Confirm */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+}
+.slider:before {
+  position: absolute;
+  content: '';
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+}
+input:checked + .slider {
+  background-color: #10b981;
+}
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+.slider.round {
+  border-radius: 24px;
+}
+.slider.round:before {
+  border-radius: 50%;
+}

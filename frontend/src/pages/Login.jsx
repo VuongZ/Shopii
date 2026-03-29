@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import axiosClient from '../api/axiosClient'
+import userApi from '../api/userApi'
 import { Link, useNavigate } from 'react-router-dom'
 
 export default function Login() {
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
   const navigate = useNavigate()
@@ -13,33 +13,25 @@ export default function Login() {
     setError(null)
 
     try {
-      const response = await axiosClient.post('/login', {
-        email: email,
+      const response = await userApi.login({
+        identifier: identifier,
         password: password,
       })
-      
-      // 1. Lưu thông tin vào LocalStorage
+
       localStorage.setItem('ACCESS_TOKEN', response.data.token)
       localStorage.setItem('USER_INFO', JSON.stringify(response.data.user))
 
-      // 2. Kích hoạt event để Navbar (App.jsx) nhận biết user đã đăng nhập
-      window.dispatchEvent(new Event('storage'))
-      alert(response.data.message)
+      window.dispatchEvent(new Event('userUpdated'))
+      alert(response.data.message || 'Đăng nhập thành công!')
+      const userRole = response.data.user.role
 
-      // 3. LOGIC CHUYỂN TRẠM DỰA TRÊN ROLE
-      const userRole = response.data.user.role; // Lấy role từ thông tin user trả về
-      
       if (userRole === 'seller' || userRole === 2) {
-        // Nếu là người bán -> Bay thẳng vào trang Shop
         navigate('/shop')
       } else if (userRole === 'admin' || userRole === 1) {
-        // Nếu là admin -> Bay vào trang Categories
         navigate('/categories')
       } else {
-        // Nếu là khách hàng thường -> Về Trang chủ
         navigate('/')
       }
-
     } catch (err) {
       console.error(err)
       setError(err.response?.data?.message || 'Đăng nhập thất bại!')
@@ -94,8 +86,8 @@ export default function Login() {
           <div style={{ marginBottom: '22px', position: 'relative' }}>
             <input
               type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               required
               placeholder=" "
               autoComplete="username"
@@ -114,12 +106,12 @@ export default function Login() {
               style={{
                 position: 'absolute',
                 left: '10px',
-                top: email ? '-8px' : '50%',
-                transform: email ? 'translateY(0)' : 'translateY(-50%)',
+                top: identifier ? '-8px' : '50%',
+                transform: identifier ? 'translateY(0)' : 'translateY(-50%)',
                 background: '#fff',
                 padding: '0 6px',
-                fontSize: email ? '12px' : '14px',
-                color: email ? '#5a5df0' : '#999',
+                fontSize: identifier ? '12px' : '14px',
+                color: identifier ? '#5a5df0' : '#999',
                 transition: '0.2s',
                 pointerEvents: 'none',
               }}

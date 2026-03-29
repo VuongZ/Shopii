@@ -8,21 +8,15 @@ use App\Models\UserAddress;
 
 class UserAddressController extends Controller
 {
-    // Lấy danh sách địa chỉ của user đang đăng nhập
     public function index()
     {
-        $user = Auth::user();
-        
-        // Lấy tất cả địa chỉ, sắp xếp cái mặc định lên đầu
-        $addresses = UserAddress::where('user_id', $user->id)
-            ->orderBy('is_default', 'desc') 
-            ->orderBy('created_at', 'desc')
-            ->get();
-
+        $addresses = UserAddress::where('user_id', auth()->id())
+                    ->orderBy('is_default', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->get();
         return response()->json($addresses);
     }
 
-    //Thêm địa chỉ
     public function store(Request $request)
     {
         $request->validate([
@@ -30,13 +24,12 @@ class UserAddressController extends Controller
             'recipient_phone' => 'required|string',
             'address_detail' => 'required|string',
             'city' => 'required|string',
-            'district' => 'required|string',
-            'ward' => 'required|string',
+            'district' => 'nullable|string',
+            'ward' => 'nullable|string',
         ]);
 
         $user = Auth::user();
 
-        // Nếu đây là địa chỉ đầu tiên, set nó là mặc định
         $isFirst = UserAddress::where('user_id', $user->id)->doesntExist();
 
         $address = UserAddress::create([
@@ -49,7 +42,61 @@ class UserAddressController extends Controller
             'ward' => $request->ward,
             'is_default' => $isFirst ? 1 : 0
         ]);
-
+        $user->phone=$request->recipient_phone;
+        $user->save();
         return response()->json(['message' => 'Thêm địa chỉ thành công', 'data' => $address]);
+    }
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'recipient_name'  => 'required|string',
+            'recipient_phone' => 'required|string',
+            'address_detail'  => 'required|string',
+            'city'            => 'required|string',
+            'district'        => 'nullable|string',
+            'ward'            => 'nullable|string',
+        ]);
+
+        $user = Auth::user();
+
+        $address = UserAddress::where('user_id', $user->id)->findOrFail($id);
+
+        $address->update([
+            'recipient_name'  => $request->recipient_name,
+            'recipient_phone' => $request->recipient_phone,
+            'address_detail'  => $request->address_detail,
+            'city'            => $request->city,
+            'district'        => $request->district,
+            'ward'            => $request->ward,
+        ]);
+
+        return response()->json([
+            'message' => 'Cập nhật địa chỉ thành công', 
+            'data' => $address
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $user = Auth::user();
+
+        $address = UserAddress::where('user_id', $user->id)->findOrFail($id);
+
+        $address->delete();
+
+        return response()->json(['message' => 'Xóa địa chỉ thành công']);
+    }
+
+    public function setDefault($id)
+    {
+        $user = Auth::user();
+
+        $address = UserAddress::where('user_id', $user->id)->findOrFail($id);
+
+        UserAddress::where('user_id', $user->id)->update(['is_default' => 0]);
+
+        $address->update(['is_default' => 1]);
+
+        return response()->json(['message' => 'Đã thiết lập địa chỉ mặc định']);
     }
 }
