@@ -28,7 +28,6 @@ function getStatusColor(status) {
   return '#ee4d2d'
 }
 
-// 1. THÊM onConfirmReceipt VÀO PROPS Ở ĐÂY
 export default function OrderHistoryTable({
   orders,
   onChatWithShop,
@@ -167,7 +166,7 @@ export default function OrderHistoryTable({
                           item.sku?.product?.image ||
                           item.sku?.product?.product_images?.[0]?.image_url ||
                           item.sku?.product?.product_images?.[0]?.image_path ||
-                          'https://via.placeholder.com/150'
+                          'https://placehold.co/150x150?text=No+Image'
                         }
                         alt={item.sku?.product?.name}
                         style={{
@@ -219,7 +218,9 @@ export default function OrderHistoryTable({
                 </strong>
 
                 {(order.histories || []).length === 0 ? (
-                  <div style={{ color: '#888' }}>Chưa có lịch sử cập nhật.</div>
+                  <div style={{ color: '#888', fontSize: '14px' }}>
+                    Chưa có lịch sử cập nhật.
+                  </div>
                 ) : (
                   <div style={{ display: 'grid', rowGap: 8 }}>
                     {(order.histories || []).map((h, idx) => (
@@ -232,15 +233,31 @@ export default function OrderHistoryTable({
                           borderRadius: 8,
                         }}
                       >
-                        <div style={{ fontWeight: 600 }}>
-                          {translateStatus(h.from_status)} →{' '}
-                          {translateStatus(h.to_status)}
+                        {/* --- SỬA LẠI CHỖ NÀY --- */}
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            color: getStatusColor(h.status),
+                          }}
+                        >
+                          {translateStatus(h.status)}
                         </div>
-                        <div style={{ fontSize: 12, color: '#64748b' }}>
-                          Thực hiện bởi:{' '}
-                          {h.performed_by ? `User #${h.performed_by}` : 'N/A'}
+                        <div
+                          style={{
+                            fontSize: 13,
+                            color: '#475569',
+                            marginTop: '4px',
+                          }}
+                        >
+                          Ghi chú: {h.note || 'Không có'}
                         </div>
-                        <div style={{ fontSize: 12, color: '#64748b' }}>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: '#94a3b8',
+                            marginTop: '2px',
+                          }}
+                        >
                           {h.created_at
                             ? new Date(h.created_at).toLocaleString()
                             : ''}
@@ -289,7 +306,6 @@ export default function OrderHistoryTable({
                     flexWrap: 'wrap',
                   }}
                 >
-                  {/* 2. CHÈN NÚT ĐÃ NHẬN HÀNG Ở ĐÂY */}
                   {order.status === 'shipping' && (
                     <button
                       onClick={() =>

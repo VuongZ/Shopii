@@ -105,8 +105,8 @@ function App() {
               <Link to="/cart" className="nav-link cart-icon">
                 <ShoppingCart size={22} />
 
-                {user && user.cartCount > 0 && (
-                  <span className="cart-badge">{user.cartCount}</span>
+                {user && cartCount > 0 && (
+                  <span className="cart-badge">{cartCount}</span>
                 )}
               </Link>
 
