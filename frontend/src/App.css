@@ -770,3 +770,104 @@ body {
 .view-cart-btn:hover {
   background: #1d4ed8;
 }
+/* ======================================================= */
+/* 📱 GIAO DIỆN MOBILE CHUẨN APP (App.css)                 */
+/* ======================================================= */
+
+/* Ẩn nút Hamburger trên Laptop */
+.mobile-menu-btn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .shopee-header {
+    height: 60px;
+    padding: 0;
+  }
+  
+  .header-content {
+    justify-content: flex-start;
+    padding: 0 15px;
+    position: relative;
+  }
+
+  /* Hiện nút Hamburger */
+  .mobile-menu-btn {
+    display: block;
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    padding: 0;
+    margin-right: 15px;
+  }
+
+  .logo {
+    font-size: 24px;
+    margin: 0;
+  }
+
+  /* BIẾN MENU THÀNH SIDEBAR TRƯỢT TỪ TRÁI SANG */
+  .nav-menu {
+    position: fixed;
+    top: 60px; /* Nằm dưới header */
+    left: -100%; /* Giấu đi ngoài màn hình bên trái */
+    width: 250px;
+    height: calc(100vh - 60px);
+    background: white;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+    gap: 20px;
+    box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease-in-out;
+    z-index: 1000;
+  }
+
+  /* Khi State isMobileMenuOpen = true thì nó trượt vào */
+  .nav-menu.open {
+    left: 0; 
+  }
+
+  .nav-menu a:not(:last-child) {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding-right: 0;
+    padding-bottom: 15px;
+    width: 100%;
+  }
+
+  .nav-link {
+    font-size: 16px;
+    display: block;
+    width: 100%;
+  }
+
+  /* Chỉnh lại User Menu thả xuống bên trong Sidebar */
+  .user-menu {
+    width: 100%;
+    margin-top: 10px;
+  }
+  .dropdown-menu {
+    position: static; /* Không làm popup nữa mà thả xuống liền */
+    box-shadow: none;
+    border-left: 2px solid var(--primary);
+    border-radius: 0;
+    padding-left: 10px;
+    margin-top: 10px;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    width: 100%;
+    display: none;
+  }
+  .user-menu:hover .dropdown-menu {
+    display: block;
+  }
+
+  /* Bảng giỏ hàng thả xuống chỉnh cho khỏi bị tràn màn hình */
+  .cart-dropdown {
+    right: -10px;
+    width: 280px;
+  }
+}

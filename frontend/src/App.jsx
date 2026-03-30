@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Routes, Route, Link, useNavigate } from 'react-router-dom'
-import { ShoppingCart } from 'lucide-react'
+// MỚI: Import thêm icon Menu và X cho nút Hamburger
+import { ShoppingCart, Menu, X } from 'lucide-react'
 
 import userApi from './api/userApi'
 import UsersPage from './pages/UsersPage'
@@ -35,10 +36,15 @@ function App() {
   const navigate = useNavigate()
   const [cartCount, setCartCount] = useState(0)
   const [cartItems, setCartItems] = useState([])
+  
+  // MỚI: State điều khiển Menu trượt trên Mobile
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
   const [user, setUser] = useState(() => {
     const info = localStorage.getItem('USER_INFO')
     return info ? JSON.parse(info) : null
   })
+  
   const loadCart = () => {
     const cart = JSON.parse(localStorage.getItem('CART')) || []
     setCartItems(cart)
@@ -48,6 +54,7 @@ function App() {
     window.addEventListener('storage', loadCart)
     window.addEventListener('cartUpdated', loadCart)
   }
+  
   useEffect(() => {
     loadCart()
 
@@ -72,152 +79,131 @@ function App() {
     localStorage.removeItem('ACCESS_TOKEN')
     localStorage.removeItem('USER_INFO')
     setUser(null)
+    setIsMobileMenuOpen(false) // Đóng menu khi logout
     navigate('/')
   }
+
+  // Hàm tiện ích: Đóng menu mobile sau khi click link
+  const closeMenu = () => setIsMobileMenuOpen(false);
 
   return (
     <div className="app-container">
       <header className="shopee-header">
         <div className="header-content">
-          <Link to="/" className="logo">
+          
+          {/* MỚI: Nút Hamburger chỉ hiện trên Mobile */}
+          <button 
+            className="mobile-menu-btn" 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
+          </button>
+
+          <Link to="/" className="logo" onClick={closeMenu}>
             Shopii
           </Link>
 
-          <nav className="nav-menu">
-            <Link to="/" className="nav-link">
+          {/* MENU ĐIỀU HƯỚNG (Sẽ biến thành Sidebar trượt trên Mobile) */}
+          <nav className={`nav-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+            <Link to="/" className="nav-link" onClick={closeMenu}>
               Trang chủ
             </Link>
-            <Link to="/orders" className="nav-link">
+            <Link to="/orders" className="nav-link" onClick={closeMenu}>
               Đơn mua
             </Link>
             {user && (
-              <Link to="/chat" className="nav-link">
+              <Link to="/chat" className="nav-link" onClick={closeMenu}>
                 Chat
               </Link>
             )}
-            {user && user.role !== 'seller' && user.role !== 2 && (
-              <Link to="/seller" className="nav-link">
-                Kênh người bán
-              </Link>
-            )}
-
-            <div className="cart-wrapper">
-              <Link to="/cart" className="nav-link cart-icon">
-                <ShoppingCart size={22} />
-
-                {user && cartCount > 0 && (
-                  <span className="cart-badge">{cartCount}</span>
-                )}
-              </Link>
-
-              <div className="cart-dropdown">
-                {cartItems.length === 0 ? (
-                  <p className="empty-cart-mini">Chưa có sản phẩm</p>
-                ) : (
-                  <>
-                    {cartItems.slice(0, 5).map((item) => (
-                      <div key={item.id} className="mini-item">
-                        <img
-                          src={
-                            item.image ||
-                            'https://placehold.co/50x50?text=No+Image'
-                          }
-                          alt={item.name}
-                        />
-                        <div>
-                          <p>{item.name}</p>
-                          <span>{item.price}đ</span>
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                )}
-              </div>
-            </div>
-
+            
             {/* ADMIN */}
             {user && (user.role === 'admin' || user.role === 1) && (
-              <Link
-                to="/categories"
-                className="nav-link"
-                style={{ color: '#3b82f6', fontWeight: 'bold' }}
-              >
+              <Link to="/categories" className="nav-link" style={{ color: '#3b82f6', fontWeight: 'bold' }} onClick={closeMenu}>
                 Categories
               </Link>
             )}
 
             {/* SELLER */}
-            {user && (user.role === 'seller' || user.role === 2) && (
+            {user && (user.role === 'seller' || user.role === 2) ? (
               <>
-                <Link
-                  to="/shop"
-                  className="nav-link"
-                  style={{ color: '#ee4d2d', fontWeight: 'bold' }}
-                >
+                <Link to="/shop" className="nav-link" style={{ color: '#ee4d2d', fontWeight: 'bold' }} onClick={closeMenu}>
                   Cửa hàng của tôi
                 </Link>
-
-                <Link
-                  to="/seller-coupons"
-                  className="nav-link"
-                  style={{ color: 'green', fontWeight: 'bold' }}
-                >
+                <Link to="/seller-coupons" className="nav-link" style={{ color: 'green', fontWeight: 'bold' }} onClick={closeMenu}>
                   Coupons
                 </Link>
-
-                <Link
-                  to="/seller-orders"
-                  className="nav-link"
-                  style={{ color: '#3b82f6', fontWeight: 'bold' }}
-                >
+                <Link to="/seller-orders" className="nav-link" style={{ color: '#3b82f6', fontWeight: 'bold' }} onClick={closeMenu}>
                   Quản lý đơn
                 </Link>
               </>
+            ) : (
+              // NẾU LÀ USER BÌNH THƯỜNG THÌ HIỆN NÚT KÊNH NGƯỜI BÁN
+              user && (
+                <Link to="/seller" className="nav-link" onClick={closeMenu}>
+                  Kênh người bán
+                </Link>
+              )
             )}
 
+            {/* TÀI KHOẢN (Nằm trong Menu trượt) */}
             {!user ? (
               <>
-                <Link to="/login" className="nav-link">
-                  Đăng nhập
-                </Link>
-                <Link to="/register" className="nav-link">
-                  Đăng ký
-                </Link>
+                <Link to="/login" className="nav-link" onClick={closeMenu}>Đăng nhập</Link>
+                <Link to="/register" className="nav-link" onClick={closeMenu}>Đăng ký</Link>
               </>
             ) : (
-              <>
-                <div className="user-menu">
-                  <div className="user-trigger">
-                    <div className="avatar">
-                      {user.name?.charAt(0).toUpperCase()}
-                    </div>
-
-                    <span>{user.name}</span>
+              <div className="user-menu">
+                <div className="user-trigger">
+                  <div className="avatar">
+                    {user.name?.charAt(0).toUpperCase()}
                   </div>
-
-                  <div className="dropdown-menu">
-                    {user.role !== 'seller' && user.role !== 2 && (
-                      <>
-                        <Link to="/profile" className="dropdown-item">
-                          Tài khoản của tôi
-                        </Link>
-                        <Link to="/orders" className="dropdown-item">
-                          Đơn mua
-                        </Link>
-                      </>
-                    )}
-
-                    <div
-                      className="dropdown-item logout"
-                      onClick={handleLogout}
-                    >
-                      Đăng xuất
-                    </div>
+                  <span>{user.name}</span>
+                </div>
+                <div className="dropdown-menu">
+                  {user.role !== 'seller' && user.role !== 2 && (
+                    <>
+                      <Link to="/profile" className="dropdown-item" onClick={closeMenu}>Tài khoản của tôi</Link>
+                      <Link to="/orders" className="dropdown-item" onClick={closeMenu}>Đơn mua</Link>
+                    </>
+                  )}
+                  <div className="dropdown-item logout" onClick={handleLogout}>
+                    Đăng xuất
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </nav>
+
+          {/* MỚI: TÁCH GIỎ HÀNG RA NGOÀI ĐỂ LUÔN NẰM GÓC PHẢI TRÊN CÙNG */}
+          <div className="cart-wrapper" style={{ marginLeft: 'auto' }}>
+            <Link to="/cart" className="nav-link cart-icon" onClick={closeMenu}>
+              <ShoppingCart size={24} />
+              {user && cartCount > 0 && (
+                <span className="cart-badge">{cartCount}</span>
+              )}
+            </Link>
+
+            <div className="cart-dropdown">
+              {cartItems.length === 0 ? (
+                <p className="empty-cart-mini">Chưa có sản phẩm</p>
+              ) : (
+                <>
+                  {cartItems.slice(0, 5).map((item) => (
+                    <div key={item.id} className="mini-item">
+                      <img src={item.image || 'https://placehold.co/50x50?text=No+Image'} alt={item.name} />
+                      <div>
+                        <p>{item.name}</p>
+                        <span>{item.price}đ</span>
+                      </div>
+                    </div>
+                  ))}
+                  <Link to="/cart" className="view-cart-btn" onClick={closeMenu}>Xem Giỏ Hàng</Link>
+                </>
+              )}
+            </div>
+          </div>
+
         </div>
       </header>
 
