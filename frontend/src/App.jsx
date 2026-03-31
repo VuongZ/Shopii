@@ -155,7 +155,7 @@ function App() {
                   <span>{user.name}</span>
                 </div>
                 <div className="dropdown-menu">
-                  {user.role !== 'seller' && user.role !== 2 && (
+                  {user.role == 'seller' || user.role == 'user' && (
                     <>
                       <Link to="/profile" className="dropdown-item" onClick={closeMenu}>Tài khoản của tôi</Link>
                       <Link to="/orders" className="dropdown-item" onClick={closeMenu}>Đơn mua</Link>
