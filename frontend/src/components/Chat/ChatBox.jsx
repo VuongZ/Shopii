@@ -11,15 +11,30 @@ export default function ChatBox({
   const [content, setContent] = useState("");
   const messagesEndRef = useRef(null);
 
-  const conversationList = useMemo(() => Array.isArray(conversations) ? conversations : [], [conversations]);
+  const conversationList = useMemo(() => (Array.isArray(conversations) ? conversations : []), [conversations]);
 
-  // Lấy thông tin cuộc trò chuyện hiện tại để trích xuất tên shop
+  // Tìm hội thoại hiện tại
   const currentConv = useMemo(() => {
     return conversationList.find(c => String(c.id) === String(selectedConversationId));
   }, [conversationList, selectedConversationId]);
 
+  // --- LOGIC QUAN TRỌNG: XÁC ĐỊNH ĐỐI PHƯƠNG ---
+  const getPartnerInfo = (conv) => {
+    if (!conv) return { name: "Hội thoại" };
+    
+    // Nếu ID người gửi đầu tiên (hoặc ID shop) trùng với mình, mình là Seller. 
+    // Nhưng cách chuẩn nhất là dựa vào logic: Nếu mình là chủ shop thì hiện tên User, ngược lại hiện tên Shop.
+    // Giả sử backend trả về object 'user' và 'shop' trong conversation:
+    const isBuyer = String(currentUserId) === String(conv.user_id);
+    
+    return isBuyer 
+      ? { name: conv.shop?.name || `Shop #${conv.shop_id}`, label: "Người bán" }
+      : { name: conv.user?.name || `Khách hàng #${conv.user_id}`, label: "Người mua" };
+  };
+
+  const partner = useMemo(() => getPartnerInfo(currentConv), [currentConv, currentUserId]);
+
   useEffect(() => {
-    // Auto scroll to the newest message
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -33,147 +48,85 @@ export default function ChatBox({
   };
 
   return (
-    <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 15px" }}>
-      <div style={{ backgroundColor: "white", padding: "15px 20px", borderRadius: "2px", marginBottom: "15px", boxShadow: "0 1px 1px rgba(0,0,0,0.05)" }}>
-        <h2 style={{ margin: 0, color: "#333", fontSize: 18, textTransform: "uppercase" }}>
-          Chat
-        </h2>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 15, alignItems: "stretch" }}>
-        {/* Sidebar danh sách hội thoại */}
-        <div style={{ background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden" }}>
-          <div style={{ padding: 12, borderBottom: "1px solid #e5e7eb", fontWeight: 800 }}>
-            Cuộc trò chuyện
+    <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 15px", fontFamily: "sans-serif" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 15, height: "80vh" }}>
+        
+        {/* Sidebar */}
+        <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <div style={{ padding: 15, borderBottom: "1px solid #e5e7eb", fontWeight: 800, background: "#f8fafc" }}>
+            Tin nhắn
           </div>
-          {conversationList.length === 0 ? (
-            <div style={{ padding: 12, color: "#64748b" }}>Chưa có cuộc trò chuyện.</div>
-          ) : (
-            <div style={{ maxHeight: 520, overflowY: "auto" }}>
-              {conversationList.map((c) => {
-                const active = String(c.id) === String(selectedConversationId);
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => onSelectConversation?.(c.id)}
-                    style={{
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "12px 12px",
-                      border: "none",
-                      background: active ? "#eef2ff" : "transparent",
-                      cursor: "pointer",
-                      borderBottom: "1px solid #eef2f7",
-                    }}
-                  >
-                    <div style={{ fontWeight: 800, color: "#111827" }}>
-                      {c.shop?.name || (c.shop_id ? `Shop #${c.shop_id}` : `Conversation #${c.id}`)}
-                    </div>
-                    <div style={{ fontSize: 12, color: "#64748b" }}>
-                      Tin nhắn: {(c.messages || []).length}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            {conversationList.map((c) => {
+              const active = String(c.id) === String(selectedConversationId);
+              const { name } = getPartnerInfo(c);
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => onSelectConversation?.(c.id)}
+                  style={{
+                    width: "100%", textAlign: "left", padding: "12px 15px", border: "none",
+                    background: active ? "#fff5f1" : "transparent", cursor: "pointer",
+                    borderBottom: "1px solid #f1f5f9", transition: "0.2s"
+                  }}
+                >
+                  <div style={{ fontWeight: active ? 700 : 500, color: active ? "#ee4d2d" : "#111827" }}>{name}</div>
+                  <div style={{ fontSize: 12, color: "#64748b" }}>ID: {c.id}</div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Khung hiển thị tin nhắn */}
-        <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-          <div style={{ padding: 12, borderBottom: "1px solid #e5e7eb", fontWeight: 800 }}>
-            {currentConv?.shop?.name || (currentConv?.shop_id ? `Shop #${currentConv?.shop_id}` : "Chọn cuộc trò chuyện")}
+        {/* Nội dung Chat */}
+        <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 8, display: "flex", flexDirection: "column" }}>
+          <div style={{ padding: "12px 20px", borderBottom: "1px solid #e5e7eb", fontWeight: 800 }}>
+            {selectedConversationId ? partner.name : "Chọn hội thoại"} 
+            <span style={{ fontSize: 11, fontWeight: 400, color: "#94a3b8", marginLeft: 8 }}>({partner.label})</span>
           </div>
 
-          <div style={{ padding: 12, flex: 1, overflowY: "auto", background: "#fff" }}>
-            {selectedConversationId ? (
-              messages && messages.length > 0 ? (
-                messages.map((m) => {
-                  const isMe = currentUserId && String(m.sender_id) === String(currentUserId);
-                  
-                  // Xác định tên người gửi (Bạn hoặc Tên Shop)
-                  const senderName = isMe 
-                    ? "Bạn" 
-                    : (currentConv?.shop?.name || (currentConv?.shop_id ? `Shop #${currentConv?.shop_id}` : "Shop"));
-
-                  return (
-                    <div
-                      key={m.id}
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: isMe ? "flex-end" : "flex-start", // Đổi lề: Bạn ở phải, Shop ở trái
-                        marginBottom: 15,
-                      }}
-                    >
-                      {/* Hiển thị Tên người gửi */}
-                      <div style={{ fontSize: 12, color: "#64748b", marginBottom: 4, padding: "0 4px", fontWeight: 600 }}>
-                        {senderName}
-                      </div>
-
-                      {/* Bong bóng tin nhắn */}
-                      <div
-                        style={{
-                          maxWidth: "70%",
-                          padding: "10px 12px",
-                          borderRadius: 12,
-                          background: isMe ? "#eef2ff" : "#f1f5f9",
-                          border: "1px solid #e5e7eb",
-                        }}
-                      >
-                        <div style={{ fontSize: 14, color: "#111827", whiteSpace: "pre-wrap" }}>
-                          {m.content}
-                        </div>
-                        <div style={{ fontSize: 11, color: "#64748b", marginTop: 6, textAlign: isMe ? "right" : "left" }}>
-                          {m.created_at ? new Date(m.created_at).toLocaleTimeString() : ""}
-                        </div>
-                      </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: 20, background: "#f8fafc" }}>
+            {messages.map((m) => {
+              const isMe = String(m.sender_id) === String(currentUserId);
+              return (
+                <div key={m.id} style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start", marginBottom: 15 }}>
+                  <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4, fontWeight: 600 }}>
+                    {isMe ? "Bạn" : partner.name}
+                  </div>
+                  <div style={{
+                    maxWidth: "75%", padding: "10px 14px", borderRadius: 12,
+                    background: isMe ? "#ee4d2d" : "white", // Màu đỏ cam cho "Tôi", Trắng cho "Đối phương"
+                    color: isMe ? "white" : "#111827",
+                    border: isMe ? "none" : "1px solid #e5e7eb",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+                  }}>
+                    <div style={{ fontSize: 14, whiteSpace: "pre-wrap" }}>{m.content}</div>
+                    <div style={{ fontSize: 10, marginTop: 4, opacity: 0.7, textAlign: "right" }}>
+                      {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
-                  );
-                })
-              ) : (
-                <div style={{ color: "#64748b", textAlign: "center", marginTop: 20 }}>Chưa có tin nhắn.</div>
-              )
-            ) : (
-              <div style={{ color: "#64748b", textAlign: "center", marginTop: 20 }}>Hãy chọn một cuộc trò chuyện để xem tin nhắn.</div>
-            )}
-
+                  </div>
+                </div>
+              );
+            })}
             <div ref={messagesEndRef} />
           </div>
 
           {/* Ô nhập tin nhắn */}
-          <div style={{ padding: 12, borderTop: "1px solid #e5e7eb", background: "#f8fafc" }}>
+          <div style={{ padding: 15, borderTop: "1px solid #e5e7eb" }}>
             <div style={{ display: "flex", gap: 10 }}>
               <input
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSend()}
                 placeholder="Nhập tin nhắn..."
-                style={{
-                  flex: 1,
-                  borderRadius: 8,
-                  border: "1px solid #e5e7eb",
-                  padding: "10px 12px",
-                  outline: "none",
-                }}
-                disabled={!selectedConversationId}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
+                style={{ flex: 1, padding: "10px 15px", borderRadius: 20, border: "1px solid #e5e7eb", outline: "none" }}
               />
               <button
                 onClick={handleSend}
-                disabled={!selectedConversationId || !content.trim()}
+                disabled={!content.trim()}
                 style={{
-                  minWidth: 120,
-                  borderRadius: 8,
-                  border: "1px solid #ddd",
-                  background: "#ee4d2d",
-                  color: "white",
-                  fontWeight: 800,
-                  cursor: selectedConversationId ? "pointer" : "not-allowed",
+                  padding: "0 20px", borderRadius: 20, border: "none",
+                  background: "#ee4d2d", color: "white", fontWeight: "bold", cursor: "pointer"
                 }}
               >
                 Gửi
