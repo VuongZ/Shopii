@@ -130,12 +130,6 @@ function App() {
                 <Link to="/shop" className="nav-link" style={{ color: '#ee4d2d', fontWeight: 'bold' }} onClick={closeMenu}>
                   Cửa hàng của tôi
                 </Link>
-                <Link to="/seller-coupons" className="nav-link" style={{ color: 'green', fontWeight: 'bold' }} onClick={closeMenu}>
-                  Coupons
-                </Link>
-                <Link to="/seller-orders" className="nav-link" style={{ color: '#3b82f6', fontWeight: 'bold' }} onClick={closeMenu}>
-                  Quản lý đơn
-                </Link>
               </>
             ) : (
               // NẾU LÀ USER BÌNH THƯỜNG THÌ HIỆN NÚT KÊNH NGƯỜI BÁN
