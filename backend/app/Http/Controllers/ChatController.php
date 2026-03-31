@@ -30,19 +30,19 @@ class ChatController extends Controller
                 return response()->json([], 200);
             }
 
-            $conversations = Conversation::with(['messages'])
-                ->where('shop_id', $shop->id)
-                ->latest()
-                ->get();
-
+            $conversations = Conversation::with(['messages', 'shop'])
+         ->where('shop_id', $shop->id)
+            ->latest()
+            ->get();
+                
             return response()->json($conversations);
         }
 
         if ($this->isUserRole($user->role)) {
-            $conversations = Conversation::with(['messages'])
-                ->where('user_id', $user->id)
-                ->latest()
-                ->get();
+       $conversations = Conversation::with(['messages', 'shop'])
+    ->where('user_id', $user->id)
+    ->latest()
+    ->get();
 
             return response()->json($conversations);
         }

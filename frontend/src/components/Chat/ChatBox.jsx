@@ -88,9 +88,9 @@ export default function ChatBox({
                       borderBottom: "1px solid #eef2f7",
                     }}
                   >
-                    <div style={{ fontWeight: 800, color: "#111827" }}>
-                      {c.shop_id ? `Shop #${c.shop_id}` : `Conversation #${c.id}`}
-                    </div>
+                <div style={{ fontWeight: 800, color: "#111827" }}>
+            {c.shop?.name || `Shop #${c.shop_id}` || `Conversation #${c.id}`}
+            </div>
                     <div style={{ fontSize: 12, color: "#64748b" }}>
                       Tin nhắn: {(c.messages || []).length}
                     </div>
@@ -112,20 +112,23 @@ export default function ChatBox({
           }}
         >
           <div style={{ padding: 12, borderBottom: "1px solid #e5e7eb", fontWeight: 800 }}>
-            {selectedConversationId ? `Conversation #${selectedConversationId}` : "Chọn cuộc trò chuyện"}
+           {(() => {
+          const conv = conversationList.find(c => String(c.id) === String(selectedConversationId));
+            return conv?.shop?.name || (conv?.shop_id ? `Shop #${conv?.shop_id}` : "Chọn cuộc trò chuyện");
+        })()}
           </div>
 
           <div style={{ padding: 12, flex: 1, overflowY: "auto", background: "#fff" }}>
             {selectedConversationId ? (
               messages && messages.length > 0 ? (
                 messages.map((m) => {
-                  const isMe = currentUserId && String(m.sender_user_id) === String(currentUserId);
+                  const isMe = currentUserId && String(m.sender_id) === String(currentUserId);
                   return (
                     <div
                       key={m.id}
                       style={{
                         display: "flex",
-                        justifyContent: isMe ? "flex-end" : "flex-start",
+                        justifyContent: isMe ? "flex-start" : "flex-end",
                         marginBottom: 10,
                       }}
                     >
