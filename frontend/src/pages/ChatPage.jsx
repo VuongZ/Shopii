@@ -79,13 +79,17 @@ export default function ChatPage() {
     if (conversationIdFromQuery) setSelectedConversationId(conversationIdFromQuery);
   }, [conversationIdFromQuery]);
 
-  const handleSendMessage = async (content) => {
-    if (!selectedConversationId) return;
-    setErrorMessage(null);
+ const handleSendMessage = async (content) => {
+  if (!selectedConversationId) return;
+  setErrorMessage(null);
+  try {
     await chatApi.sendMessage(selectedConversationId, content);
     await fetchMessages(selectedConversationId);
-  };
-
+  } catch (err) {
+    console.error("Send message error:", err?.response?.data); // ← xem lỗi chi tiết
+    setErrorMessage(err?.response?.data?.message || "Không thể gửi tin nhắn.");
+  }
+};
   const handleSelectConversation = async (convId) => {
     setSelectedConversationId(convId);
   };

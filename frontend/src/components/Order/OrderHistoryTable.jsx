@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useState } from 'react'
+import ReviewSection from '../../pages/Review' // Đảm bảo đường dẫn import này đúng với cấu trúc thư mục của bạn
 
 function translateStatus(status) {
   switch (status) {
@@ -32,8 +33,12 @@ export default function OrderHistoryTable({
   orders,
   onChatWithShop,
   onConfirmReceipt,
+  onReviewProduct,
 }) {
   const orderList = Array.isArray(orders) ? orders : []
+  
+  // State để quản lý việc hiển thị modal đánh giá
+  const [reviewData, setReviewData] = useState(null)
 
   return (
     <div
@@ -325,6 +330,35 @@ export default function OrderHistoryTable({
                       Đã Nhận Được Hàng
                     </button>
                   )}
+                  {order.status === 'completed' && (
+                    <button
+                      onClick={() => {
+                        // Gọi hàm prop cũ (nếu bạn vẫn cần dùng ở component cha)
+                        if (onReviewProduct) onReviewProduct(order.id);
+                        
+                        // Lấy ID của sản phẩm đầu tiên trong đơn hàng để truyền vào ReviewSection
+                        const firstProductId = order.items?.[0]?.sku?.product?.id;
+                        
+                        // Mở Modal Đánh giá
+                        setReviewData({
+                          orderId: order.id,
+                          productId: firstProductId
+                        });
+                      }}
+                      style={{
+                        background: '#fff',
+                        color: '#ee4d2d',
+                        padding: '10px 20px',
+                        border: '1px solid #ee4d2d',
+                        borderRadius: '2px',
+                        cursor: 'pointer',
+                        minWidth: '150px',
+                        fontWeight: '500',
+                      }}
+                    >
+                      Đánh Giá Sản Phẩm
+                    </button>
+                  )}
 
                   {typeof onChatWithShop === 'function' && order.shop?.id && (
                     <button
@@ -348,6 +382,64 @@ export default function OrderHistoryTable({
           ))
         )}
       </div>
+
+      {/* --- MODAL REVIEW SECTION --- */}
+      {reviewData && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+          }}
+          onClick={() => setReviewData(null)} // Bấm ra ngoài để đóng
+        >
+          <div
+            style={{
+              backgroundColor: '#fff',
+              padding: '20px',
+              borderRadius: '8px',
+              width: '90%',
+              maxWidth: '500px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              position: 'relative',
+            }}
+            onClick={(e) => e.stopPropagation()} // Ngăn sự kiện đóng khi bấm vào form
+          >
+            {/* Nút đóng Modal */}
+            <button
+              onClick={() => setReviewData(null)}
+              style={{
+                position: 'absolute',
+                top: '15px',
+                right: '15px',
+                background: 'transparent',
+                border: 'none',
+                fontSize: '18px',
+                cursor: 'pointer',
+                color: '#888',
+              }}
+            >
+              ✖
+            </button>
+
+            {/* Render Component ReviewSection */}
+            <ReviewSection
+              orderId={reviewData.orderId}
+              productId={reviewData.productId}
+              // Lưu ý: Đảm bảo token được truyền đúng cách (từ localStorage hoặc AuthContext của bạn)
+              token={localStorage.getItem('token') || ''} 
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

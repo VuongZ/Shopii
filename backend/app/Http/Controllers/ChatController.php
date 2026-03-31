@@ -49,7 +49,7 @@ class ChatController extends Controller
 
         return response()->json(['message' => 'Unauthorized.'], 403);
     }
-
+    
     public function createConversation(Request $request)
     {
         $user = $request->user();
@@ -107,6 +107,7 @@ class ChatController extends Controller
 
     public function sendMessage(Request $request, $conversationId)
     {
+        
         $request->validate([
             'content' => 'required|string|max:2000',
         ]);
@@ -130,15 +131,16 @@ class ChatController extends Controller
         }
 
         $content = $request->content;
-
+     
         DB::beginTransaction();
         try {
             $message = Message::create([
-                'conversation_id' => $conversation->id,
-                'sender_user_id' => $user->id,
-                'content' => $content,
-            ]);
-
+        'conversation_id' => $conversation->id,
+        'sender_id'       => $user->id,
+        'is_shop_sender'  => $this->isSellerRole($user->role) ? 1 : 0,
+        'content'         => $content,
+        'type'            => 'text',
+        ]);
             DB::commit();
 
             return response()->json([
