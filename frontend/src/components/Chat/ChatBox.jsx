@@ -13,23 +13,19 @@ export default function ChatBox({
 
   const conversationList = useMemo(() => (Array.isArray(conversations) ? conversations : []), [conversations]);
 
-  // Tìm hội thoại hiện tại
   const currentConv = useMemo(() => {
     return conversationList.find(c => String(c.id) === String(selectedConversationId));
   }, [conversationList, selectedConversationId]);
 
-  // --- LOGIC QUAN TRỌNG: XÁC ĐỊNH ĐỐI PHƯƠNG ---
+  // Xác định vai trò của user hiện tại trong hội thoại
   const getPartnerInfo = (conv) => {
-    if (!conv) return { name: "Hội thoại" };
+    if (!conv) return { name: "Hội thoại", isCurrentUserBuyer: false };
     
-    // Nếu ID người gửi đầu tiên (hoặc ID shop) trùng với mình, mình là Seller. 
-    // Nhưng cách chuẩn nhất là dựa vào logic: Nếu mình là chủ shop thì hiện tên User, ngược lại hiện tên Shop.
-    // Giả sử backend trả về object 'user' và 'shop' trong conversation:
     const isBuyer = String(currentUserId) === String(conv.user_id);
     
     return isBuyer 
-      ? { name: conv.shop?.name || `Shop #${conv.shop_id}`, label: "Người bán" }
-      : { name: conv.user?.name || `Khách hàng #${conv.user_id}`, label: "Người mua" };
+      ? { name: conv.shop?.name || `Shop #${conv.shop_id}`, label: "Người bán", isCurrentUserBuyer: true }
+      : { name: conv.user?.name || `Khách hàng #${conv.user_id}`, label: "Người mua", isCurrentUserBuyer: false };
   };
 
   const partner = useMemo(() => getPartnerInfo(currentConv), [currentConv, currentUserId]);
@@ -88,20 +84,28 @@ export default function ChatBox({
           <div style={{ flex: 1, overflowY: "auto", padding: 20, background: "#f8fafc" }}>
             {messages.map((m) => {
               const isMe = String(m.sender_id) === String(currentUserId);
+              
+              /**
+               * LOGIC ĐẢO CHIỀU:
+               * - Nếu tôi là Seller: 'Tôi' bên phải, 'Đối phương' bên trái (Giữ nguyên).
+               * - Nếu tôi là Buyer: 'Tôi' bên trái, 'Đối phương' bên phải.
+               */
+              const isLeft = partner.isCurrentUserBuyer ? isMe : !isMe;
+
               return (
-                <div key={m.id} style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start", marginBottom: 15 }}>
+                <div key={m.id} style={{ display: "flex", flexDirection: "column", alignItems: isLeft ? "flex-start" : "flex-end", marginBottom: 15 }}>
                   <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4, fontWeight: 600 }}>
                     {isMe ? "Bạn" : partner.name}
                   </div>
                   <div style={{
                     maxWidth: "75%", padding: "10px 14px", borderRadius: 12,
-                    background: isMe ? "#ee4d2d" : "white", // Màu đỏ cam cho "Tôi", Trắng cho "Đối phương"
+                    background: isMe ? "#ee4d2d" : "white", 
                     color: isMe ? "white" : "#111827",
                     border: isMe ? "none" : "1px solid #e5e7eb",
                     boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
                   }}>
                     <div style={{ fontSize: 14, whiteSpace: "pre-wrap" }}>{m.content}</div>
-                    <div style={{ fontSize: 10, marginTop: 4, opacity: 0.7, textAlign: "right" }}>
+                    <div style={{ fontSize: 10, marginTop: 4, opacity: 0.7, textAlign: isLeft ? "left" : "right" }}>
                       {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
