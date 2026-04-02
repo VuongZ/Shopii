@@ -21,19 +21,20 @@ class OrderProcessingController extends Controller
         return $shop;
     }
 
-    public function userIndex(Request $request)
-    {
-        $orders = Order::with(['shop', 'items.sku.product', 'histories'])
-            ->where('user_id', $request->user()->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+ public function userIndex(Request $request)
+{
+    
+    $orders = Order::with(['shop', 'items.sku.product.product_images', 'histories'])
+        ->where('user_id', $request->user()->id)
+        ->orderBy('created_at', 'desc')
+        ->get();
 
-        return response()->json($orders);
-    }
+    return response()->json($orders);
+}
 
     public function userShow(Request $request, $orderId)
     {
-        $order = Order::with(['shop', 'items.sku.product', 'histories'])
+        $order = Order::with(['shop', 'items.sku.product.product_images', 'histories'])
             ->where('user_id', $request->user()->id)
             ->where('id', $orderId)
             ->firstOrFail();
@@ -48,7 +49,7 @@ class OrderProcessingController extends Controller
             return response()->json(['message' => 'Bạn chưa có shop'], 404);
         }
 
-        $orders = Order::with(['shop', 'items.sku.product', 'histories'])
+        $orders = Order::with(['shop', 'items.sku.product.product_images', 'histories'])
             ->where('shop_id', $shop->id)
             ->orderBy('created_at', 'desc')
             ->get();

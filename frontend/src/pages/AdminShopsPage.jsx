@@ -1,21 +1,23 @@
-import { useEffect, useState } from "react";
-import axiosClient from "../api/axiosClient";
+import { useEffect, useState } from 'react'
+
+import axiosClient from '../api/axiosClient'
 
 function AdminShopsPage() {
-  const [shops, setShops] = useState([]);
+  const [shops, setShops] = useState([])
 
   const fetchShops = () => {
-    axiosClient.get("/admin/shops").then((res) => setShops(res.data));
-  };
+    axiosClient.get('/admin/shops').then((res) => setShops(res.data))
+  }
+
   useEffect(() => {
-    fetchShops();
-  }, []);
+    fetchShops()
+  }, [])
 
   const approveShop = (id) => {
     axiosClient.put(`/admin/shops/${id}/approve`).then(() => {
-      fetchShops(); // reload lại danh sách
-    });
-  };
+      fetchShops() // reload lại danh sách
+    })
+  }
 
   return (
     <div>
@@ -26,14 +28,15 @@ function AdminShopsPage() {
       {shops.map((shop) => (
         <div
           key={shop.id}
-          style={{ border: "1px solid #ccc", padding: 10, margin: 10 }}
+          style={{ border: '1px solid #ccc', padding: 10, margin: 10 }}
         >
           <h3>{shop.name}</h3>
+
           <button onClick={() => approveShop(shop.id)}>Duyệt</button>
         </div>
       ))}
     </div>
-  );
+  )
 }
 
-export default AdminShopsPage;
+export default AdminShopsPage

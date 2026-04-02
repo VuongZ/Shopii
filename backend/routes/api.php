@@ -24,7 +24,7 @@ use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\ChatController;
 
 use App\Http\Controllers\StatisticsController;
-
+use App\Http\Controllers\MembershipTierController;
 /*
 |--------------------------------------------------------------------------
 | 1. KHU VỰC CÔNG KHAI (Không cần đăng nhập)
@@ -76,7 +76,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Lấy thông tin user
     Route::get('/user', function (Request $request) {
-        return $request->user();
+        $user = $request->user()->load('membership.tier');
+        return response()->json($user);
     });
     Route::put('/user/update', [UserController::class, 'updateProfile']);
     Route::post('/user/update-avatar', [UserController::class, 'updateAvatar']);
@@ -174,6 +175,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Statistics
         Route::get('/admin/statistics', [StatisticsController::class, 'adminDashboard']);
+        Route::get('/admin/membership-tiers', [MembershipTierController::class, 'index']);
+        Route::post('/admin/membership-tiers', [MembershipTierController::class, 'store']);
+        Route::put('/admin/membership-tiers/{id}', [MembershipTierController::class, 'update']);
+        Route::delete('/admin/membership-tiers/{id}', [MembershipTierController::class, 'destroy']);
     });
 
     

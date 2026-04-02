@@ -29,14 +29,14 @@ import AdminShopsPage from './pages/AdminShopsPage'
 import ShopPage from './pages/ShopPage'
 import SellerOrderManagementPage from './pages/SellerOrderManagementPage'
 import ChatPage from './pages/ChatPage'
-
+import AdminMembershipTiersPage from './pages/AdminMembershipTiersPage'
 import './App.css'
 
 function App() {
   const navigate = useNavigate()
   const [cartCount, setCartCount] = useState(0)
   const [cartItems, setCartItems] = useState([])
-  
+
   // MỚI: State điều khiển Menu trượt trên Mobile
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -44,7 +44,7 @@ function App() {
     const info = localStorage.getItem('USER_INFO')
     return info ? JSON.parse(info) : null
   })
-  
+
   const loadCart = () => {
     const cart = JSON.parse(localStorage.getItem('CART')) || []
     setCartItems(cart)
@@ -54,7 +54,7 @@ function App() {
     window.addEventListener('storage', loadCart)
     window.addEventListener('cartUpdated', loadCart)
   }
-  
+
   useEffect(() => {
     loadCart()
 
@@ -84,16 +84,15 @@ function App() {
   }
 
   // Hàm tiện ích: Đóng menu mobile sau khi click link
-  const closeMenu = () => setIsMobileMenuOpen(false);
+  const closeMenu = () => setIsMobileMenuOpen(false)
 
   return (
     <div className="app-container">
       <header className="shopee-header">
         <div className="header-content">
-          
           {/* MỚI: Nút Hamburger chỉ hiện trên Mobile */}
-          <button 
-            className="mobile-menu-btn" 
+          <button
+            className="mobile-menu-btn"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
@@ -116,10 +115,15 @@ function App() {
                 Chat
               </Link>
             )}
-            
+
             {/* ADMIN */}
             {user && (user.role === 'admin' || user.role === 1) && (
-              <Link to="/categories" className="nav-link" style={{ color: '#3b82f6', fontWeight: 'bold' }} onClick={closeMenu}>
+              <Link
+                to="/categories"
+                className="nav-link"
+                style={{ color: '#3b82f6', fontWeight: 'bold' }}
+                onClick={closeMenu}
+              >
                 Categories
               </Link>
             )}
@@ -127,7 +131,12 @@ function App() {
             {/* SELLER */}
             {user && (user.role === 'seller' || user.role === 2) ? (
               <>
-                <Link to="/shop" className="nav-link" style={{ color: '#ee4d2d', fontWeight: 'bold' }} onClick={closeMenu}>
+                <Link
+                  to="/shop"
+                  className="nav-link"
+                  style={{ color: '#ee4d2d', fontWeight: 'bold' }}
+                  onClick={closeMenu}
+                >
                   Cửa hàng của tôi
                 </Link>
               </>
@@ -143,8 +152,12 @@ function App() {
             {/* TÀI KHOẢN (Nằm trong Menu trượt) */}
             {!user ? (
               <>
-                <Link to="/login" className="nav-link" onClick={closeMenu}>Đăng nhập</Link>
-                <Link to="/register" className="nav-link" onClick={closeMenu}>Đăng ký</Link>
+                <Link to="/login" className="nav-link" onClick={closeMenu}>
+                  Đăng nhập
+                </Link>
+                <Link to="/register" className="nav-link" onClick={closeMenu}>
+                  Đăng ký
+                </Link>
               </>
             ) : (
               <div className="user-menu">
@@ -155,12 +168,25 @@ function App() {
                   <span>{user.name}</span>
                 </div>
                 <div className="dropdown-menu">
-                  {user.role == 'seller' || user.role == 'user' && (
-                    <>
-                      <Link to="/profile" className="dropdown-item" onClick={closeMenu}>Tài khoản của tôi</Link>
-                      <Link to="/orders" className="dropdown-item" onClick={closeMenu}>Đơn mua</Link>
-                    </>
-                  )}
+                  {user.role == 'seller' ||
+                    (user.role == 'user' && (
+                      <>
+                        <Link
+                          to="/profile"
+                          className="dropdown-item"
+                          onClick={closeMenu}
+                        >
+                          Tài khoản của tôi
+                        </Link>
+                        <Link
+                          to="/orders"
+                          className="dropdown-item"
+                          onClick={closeMenu}
+                        >
+                          Đơn mua
+                        </Link>
+                      </>
+                    ))}
                   <div className="dropdown-item logout" onClick={handleLogout}>
                     Đăng xuất
                   </div>
@@ -185,19 +211,30 @@ function App() {
                 <>
                   {cartItems.slice(0, 5).map((item) => (
                     <div key={item.id} className="mini-item">
-                      <img src={item.image || 'https://placehold.co/50x50?text=No+Image'} alt={item.name} />
+                      <img
+                        src={
+                          item.image ||
+                          'https://placehold.co/50x50?text=No+Image'
+                        }
+                        alt={item.name}
+                      />
                       <div>
                         <p>{item.name}</p>
                         <span>{item.price}đ</span>
                       </div>
                     </div>
                   ))}
-                  <Link to="/cart" className="view-cart-btn" onClick={closeMenu}>Xem Giỏ Hàng</Link>
+                  <Link
+                    to="/cart"
+                    className="view-cart-btn"
+                    onClick={closeMenu}
+                  >
+                    Xem Giỏ Hàng
+                  </Link>
                 </>
               )}
             </div>
           </div>
-
         </div>
       </header>
 
@@ -241,6 +278,10 @@ function App() {
           <Route
             path="/seller/products/:id"
             element={<SellerProductDetail />}
+          />
+          <Route
+            path="/admin/membership-tiers"
+            element={<AdminMembershipTiersPage />}
           />
         </Routes>
       </main>
