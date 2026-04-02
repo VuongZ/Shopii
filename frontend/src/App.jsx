@@ -31,6 +31,7 @@ import SellerOrderManagementPage from './pages/SellerOrderManagementPage'
 import ChatPage from './pages/ChatPage'
 import AdminMembershipTiersPage from './pages/AdminMembershipTiersPage'
 import AdminCouponsPage from './pages/AdminCouponPage'
+import AdminLayout from './components/AdminLayout'
 import './App.css'
 
 function App() {
@@ -262,29 +263,25 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />
-
           <Route path="/seller/register" element={<SellerRegister />} />
-
           <Route path="/profile" element={<ProfilePage />} />
-
-          <Route path="/categories" element={<CategoriesPage />} />
-
           <Route path="/reviews" element={<Reviews />} />
-
-          <Route path="/admin/shops" element={<AdminShopsPage />} />
-
           <Route path="/shop" element={<ShopPage />} />
-
           <Route path="/seller" element={<ShopPage />} />
           <Route
             path="/seller/products/:id"
             element={<SellerProductDetail />}
           />
-          <Route
-            path="/admin/membership-tiers"
-            element={<AdminMembershipTiersPage />}
-          />
-          <Route path="/admin/coupons" element={<AdminCouponsPage />} />
+          //admin
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="categories" element={<CategoriesPage />} />
+            <Route path="shops" element={<AdminShopsPage />} />
+            <Route
+              path="membership-tiers"
+              element={<AdminMembershipTiersPage />}
+            />
+            <Route path="coupons" element={<AdminCouponsPage />} />
+          </Route>
         </Routes>
       </main>
     </div>
