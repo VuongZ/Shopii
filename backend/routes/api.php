@@ -100,7 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::put('/orders/{id}/complete', [OrderController::class, 'confirmReceipt']);
-
+    Route::get('/vouchers/checkout', [CouponController::class, 'getAvailableVouchers']);
     /* ----------------------- ORDER HISTORIES (User) ----------------------- */
     Route::middleware('user')->group(function () {
         Route::get('/order-histories', [OrderProcessingController::class, 'userIndex']);

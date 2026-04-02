@@ -10,24 +10,29 @@ class CouponController extends Controller
 {
     // 1. Lấy danh sách Coupon (Seller lấy mã của shop, User lấy mã sàn)
     public function index(Request $request)
-    {
-        $query = Coupon::query();
+{
+    $query = Coupon::with('tier'); // Eager load tier để check hạng
+    $now = now();
 
-        if ($request->has('shop_id')) {
-            // Seller xem danh sách mã của chính họ
-            $query->where('shop_id', $request->shop_id);
-        } else {
-            // User xem mã đang còn hạn và còn lượt dùng trên toàn sàn
-            $now = Carbon::now();
-            $query->where('start_date', '<=', $now)
-                  ->where('end_date', '>=', $now)
-                  ->where('usage_limit', '>', 0)
-                  ->whereNull('shop_id');
+    // Lấy mã toàn sàn (shop_id là null)
+    $query->where(function($q) use ($request) {
+        $q->whereNull('shop_id'); 
+
+        // NẾU CÓ TRUYỀN DANH SÁCH SHOP_IDS TỪ GIỎ HÀNG
+        if ($request->has('shop_ids')) {
+            $ids = explode(',', $request->shop_ids);
+            $q->orWhereIn('shop_id', $ids); // Lấy thêm mã của các shop đó
         }
+    });
 
-        return response()->json($query->orderBy('created_at', 'desc')->get());
-    }
-
+    return response()->json(
+        $query->where('start_date', '<=', $now)
+              ->where('end_date', '>=', $now)
+              ->where('usage_limit', '>', 0)
+              ->orderBy('created_at', 'desc')
+              ->get()
+    );
+}
     // 2. Seller tạo Coupon mới với đầy đủ thông tin
     public function store(Request $request)
     {
@@ -151,4 +156,24 @@ class CouponController extends Controller
         $coupon->delete();
         return response()->json(['message' => 'Đã xóa mã giảm giá']);
     }
+    public function getAvailableVouchers(Request $request) {
+    $now = Carbon::now();
+    $shopIds = $request->query('shop_ids'); // Lấy danh sách ID shop từ frontend gửi lên
+
+    $query = Coupon::with('tier')
+        ->where('start_date', '<=', $now)
+        ->where('end_date', '>=', $now)
+        ->where('usage_limit', '>', 0);
+
+    $query->where(function($q) use ($shopIds) {
+        $q->whereNull('shop_id'); // Lấy mã toàn sàn (Admin)
+        
+        if ($shopIds) {
+            $ids = explode(',', $shopIds);
+            $q->orWhereIn('shop_id', $ids); // Lấy thêm mã của các Shop khách đang mua
+        }
+    });
+
+    return response()->json($query->get());
+}
 }
