@@ -207,6 +207,27 @@ export default function CategoriesPage() {
                 💎 Quản Lý Hạng
               </Link>
             </li>
+            <li style={{ marginTop: '10px' }}>
+              <Link
+                to="/admin/coupons"
+                style={{
+                  display: 'block',
+                  padding: '12px 15px',
+                  background: '#ec4899',
+                  color: 'white',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  transition: 'background 0.3s',
+                }}
+                onMouseEnter={(e) => (e.target.style.background = '#db2777')}
+                onMouseLeave={(e) => (e.target.style.background = '#ec4899')}
+              >
+                🎟️ Coupon Toàn Sàn
+              </Link>
+            </li>
           </ul>
         </div>
 

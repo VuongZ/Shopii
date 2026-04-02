@@ -112,5 +112,43 @@ class CouponController extends Controller
             'discount_amount' => min($discount, $request->order_total),
             'coupon_id' => $coupon->id
         ]);
+
+    }
+    public function adminIndex()
+    {
+        // Load kèm thông tin hạng để hiển thị ở bảng
+        return Coupon::with('tier')->whereNull('shop_id')->orderBy('created_at', 'desc')->get();
+    }
+
+    // API Admin tạo mã toàn sàn
+    public function adminStore(Request $request)
+    {
+        $validated = $request->validate([
+            'code' => 'required|string|unique:coupons,code',
+            'membership_tier_id' => 'nullable|exists:membership_tiers,id',
+            'discount_type' => 'required|in:fixed,percent',
+            'discount_value' => 'required|numeric|min:0',
+            'min_order_value' => 'nullable|numeric|min:0',
+            'max_discount_value' => 'nullable|numeric|min:0',
+            'usage_limit' => 'required|integer|min:1',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+        ]);
+
+        // shop_id sẽ là null vì đây là mã toàn sàn của hệ thống
+        $coupon = Coupon::create($validated);
+
+        return response()->json([
+            'message' => 'Tạo mã giảm giá hệ thống thành công!',
+            'data' => $coupon->load('tier')
+        ], 201);
+    }
+
+    // API Xóa mã
+    public function adminDestroy($id)
+    {
+        $coupon = Coupon::whereNull('shop_id')->findOrFail($id);
+        $coupon->delete();
+        return response()->json(['message' => 'Đã xóa mã giảm giá']);
     }
 }

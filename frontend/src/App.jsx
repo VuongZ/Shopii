@@ -30,6 +30,7 @@ import ShopPage from './pages/ShopPage'
 import SellerOrderManagementPage from './pages/SellerOrderManagementPage'
 import ChatPage from './pages/ChatPage'
 import AdminMembershipTiersPage from './pages/AdminMembershipTiersPage'
+import AdminCouponsPage from './pages/AdminCouponPage'
 import './App.css'
 
 function App() {
@@ -283,6 +284,7 @@ function App() {
             path="/admin/membership-tiers"
             element={<AdminMembershipTiersPage />}
           />
+          <Route path="/admin/coupons" element={<AdminCouponsPage />} />
         </Routes>
       </main>
     </div>

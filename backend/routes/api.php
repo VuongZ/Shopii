@@ -179,6 +179,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/admin/membership-tiers', [MembershipTierController::class, 'store']);
         Route::put('/admin/membership-tiers/{id}', [MembershipTierController::class, 'update']);
         Route::delete('/admin/membership-tiers/{id}', [MembershipTierController::class, 'destroy']);
+        Route::get('/membership-tiers', [App\Http\Controllers\MembershipTierController::class, 'index']);
+        Route::get('/admin/coupons', [CouponController::class, 'adminIndex']);
+        Route::post('/admin/coupons', [CouponController::class, 'adminStore']);
+        Route::delete('/admin/coupons/{id}', [CouponController::class, 'adminDestroy']);      
     });
 
     
