@@ -77,48 +77,71 @@ class CouponController extends Controller
 
     // 4. Logic áp dụng Coupon 
     public function apply(Request $request)
-    {
-        $request->validate([
-            'coupon_code' => 'required|string',
-            'order_total' => 'required|numeric|min:0',
-            'shop_id'     => 'nullable|integer',
-        ]);
+{
+    $request->validate([
+        'coupon_code' => 'required|string',
+        'order_total' => 'required|numeric|min:0',
+        'shop_id'     => 'nullable', // Bỏ integer để linh hoạt
+    ]);
 
-        $now = Carbon::now();
-        $coupon = Coupon::where('code', $request->coupon_code)
-            ->where('start_date', '<=', $now)
-            ->where('end_date', '>=', $now)
-            ->where('usage_limit', '>', 0)
-            ->first();
+    $now = Carbon::now();
+    
+    // 1. Tìm mã theo Code (Chỉ tìm theo Code để biết nó có tồn tại không đã)
+    $coupon = Coupon::where('code', $request->coupon_code)->with('tier')->first();
 
-        if (!$coupon) {
-            return response()->json(['message' => 'Mã không tồn tại hoặc hết hạn'], 400);
-        }
-
-        // Kiểm tra đơn hàng tối thiểu
-        if ($request->order_total < $coupon->min_order_value) {
-            return response()->json(['message' => 'Chưa đủ giá trị đơn hàng tối thiểu'], 400);
-        }
-
-        // Tính toán số tiền giảm
-        $discount = 0;
-        if ($coupon->discount_type === 'fixed') {
-            $discount = $coupon->discount_value;
-        } else {
-            $discount = ($request->order_total * $coupon->discount_value) / 100;
-            // Áp dụng mức giảm tối đa nếu có (max_discount_value)
-            if ($coupon->max_discount_value && $discount > $coupon->max_discount_value) {
-                $discount = $coupon->max_discount_value;
-            }
-        }
-
-        return response()->json([
-            'message' => 'Áp dụng thành công',
-            'discount_amount' => min($discount, $request->order_total),
-            'coupon_id' => $coupon->id
-        ]);
-
+    if (!$coupon) {
+        return response()->json(['message' => 'Mã giảm giá này không tồn tại'], 404);
     }
+
+    // 2. Kiểm tra thời hạn
+    if ($now->lt($coupon->start_date)) {
+        return response()->json(['message' => 'Mã này chưa đến thời gian sử dụng'], 400);
+    }
+    if ($now->gt($coupon->end_date)) {
+        return response()->json(['message' => 'Mã giảm giá này đã hết hạn'], 400);
+    }
+
+    // 3. Kiểm tra số lượng
+    if ($coupon->usage_limit <= 0) {
+        return response()->json(['message' => 'Mã giảm giá này đã hết lượt sử dụng'], 400);
+    }
+
+    // 4. Kiểm tra Hạng thành viên (Dành cho mã Toàn Sàn của Admin)
+    if ($coupon->membership_tier_id) {
+        $user = $request->user()->load('membership.tier');
+        $userMinSpent = $user->membership->tier->min_spent ?? 0;
+        $requiredMinSpent = $coupon->tier->min_spent ?? 0;
+
+        if ($userMinSpent < $requiredMinSpent) {
+            return response()->json(['message' => 'Hạng thành viên của bạn chưa đủ để dùng mã này'], 400);
+        }
+    }
+
+    // 5. Kiểm tra giá trị đơn hàng tối thiểu
+    if ($request->order_total < $coupon->min_order_value) {
+        return response()->json([
+            'message' => 'Đơn hàng chưa đủ giá trị tối thiểu ' . number_format($coupon->min_order_value) . 'đ'
+        ], 400);
+    }
+
+    // 6. Tính toán số tiền giảm
+    $discount = 0;
+    if ($coupon->discount_type === 'fixed') {
+        $discount = $coupon->discount_value;
+    } else {
+        $discount = ($request->order_total * $coupon->discount_value) / 100;
+        if ($coupon->max_discount_value && $discount > $coupon->max_discount_value) {
+            $discount = $coupon->max_discount_value;
+        }
+    }
+
+    return response()->json([
+        'message' => 'Áp dụng thành công',
+        'discount_amount' => (float) min($discount, $request->order_total),
+        'coupon_id' => $coupon->id,
+        'code' => $coupon->code
+    ]);
+}
     public function adminIndex()
     {
         // Load kèm thông tin hạng để hiển thị ở bảng
@@ -129,19 +152,19 @@ class CouponController extends Controller
     public function adminStore(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|string|unique:coupons,code',
-            'membership_tier_id' => 'nullable|exists:membership_tiers,id',
-            'discount_type' => 'required|in:fixed,percent',
-            'discount_value' => 'required|numeric|min:0',
-            'min_order_value' => 'nullable|numeric|min:0',
-            'max_discount_value' => 'nullable|numeric|min:0',
-            'usage_limit' => 'required|integer|min:1',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
+        'code'               => 'required|string|unique:coupons,code',
+        'membership_tier_id' => 'nullable|exists:membership_tiers,id',
+        'discount_type'      => 'required|in:fixed,percent',
+        'discount_value'     => 'required|numeric|min:0',
+        'min_order_value'    => 'required|numeric|min:0', 
+        'max_discount_value' => 'nullable|numeric|min:0', 
+        'usage_limit'        => 'required|integer|min:1',
+        'start_date'         => 'required|date',
+        'end_date'           => 'required|date|after:start_date',
         ]);
 
         // shop_id sẽ là null vì đây là mã toàn sàn của hệ thống
-        $coupon = Coupon::create($validated);
+        $coupon = Coupon::create(array_merge($validated, ['shop_id' => null]));
 
         return response()->json([
             'message' => 'Tạo mã giảm giá hệ thống thành công!',

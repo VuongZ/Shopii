@@ -14,33 +14,50 @@ const CheckoutPage = () => {
 
   const selectedItems = state?.selectedItems || []
 
-  // --- QUẢN LÝ THÔNG TIN NGƯỜI DÙNG & ĐỊA CHỈ ---
+  // --- HỆ MÀU CHỦ ĐẠO (BLUE THEME) ---
+  const COLORS = {
+    primary: '#2563eb', // Xanh dương đậm
+    secondary: '#3b82f6', // Xanh dương vừa
+    light: '#eff6ff', // Xanh dương cực nhạt (background)
+    success: '#10b981', // Xanh lá (Seller)
+    error: '#ef4444', // Đỏ
+    warning: '#f59e0b', // Vàng cam
+    text: '#1e293b',
+  }
+
+  // --- STATES ---
   const [user, setUser] = useState(null)
   const [addresses, setAddresses] = useState([])
   const [selectedAddress, setSelectedAddress] = useState(null)
-
-  // --- QUẢN LÝ SẢN PHẨM ---
   const [cartItems, setCartItems] = useState([])
-
-  // --- VẬN CHUYỂN & THANH TOÁN ---
   const [shippingMethods, setShippingMethods] = useState([])
   const [selectedShippingId, setSelectedShippingId] = useState(null)
   const [shippingFee, setShippingFee] = useState(0)
-  const [paymentMethod, setPaymentMethod] = useState(1) // 1: COD, 2: MoMo, 3: VNPay
+  const [paymentMethod, setPaymentMethod] = useState(1)
   const [loading, setLoading] = useState(false)
 
-  // --- VOUCHER ---
   const [coupons, setCoupons] = useState([])
   const [appliedCoupon, setAppliedCoupon] = useState(null)
   const [discountAmount, setDiscountAmount] = useState(0)
   const [showCouponModal, setShowCouponModal] = useState(false)
   const [couponApplying, setCouponApplying] = useState(false)
+  const [manualCode, setManualCode] = useState('')
 
+  // Gom nhóm tiền theo từng shop (Dùng String ID để nhất quán)
   const shopSubtotalMap = cartItems.reduce((acc, item) => {
     const sId = String(item.shop_id)
     acc[sId] = (acc[sId] ?? 0) + Number(item.price) * item.quantity
     return acc
   }, {})
+
+  const totalProductPrice = cartItems.reduce(
+    (sum, i) => sum + Number(i.price) * i.quantity,
+    0
+  )
+  const finalTotal = Math.max(
+    0,
+    totalProductPrice + shippingFee - discountAmount
+  )
 
   useEffect(() => {
     if (selectedItems.length === 0) {
@@ -58,23 +75,19 @@ const CheckoutPage = () => {
         ])
 
         setUser(userRes.data)
+
         const allItems = Object.values(cartRes.data || {}).flat()
-        // Lọc sản phẩm đã chọn
         const filtered = allItems.filter((item) =>
           selectedItems.map(String).includes(String(item.id))
         )
         setCartItems(filtered)
-        if (filtered.length === 0) {
-          console.warn('Không tìm thấy sản phẩm đã chọn trong giỏ hàng!')
-        }
-        // Địa chỉ
+
         const addrList = addrRes.data || []
         setAddresses(addrList)
         if (addrList.length > 0) {
           setSelectedAddress(addrList.find((a) => a.is_default) || addrList[0])
         }
 
-        // Vận chuyển
         const shipList = shipRes.data || []
         setShippingMethods(shipList)
         if (shipList.length > 0) {
@@ -82,14 +95,12 @@ const CheckoutPage = () => {
           setShippingFee(Number(shipList[0].base_fee))
         }
 
-        // Lấy Voucher (Gộp cả Admin và các Shop có trong giỏ)
         const shopIds = Array.from(
           new Set(filtered.map((i) => i.shop_id))
         ).filter(Boolean)
         const couponRes = await axiosClient.get('/vouchers/checkout', {
           params: { shop_ids: shopIds.join(',') },
         })
-        console.log('Voucher từ Backend trả về:', couponRes.data) // Thêm dòng này để debug
         setCoupons(couponRes.data || [])
       } catch (err) {
         console.error('Load checkout error:', err)
@@ -98,38 +109,51 @@ const CheckoutPage = () => {
     fetchData()
   }, [selectedItems, navigate])
 
-  const totalProductPrice = cartItems.reduce(
-    (sum, i) => sum + Number(i.price) * i.quantity,
-    0
-  )
-  const finalTotal = Math.max(
-    0,
-    totalProductPrice + shippingFee - discountAmount
-  )
-
-  // Hàm "Xịn": Thay đổi địa chỉ (Xoay vòng danh sách)
   const handleChangeAddress = () => {
-    if (addresses.length <= 1)
-      return alert('Bạn không có địa chỉ khác để thay đổi')
+    if (addresses.length <= 1) return alert('Bạn không có địa chỉ khác')
     const currentIndex = addresses.findIndex((a) => a.id === selectedAddress.id)
     const nextIndex = (currentIndex + 1) % addresses.length
     setSelectedAddress(addresses[nextIndex])
   }
 
-  const handleApplyCoupon = async (code) => {
+  // --- LOGIC APPLY VOUCHER (FIXED 422) ---
+  const handleApplyCoupon = async (codeFromModal) => {
     if (couponApplying) return
+    const code = (
+      typeof codeFromModal === 'string' ? codeFromModal : manualCode
+    )
+      .trim()
+      .toUpperCase()
+    if (!code) return alert('Vui lòng nhập hoặc chọn mã')
+
     try {
       setCouponApplying(true)
+      const cp = coupons.find((i) => i.code === code)
+
+      // Xác định subtotal chuẩn để gửi lên Backend check min_order_value
+      const isSystem = cp ? cp.shop_id === null : true // Nếu nhập tay thì mặc định check theo tổng đơn
+      const subtotalToCheck =
+        !isSystem && cp
+          ? shopSubtotalMap[String(cp.shop_id)] || 0
+          : totalProductPrice
+
       const res = await couponApi.applyCoupon({
         coupon_code: code,
-        cart_item_ids: selectedItems,
+        order_total: subtotalToCheck,
+        shop_id: cp?.shop_id || null,
       })
+
       setAppliedCoupon(res.data)
       setDiscountAmount(Number(res.data.discount_amount) || 0)
       setShowCouponModal(false)
-      alert('Áp dụng mã thành công!')
+      setManualCode('')
+      alert(
+        `Áp dụng thành công! Giảm ${res.data.discount_amount.toLocaleString()}đ`
+      )
     } catch (err) {
-      alert(err.response?.data?.message || 'Mã không hợp lệ')
+      alert(
+        err.response?.data?.message || 'Mã không hợp lệ hoặc không đủ điều kiện'
+      )
     } finally {
       setCouponApplying(false)
     }
@@ -146,18 +170,14 @@ const CheckoutPage = () => {
         shipping_method_id: selectedShippingId,
         coupon_code: appliedCoupon?.code,
       })
-
       const { order_ids, total_amount } = orderRes.data
-
       if (paymentMethod === 2) {
-        // MOMO
         const res = await paymentApi.createMoMoUrl({
           orderId: order_ids[0],
           amount: total_amount,
         })
         if (res.data.paymentUrl) window.location.href = res.data.paymentUrl
       } else if (paymentMethod === 3) {
-        // VNPAY
         const res = await paymentApi.createVNPayUrl({
           orderId: order_ids[0],
           amount: total_amount,
@@ -176,19 +196,46 @@ const CheckoutPage = () => {
 
   return (
     <div
-      style={{ background: '#f5f5f5', minHeight: '100vh', padding: '20px 0' }}
+      style={{
+        background: '#f8fafc',
+        minHeight: '100vh',
+        padding: '30px 0',
+        fontFamily: 'Segoe UI, sans-serif',
+      }}
     >
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-        <h2 style={{ color: '#ee4d2d', marginBottom: '20px' }}>Thanh toán</h2>
+        <h2
+          style={{
+            color: COLORS.primary,
+            marginBottom: '25px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontWeight: '800',
+          }}
+        >
+          <span
+            style={{
+              background: COLORS.primary,
+              color: '#fff',
+              padding: '8px',
+              borderRadius: '12px',
+            }}
+          >
+            SH
+          </span>{' '}
+          Thanh toán
+        </h2>
 
-        {/* 1. ĐỊA CHỈ NHẬN HÀNG - XỊN */}
+        {/* 1. ĐỊA CHỈ NHẬN HÀNG */}
         <div
           style={{
             background: '#fff',
             padding: '25px',
-            marginBottom: '15px',
-            borderTop: '4px solid #ee4d2d',
-            borderRadius: '4px',
+            marginBottom: '20px',
+            borderTop: `5px solid ${COLORS.primary}`,
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
           }}
         >
           <div
@@ -196,12 +243,14 @@ const CheckoutPage = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '10px',
-              color: '#ee4d2d',
-              marginBottom: '15px',
+              color: COLORS.primary,
+              marginBottom: '18px',
             }}
           >
-            <span style={{ fontSize: '20px' }}>📍</span>
-            <h3 style={{ margin: 0, fontSize: '18px' }}>Địa chỉ nhận hàng</h3>
+            <span style={{ fontSize: '22px' }}>📍</span>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700' }}>
+              Địa chỉ nhận hàng
+            </h3>
           </div>
           {selectedAddress ? (
             <div
@@ -211,57 +260,70 @@ const CheckoutPage = () => {
                 alignItems: 'center',
               }}
             >
-              <div>
-                <strong style={{ fontSize: '16px' }}>
-                  {selectedAddress.recipient_name} (
-                  {selectedAddress.recipient_phone})
+              <div style={{ color: COLORS.text }}>
+                <strong style={{ fontSize: '17px' }}>
+                  {selectedAddress.recipient_name} |{' '}
+                  {selectedAddress.recipient_phone}
                 </strong>
-                <p style={{ margin: '5px 0', color: '#555' }}>
+                <p style={{ margin: '8px 0', opacity: 0.8, fontSize: '15px' }}>
                   {selectedAddress.address_detail}, {selectedAddress.ward},{' '}
                   {selectedAddress.district}, {selectedAddress.city}
                 </p>
                 {selectedAddress.is_default && (
                   <span
                     style={{
-                      color: '#ee4d2d',
-                      fontSize: '12px',
-                      border: '1px solid #ee4d2d',
-                      padding: '0 5px',
+                      background: COLORS.primary,
+                      color: '#fff',
+                      fontSize: '11px',
+                      padding: '3px 10px',
+                      borderRadius: '20px',
+                      fontWeight: '600',
                     }}
                   >
-                    Mặc định
+                    MẶC ĐỊNH
                   </span>
                 )}
               </div>
               <button
                 onClick={handleChangeAddress}
                 style={{
-                  color: '#4080ff',
-                  border: 'none',
-                  background: 'none',
+                  color: COLORS.primary,
+                  border: `1.5px solid ${COLORS.primary}`,
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  background: 'transparent',
                   cursor: 'pointer',
-                  fontWeight: '500',
+                  fontWeight: '700',
+                  transition: '0.3s',
                 }}
               >
                 THAY ĐỔI
               </button>
             </div>
           ) : (
-            <p>Chưa có địa chỉ nào.</p>
+            <p>Vui lòng thêm địa chỉ nhận hàng.</p>
           )}
         </div>
 
         {/* 2. DANH SÁCH SẢN PHẨM */}
         <div
-          style={{ background: '#fff', padding: '20px', marginBottom: '15px' }}
+          style={{
+            background: '#fff',
+            padding: '25px',
+            marginBottom: '20px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+          }}
         >
           <div
             style={{
               display: 'flex',
               paddingBottom: '15px',
-              borderBottom: '1px solid #eee',
-              color: '#888',
-              fontSize: '14px',
+              borderBottom: '1px solid #f1f5f9',
+              color: '#64748b',
+              fontWeight: '700',
+              fontSize: '13px',
+              textTransform: 'uppercase',
             }}
           >
             <div style={{ flex: 6 }}>Sản phẩm</div>
@@ -275,30 +337,63 @@ const CheckoutPage = () => {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                padding: '15px 0',
-                borderBottom: '1px solid #f9f9f9',
+                padding: '20px 0',
+                borderBottom: '1px solid #f8fafc',
               }}
             >
               <div style={{ flex: 6, display: 'flex', gap: '15px' }}>
                 <img
                   src={item.image}
-                  style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                  style={{
+                    width: '65px',
+                    height: '65px',
+                    objectFit: 'cover',
+                    borderRadius: '10px',
+                    border: '1px solid #e2e8f0',
+                  }}
                   alt=""
                 />
-                <div>
-                  <div style={{ fontSize: '14px' }}>{item.product_name}</div>
-                  <div style={{ fontSize: '12px', color: '#999' }}>
-                    Loại: {item.sku_code}
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: '600',
+                      color: COLORS.text,
+                    }}
+                  >
+                    {item.product_name}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '13px',
+                      color: '#94a3b8',
+                      marginTop: '4px',
+                    }}
+                  >
+                    Phân loại: {item.sku_code}
                   </div>
                 </div>
               </div>
-              <div style={{ flex: 2, textAlign: 'center' }}>
+              <div style={{ flex: 2, textAlign: 'center', color: COLORS.text }}>
                 {Number(item.price).toLocaleString()}đ
               </div>
-              <div style={{ flex: 1, textAlign: 'center' }}>
-                x{item.quantity}
+              <div style={{ flex: 1, textAlign: 'center', fontWeight: '600' }}>
+                {item.quantity}
               </div>
-              <div style={{ flex: 2, textAlign: 'right', fontWeight: '500' }}>
+              <div
+                style={{
+                  flex: 2,
+                  textAlign: 'right',
+                  fontWeight: '700',
+                  color: COLORS.primary,
+                }}
+              >
                 {(item.price * item.quantity).toLocaleString()}đ
               </div>
             </div>
@@ -310,13 +405,27 @@ const CheckoutPage = () => {
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gap: '15px',
-            marginBottom: '15px',
+            gap: '20px',
+            marginBottom: '20px',
           }}
         >
-          <div style={{ background: '#fff', padding: '20px' }}>
-            <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>
-              Đơn vị vận chuyển
+          <div
+            style={{
+              background: '#fff',
+              padding: '25px',
+              borderRadius: '12px',
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+            }}
+          >
+            <h3
+              style={{
+                fontSize: '17px',
+                marginBottom: '20px',
+                fontWeight: '700',
+                color: COLORS.text,
+              }}
+            >
+              🚀 Đơn vị vận chuyển
             </h3>
             {shippingMethods.map((m) => (
               <div
@@ -326,315 +435,569 @@ const CheckoutPage = () => {
                   setShippingFee(Number(m.base_fee))
                 }}
                 style={{
-                  padding: '12px',
+                  padding: '15px',
                   border:
                     selectedShippingId === m.id
-                      ? '1px solid #ee4d2d'
-                      : '1px solid #eee',
-                  borderRadius: '4px',
-                  marginBottom: '8px',
+                      ? `2px solid ${COLORS.primary}`
+                      : '1.5px solid #f1f5f9',
+                  background:
+                    selectedShippingId === m.id ? COLORS.light : '#fff',
+                  borderRadius: '10px',
+                  marginBottom: '12px',
                   cursor: 'pointer',
                   display: 'flex',
                   justifyContent: 'space-between',
+                  alignItems: 'center',
+                  transition: '0.2s',
                 }}
               >
-                <span>{m.name}</span>
-                <span style={{ fontWeight: '500' }}>
+                <span
+                  style={{
+                    fontWeight: selectedShippingId === m.id ? '700' : '500',
+                    color: COLORS.text,
+                  }}
+                >
+                  {m.name}
+                </span>
+                <span style={{ color: COLORS.primary, fontWeight: '800' }}>
                   {Number(m.base_fee).toLocaleString()}đ
                 </span>
               </div>
             ))}
           </div>
 
-          <div style={{ background: '#fff', padding: '20px' }}>
-            <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>
-              Phương thức thanh toán
+          <div
+            style={{
+              background: '#fff',
+              padding: '25px',
+              borderRadius: '12px',
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+            }}
+          >
+            <h3
+              style={{
+                fontSize: '17px',
+                marginBottom: '20px',
+                fontWeight: '700',
+                color: COLORS.text,
+              }}
+            >
+              💳 Phương thức thanh toán
             </h3>
             <div
-              style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
             >
-              <button
-                onClick={() => setPaymentMethod(1)}
-                style={{
-                  padding: '12px',
-                  textAlign: 'left',
-                  border:
-                    paymentMethod === 1
-                      ? '1px solid #ee4d2d'
-                      : '1px solid #eee',
-                  background: '#fff',
-                  cursor: 'pointer',
-                }}
-              >
-                💵 Thanh toán khi nhận hàng (COD)
-              </button>
-              <button
-                onClick={() => setPaymentMethod(2)}
-                style={{
-                  padding: '12px',
-                  textAlign: 'left',
-                  border:
-                    paymentMethod === 2
-                      ? '1px solid #ee4d2d'
-                      : '1px solid #eee',
-                  background: '#fff',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-              >
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png"
-                  width="20"
-                  alt=""
-                />{' '}
-                Ví MoMo
-              </button>
-              <button
-                onClick={() => setPaymentMethod(3)}
-                style={{
-                  padding: '12px',
-                  textAlign: 'left',
-                  border:
-                    paymentMethod === 3
-                      ? '1px solid #ee4d2d'
-                      : '1px solid #eee',
-                  background: '#fff',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-              >
-                <img src={logoVnPay} width="20" alt="" /> Cổng VNPay
-              </button>
+              {[
+                { id: 1, name: 'Thanh toán COD', icon: '💵' },
+                {
+                  id: 2,
+                  name: 'Ví MoMo',
+                  img: 'https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png',
+                },
+                { id: 3, name: 'Cổng VNPay', img: logoVnPay },
+              ].map((method) => (
+                <button
+                  key={method.id}
+                  onClick={() => setPaymentMethod(method.id)}
+                  style={{
+                    padding: '15px',
+                    textAlign: 'left',
+                    border:
+                      paymentMethod === method.id
+                        ? `2px solid ${COLORS.primary}`
+                        : '1.5px solid #f1f5f9',
+                    background:
+                      paymentMethod === method.id ? COLORS.light : '#fff',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    transition: '0.2s',
+                  }}
+                >
+                  {method.img ? (
+                    <img
+                      src={method.img}
+                      width="26"
+                      height="26"
+                      style={{ borderRadius: '6px' }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: '22px' }}>{method.icon}</span>
+                  )}
+                  <span
+                    style={{
+                      fontWeight: paymentMethod === method.id ? '700' : '500',
+                      color: COLORS.text,
+                    }}
+                  >
+                    {method.name}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
         {/* 4. VOUCHER & TỔNG KẾT */}
         <div
-          style={{ background: '#fff', padding: '20px', borderRadius: '4px' }}
+          style={{
+            background: '#fff',
+            padding: '30px',
+            borderRadius: '12px',
+            boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+          }}
         >
           <div
             style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              paddingBottom: '20px',
-              borderBottom: '1px dashed #eee',
+              paddingBottom: '25px',
+              borderBottom: '1.5px dashed #e2e8f0',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ color: '#ee4d2d', fontSize: '20px' }}>🎟️</span>
-              <strong>Shopii Voucher</strong>
-              {appliedCoupon && (
-                <span
-                  style={{
-                    background: '#ee4d2d',
-                    color: '#fff',
-                    padding: '2px 8px',
-                    borderRadius: '2px',
-                  }}
-                >
-                  {appliedCoupon.code}
-                </span>
-              )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ color: COLORS.primary, fontSize: '28px' }}>
+                🎟️
+              </span>
+              <strong style={{ fontSize: '18px', color: COLORS.text }}>
+                Shopii Voucher
+              </strong>
             </div>
-            <button
-              onClick={() => setShowCouponModal(true)}
-              style={{
-                color: '#05a',
-                border: 'none',
-                background: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              Chọn hoặc nhập mã
-            </button>
+
+            {/* NHẬP MÃ TẠI CHỖ */}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <input
+                type="text"
+                placeholder="Nhập mã ưu đãi..."
+                value={manualCode}
+                onChange={(e) => setManualCode(e.target.value)}
+                style={{
+                  padding: '12px 18px',
+                  border: '2px solid #f1f5f9',
+                  borderRadius: '10px',
+                  outline: 'none',
+                  width: '220px',
+                  fontSize: '14px',
+                  background: '#f8fafc',
+                }}
+              />
+              <button
+                onClick={() => handleApplyCoupon()}
+                style={{
+                  padding: '12px 25px',
+                  background: COLORS.primary,
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: '0.3s',
+                }}
+              >
+                ÁP DỤNG
+              </button>
+              <div
+                style={{ width: '2px', height: '30px', background: '#f1f5f9' }}
+              ></div>
+              <button
+                onClick={() => setShowCouponModal(true)}
+                style={{
+                  color: COLORS.primary,
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  textDecoration: 'none',
+                  fontSize: '15px',
+                }}
+              >
+                CHỌN MÃ
+              </button>
+            </div>
           </div>
 
-          <div style={{ textAlign: 'right', marginTop: '20px' }}>
-            <p style={{ color: '#888' }}>
-              Tổng tiền hàng: {totalProductPrice.toLocaleString()}đ
-            </p>
-            <p style={{ color: '#888' }}>
-              Phí vận chuyển: {shippingFee.toLocaleString()}đ
-            </p>
-            {discountAmount > 0 && (
-              <p style={{ color: '#ee4d2d' }}>
-                Giảm giá Voucher: -{discountAmount.toLocaleString()}đ
-              </p>
-            )}
-            <div style={{ margin: '20px 0' }}>
-              <span style={{ fontSize: '16px' }}>Tổng thanh toán: </span>
+          {appliedCoupon && (
+            <div
+              style={{
+                marginTop: '20px',
+                background: '#f0fdf4',
+                color: '#166534',
+                padding: '15px 20px',
+                borderRadius: '10px',
+                border: '1px solid #bbf7d0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <span style={{ fontWeight: '600' }}>
+                ✨ Đã kích hoạt mã:{' '}
+                <span style={{ color: COLORS.primary }}>
+                  {appliedCoupon.code}
+                </span>
+              </span>
+              <button
+                onClick={() => {
+                  setAppliedCoupon(null)
+                  setDiscountAmount(0)
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: COLORS.error,
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  fontSize: '13px',
+                }}
+              >
+                GỠ BỎ
+              </button>
+            </div>
+          )}
+
+          <div style={{ textAlign: 'right', marginTop: '30px' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr auto',
+                gap: '12px 40px',
+                justifyContent: 'end',
+                alignItems: 'center',
+              }}
+            >
+              <span style={{ color: '#64748b' }}>Tổng tiền hàng:</span>
+              <span style={{ fontWeight: '600', color: COLORS.text }}>
+                {totalProductPrice.toLocaleString()}đ
+              </span>
+
+              <span style={{ color: '#64748b' }}>Phí vận chuyển:</span>
+              <span style={{ fontWeight: '600', color: COLORS.text }}>
+                {shippingFee.toLocaleString()}đ
+              </span>
+
+              {discountAmount > 0 && (
+                <>
+                  <span style={{ color: COLORS.error }}>Giảm giá Voucher:</span>
+                  <span style={{ fontWeight: '700', color: COLORS.error }}>
+                    -{discountAmount.toLocaleString()}đ
+                  </span>
+                </>
+              )}
+
               <span
                 style={{
-                  fontSize: '28px',
-                  color: '#ee4d2d',
-                  fontWeight: 'bold',
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  marginTop: '10px',
+                }}
+              >
+                Tổng thanh toán:
+              </span>
+              <span
+                style={{
+                  fontSize: '32px',
+                  color: COLORS.primary,
+                  fontWeight: '900',
+                  marginTop: '10px',
                 }}
               >
                 {finalTotal.toLocaleString()}đ
               </span>
             </div>
+
             <button
               onClick={handlePlaceOrder}
               disabled={loading}
               style={{
-                padding: '12px 60px',
-                background: '#ee4d2d',
+                marginTop: '30px',
+                padding: '18px 100px',
+                background: COLORS.primary,
                 color: '#fff',
                 border: 'none',
-                borderRadius: '2px',
+                borderRadius: '12px',
                 cursor: 'pointer',
                 fontSize: '18px',
+                fontWeight: '800',
+                boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.3)',
+                transition: '0.3s',
               }}
             >
-              {loading ? 'ĐANG XỬ LÝ...' : 'ĐẶT HÀNG'}
+              {loading ? 'ĐANG XỬ LÝ...' : 'ĐẶT HÀNG NGAY'}
             </button>
           </div>
         </div>
       </div>
 
-      {/* MODAL CHỌN VOUCHER - XỊN (CÓ CHECK HẠNG) */}
+      {/* MODAL CHỌN VOUCHER - BLUE PREMIUM */}
       {showCouponModal && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.5)',
+            background: 'rgba(15, 23, 42, 0.7)',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             zIndex: 1000,
+            backdropFilter: 'blur(8px)',
           }}
         >
           <div
             style={{
               background: '#fff',
-              padding: '25px',
-              width: '500px',
-              borderRadius: '8px',
-              maxHeight: '80vh',
+              padding: '35px',
+              width: '580px',
+              borderRadius: '20px',
+              maxHeight: '85vh',
               overflowY: 'auto',
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
             }}
           >
-            <h3 style={{ marginTop: 0 }}>Chọn Shopii Voucher</h3>
-            {coupons.map((cp) => {
-              const isSystem = cp.shop_id === null
-              const minOrder = Number(cp.min_order_value || 0)
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginBottom: '25px',
+                alignItems: 'center',
+              }}
+            >
+              <h3
+                style={{
+                  margin: 0,
+                  color: COLORS.primary,
+                  fontSize: '22px',
+                  fontWeight: '800',
+                }}
+              >
+                Kho Voucher Của Bạn
+              </h3>
+              <button
+                onClick={() => setShowCouponModal(false)}
+                style={{
+                  border: 'none',
+                  background: '#f1f5f9',
+                  width: '35px',
+                  height: '35px',
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  color: '#64748b',
+                }}
+              >
+                ✕
+              </button>
+            </div>
 
-              // Lấy tổng tiền shop tương ứng (Ép kiểu về String để lấy đúng key trong Map)
-              const subtotal = isSystem
-                ? totalProductPrice
-                : shopSubtotalMap[String(cp.shop_id)] || 0
+            {coupons.length === 0 ? (
+              <p
+                style={{
+                  textAlign: 'center',
+                  padding: '50px',
+                  color: '#94a3b8',
+                }}
+              >
+                Bạn chưa có mã giảm giá nào.
+              </p>
+            ) : (
+              coupons.map((cp) => {
+                const isSystem = cp.shop_id === null
+                const subtotal = isSystem
+                  ? totalProductPrice
+                  : shopSubtotalMap[String(cp.shop_id)] || 0
 
-              const isExpired = new Date(cp.end_date) < new Date()
-              const isOutOfStock = cp.usage_limit <= 0
-              const isNotEligible = subtotal < minOrder
-              const isTierLocked =
-                cp.membership_tier_id &&
-                Number(user?.membership?.tier?.min_spent || 0) <
-                  Number(cp.tier?.min_spent || 0)
-              const isError =
-                isExpired || isOutOfStock || isTierLocked || isNotEligible
+                const isExpired = new Date(cp.end_date) < new Date()
+                const isOutOfStock = cp.usage_limit <= 0
+                const isNotEligible = subtotal < Number(cp.min_order_value)
+                const isTierLocked =
+                  cp.membership_tier_id &&
+                  Number(user?.membership?.tier?.min_spent || 0) <
+                    Number(cp.tier?.min_spent || 0)
+                const isError =
+                  isExpired || isOutOfStock || isTierLocked || isNotEligible
 
-              return (
-                <div
-                  key={cp.id}
-                  style={{
-                    display: 'flex',
-                    border: '1px solid #eee',
-                    marginBottom: '10px',
-                    opacity: isError ? 0.6 : 1,
-                    background: isError ? '#f9f9f9' : '#fff',
-                  }}
-                >
+                return (
                   <div
+                    key={cp.id}
                     style={{
-                      width: '100px',
-                      background: isSystem ? '#ee4d2d' : '#26aa99',
-                      color: '#fff',
                       display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      textAlign: 'center',
-                      fontSize: '11px',
-                      fontWeight: 'bold',
-                      padding: '5px',
+                      border: isError
+                        ? '1.5px solid #f1f5f9'
+                        : `1.5px solid ${COLORS.primary}`,
+                      marginBottom: '18px',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      background: isError ? '#fcfcfc' : '#fff',
+                      transition: '0.2s',
                     }}
                   >
-                    {isSystem ? 'SHOPII VOUCHER' : 'SELLER VOUCHER'}
-                  </div>
-                  <div style={{ flex: 1, padding: '10px' }}>
-                    <div style={{ fontWeight: 'bold' }}>{cp.code}</div>
-                    <div style={{ fontSize: '13px' }}>
-                      Giảm{' '}
-                      {cp.discount_type === 'percent'
-                        ? `${cp.discount_value}%`
-                        : `${cp.discount_value.toLocaleString()}đ`}
-                    </div>
-
-                    {/* HIỂN THỊ TRẠNG THÁI LỖI */}
-                    {isExpired && (
-                      <div style={{ color: 'red', fontSize: '11px' }}>
-                        ❌ Mã đã hết hạn
-                      </div>
-                    )}
-                    {!isExpired && isOutOfStock && (
-                      <div style={{ color: 'red', fontSize: '11px' }}>
-                        ❌ Hết lượt sử dụng
-                      </div>
-                    )}
-                    {isTierLocked && (
-                      <div style={{ color: '#8b5cf6', fontSize: '11px' }}>
-                        🔒 Hạng {cp.tier?.name} mới dùng được
-                      </div>
-                    )}
-                    {!isExpired && !isOutOfStock && isNotEligible && (
-                      <div style={{ color: '#ee4d2d', fontSize: '11px' }}>
-                        Mua thêm {(minOrder - subtotal).toLocaleString()}đ
-                      </div>
-                    )}
-                  </div>
-                  <div
-                    style={{
-                      padding: '10px',
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <button
-                      disabled={isError}
-                      onClick={() => handleApplyCoupon(cp.code)}
+                    <div
                       style={{
-                        padding: '5px 15px',
-                        background: isError ? '#ccc' : '#ee4d2d',
+                        width: '130px',
+                        background: isError
+                          ? '#cbd5e1'
+                          : isSystem
+                            ? COLORS.primary
+                            : COLORS.success,
                         color: '#fff',
-                        border: 'none',
-                        cursor: isError ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textAlign: 'center',
+                        padding: '15px',
                       }}
                     >
-                      Dùng
-                    </button>
+                      <strong
+                        style={{ fontSize: '12px', letterSpacing: '1px' }}
+                      >
+                        {isSystem ? 'SHOPII' : 'SELLER'}
+                      </strong>
+                      <span
+                        style={{
+                          fontSize: '9px',
+                          fontWeight: '700',
+                          marginTop: '4px',
+                        }}
+                      >
+                        EXCLUSIVE
+                      </span>
+                    </div>
+
+                    <div style={{ flex: 1, padding: '18px' }}>
+                      <div
+                        style={{
+                          fontWeight: '800',
+                          fontSize: '17px',
+                          color: isError ? '#94a3b8' : '#1e293b',
+                        }}
+                      >
+                        {cp.code}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '15px',
+                          color: isError ? '#94a3b8' : COLORS.primary,
+                          fontWeight: '700',
+                          margin: '6px 0',
+                        }}
+                      >
+                        Giảm{' '}
+                        {cp.discount_type === 'percent'
+                          ? `${cp.discount_value}%`
+                          : `${cp.discount_value.toLocaleString()}đ`}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '12px',
+                          color: '#64748b',
+                          fontWeight: '500',
+                        }}
+                      >
+                        Đơn tối thiểu:{' '}
+                        <strong>
+                          {Number(cp.min_order_value).toLocaleString()}đ
+                        </strong>
+                      </div>
+
+                      {/* HIỂN THỊ LÝ DO KHOÁ MÃ */}
+                      <div style={{ marginTop: '10px' }}>
+                        {isExpired && (
+                          <span
+                            style={{
+                              color: COLORS.error,
+                              fontSize: '11px',
+                              fontWeight: '700',
+                            }}
+                          >
+                            🛑 ĐÃ HẾT HẠN
+                          </span>
+                        )}
+                        {!isExpired && isOutOfStock && (
+                          <span
+                            style={{
+                              color: COLORS.error,
+                              fontSize: '11px',
+                              fontWeight: '700',
+                            }}
+                          >
+                            🛑 HẾT LƯỢT SỬ DỤNG
+                          </span>
+                        )}
+                        {isTierLocked && (
+                          <span
+                            style={{
+                              color: COLORS.secondary,
+                              fontSize: '11px',
+                              fontWeight: '700',
+                            }}
+                          >
+                            🔒 CHỈ DÀNH CHO HẠNG {cp.tier?.name}
+                          </span>
+                        )}
+                        {!isExpired && !isOutOfStock && isNotEligible && (
+                          <span
+                            style={{
+                              color: COLORS.warning,
+                              fontSize: '11px',
+                              fontWeight: '700',
+                            }}
+                          >
+                            ⚠️ CẦN MUA THÊM{' '}
+                            {(
+                              Number(cp.min_order_value) - subtotal
+                            ).toLocaleString()}
+                            đ
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        padding: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <button
+                        disabled={isError || couponApplying}
+                        onClick={() => handleApplyCoupon(cp.code)}
+                        style={{
+                          padding: '10px 22px',
+                          background: isError ? '#f1f5f9' : COLORS.primary,
+                          color: isError ? '#94a3b8' : '#fff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: isError ? 'not-allowed' : 'pointer',
+                          fontWeight: '800',
+                          fontSize: '13px',
+                        }}
+                      >
+                        DÙNG
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })
+            )}
             <button
               onClick={() => setShowCouponModal(false)}
               style={{
                 width: '100%',
-                padding: '10px',
-                marginTop: '10px',
-                border: '1px solid #ddd',
+                padding: '14px',
+                marginTop: '15px',
+                borderRadius: '10px',
+                border: '2px solid #f1f5f9',
                 background: '#fff',
                 cursor: 'pointer',
+                fontWeight: '700',
+                color: '#64748b',
               }}
             >
-              Đóng
+              ĐÓNG
             </button>
           </div>
         </div>
