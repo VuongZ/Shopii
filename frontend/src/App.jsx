@@ -121,7 +121,7 @@ function App() {
             {/* ADMIN */}
             {user && (user.role === 'admin' || user.role === 1) && (
               <Link
-                to="/categories"
+                to="/admin/categories"
                 className="nav-link"
                 style={{ color: '#3b82f6', fontWeight: 'bold' }}
                 onClick={closeMenu}
