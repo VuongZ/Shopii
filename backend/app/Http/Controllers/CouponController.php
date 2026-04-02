@@ -156,24 +156,25 @@ class CouponController extends Controller
         $coupon->delete();
         return response()->json(['message' => 'Đã xóa mã giảm giá']);
     }
-    public function getAvailableVouchers(Request $request) {
-    $now = Carbon::now();
-    $shopIds = $request->query('shop_ids'); // Lấy danh sách ID shop từ frontend gửi lên
+   public function getAvailableVouchers(Request $request) {
+    // Lấy danh sách ID shop từ giỏ hàng gửi lên
+    $shopIdsParam = $request->query('shop_ids'); 
 
-    $query = Coupon::with('tier')
-        ->where('start_date', '<=', $now)
-        ->where('end_date', '>=', $now)
-        ->where('usage_limit', '>', 0);
+    $query = Coupon::with('tier');
 
-    $query->where(function($q) use ($shopIds) {
-        $q->whereNull('shop_id'); // Lấy mã toàn sàn (Admin)
+    $query->where(function($q) use ($shopIdsParam) {
+        // 1. Lấy mã Shopee (Mã toàn sàn - shop_id là NULL)
+        $q->whereNull('shop_id');
         
-        if ($shopIds) {
-            $ids = explode(',', $shopIds);
-            $q->orWhereIn('shop_id', $ids); // Lấy thêm mã của các Shop khách đang mua
+        // 2. Lấy mã của các Seller khách đang mua hàng
+        if ($shopIdsParam) {
+            $ids = explode(',', $shopIdsParam);
+            $q->orWhereIn('shop_id', $ids);
         }
     });
 
-    return response()->json($query->get());
+    
+    return response()->json($query->orderBy('created_at', 'desc')->get());
 }
+
 }
