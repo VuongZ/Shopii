@@ -80,7 +80,9 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json($user);
     });
     Route::put('/user/update', [UserController::class, 'updateProfile']);
+   
     Route::post('/user/update-avatar', [UserController::class, 'updateAvatar']);
+   Route::get('/membership-tiers', [MembershipTierController::class, 'index']);
     /* ----------------------- GIỎ HÀNG ----------------------- */
     Route::get('/cart', [CartController::class, 'getCart']);
     Route::post('/cart/add', [CartController::class, 'addToCart']);
