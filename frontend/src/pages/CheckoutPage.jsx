@@ -521,7 +521,7 @@ const CheckoutPage = () => {
               overflowY: 'auto',
             }}
           >
-            <h3 style={{ marginTop: 0 }}>Chọn Shopee Voucher</h3>
+            <h3 style={{ marginTop: 0 }}>Chọn Shopii Voucher</h3>
             {coupons.map((cp) => {
               const isSystem = cp.shop_id === null
               const minOrder = Number(cp.min_order_value || 0)
@@ -566,7 +566,7 @@ const CheckoutPage = () => {
                       padding: '5px',
                     }}
                   >
-                    {isSystem ? 'SHOPEE VOUCHER' : 'SELLER VOUCHER'}
+                    {isSystem ? 'SHOPII VOUCHER' : 'SELLER VOUCHER'}
                   </div>
                   <div style={{ flex: 1, padding: '10px' }}>
                     <div style={{ fontWeight: 'bold' }}>{cp.code}</div>
