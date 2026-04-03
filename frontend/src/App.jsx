@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Routes, Route, Link, useNavigate } from 'react-router-dom'
-// MỚI: Import thêm icon Menu và X cho nút Hamburger
-import { ShoppingCart, Menu, X } from 'lucide-react'
+import { ShoppingCart, Menu, X, MessageCircle } from 'lucide-react'
 
 import userApi from './api/userApi'
+import chatApi from './api/chatApi'
 import UsersPage from './pages/UsersPage'
 import Home from './pages/HomePage'
 import Login from './pages/Login'
@@ -42,6 +42,9 @@ function App() {
   // MỚI: State điều khiển Menu trượt trên Mobile
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
+  // Số tin nhắn chưa đọc
+  const [unreadChatCount, setUnreadChatCount] = useState(0)
+
   const [user, setUser] = useState(() => {
     const info = localStorage.getItem('USER_INFO')
     return info ? JSON.parse(info) : null
@@ -57,20 +60,49 @@ function App() {
     window.addEventListener('cartUpdated', loadCart)
   }
 
+  // Fetch tổng số tin nhắn chưa đọc từ tất cả conversations
+  const loadUnreadChat = async (currentUser) => {
+    if (!currentUser) return
+    try {
+      const res = await chatApi.listConversations()
+      const convs = Array.isArray(res.data) ? res.data : []
+      const total = convs.reduce((sum, c) => sum + (c.unread_count || 0), 0)
+      setUnreadChatCount(total)
+    } catch {
+      // Bỏ qua lỗi, không ảnh hưởng UI
+    }
+  }
+
   useEffect(() => {
     loadCart()
 
     const handleUserUpdate = () => {
       const info = localStorage.getItem('USER_INFO')
-      setUser(info ? JSON.parse(info) : null)
+      const updatedUser = info ? JSON.parse(info) : null
+      setUser(updatedUser)
+      loadUnreadChat(updatedUser)
     }
     window.addEventListener('userUpdated', handleUserUpdate)
+
+    // Lắng nghe event reset badge khi user đang ở trang chat
+    const handleChatRead = () => setUnreadChatCount(0)
+    window.addEventListener('chatRead', handleChatRead)
+
     return () => {
       window.removeEventListener('userUpdated', handleUserUpdate)
       window.removeEventListener('storage', loadCart)
       window.removeEventListener('cartUpdated', loadCart)
+      window.removeEventListener('chatRead', handleChatRead)
     }
   }, [])
+
+  // Load unread khi user thay đổi (login/logout) + polling mỗi 30 giây
+  useEffect(() => {
+    loadUnreadChat(user)
+    if (!user) return
+    const interval = setInterval(() => loadUnreadChat(user), 30000)
+    return () => clearInterval(interval)
+  }, [user])
 
   const handleLogout = async () => {
     try {
@@ -81,12 +113,19 @@ function App() {
     localStorage.removeItem('ACCESS_TOKEN')
     localStorage.removeItem('USER_INFO')
     setUser(null)
+    setUnreadChatCount(0)
     setIsMobileMenuOpen(false) // Đóng menu khi logout
     navigate('/')
   }
 
   // Hàm tiện ích: Đóng menu mobile sau khi click link
   const closeMenu = () => setIsMobileMenuOpen(false)
+
+  // Khi click vào icon chat → reset badge
+  const handleChatClick = () => {
+    setUnreadChatCount(0)
+    closeMenu()
+  }
 
   return (
     <div className="app-container">
@@ -112,11 +151,6 @@ function App() {
             <Link to="/orders" className="nav-link" onClick={closeMenu}>
               Đơn mua
             </Link>
-            {user && (
-              <Link to="/chat" className="nav-link" onClick={closeMenu}>
-                Chat
-              </Link>
-            )}
 
             {/* ADMIN */}
             {user && (user.role === 'admin' || user.role === 1) && (
@@ -197,8 +231,18 @@ function App() {
             )}
           </nav>
 
-          {/* MỚI: TÁCH GIỎ HÀNG RA NGOÀI ĐỂ LUÔN NẰM GÓC PHẢI TRÊN CÙNG */}
-          <div className="cart-wrapper" style={{ marginLeft: 'auto' }}>
+          {/* TÁCH GIỎ HÀNG VÀ CHAT RA NGOÀI ĐỂ LUÔN NẰM GÓC PHẢI TRÊN CÙNG */}
+          <div className="cart-wrapper" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* ICON CHAT - chỉ hiện khi đã đăng nhập */}
+            {user && (
+              <Link to="/chat" className="nav-link chat-icon" onClick={handleChatClick} style={{ position: 'relative' }}>
+                <MessageCircle size={24} />
+                {unreadChatCount > 0 && (
+                  <span className="cart-badge">{unreadChatCount > 99 ? '99+' : unreadChatCount}</span>
+                )}
+              </Link>
+            )}
+
             <Link to="/cart" className="nav-link cart-icon" onClick={closeMenu}>
               <ShoppingCart size={24} />
               {user && cartCount > 0 && (
