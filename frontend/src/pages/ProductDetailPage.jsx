@@ -7,51 +7,53 @@ import cartApi from '../api/cartApi'
 
 function ProductDetailPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
+
   const [orderId, setOrderId] = useState(null)
+  const [product, setProduct] = useState(null)
+  const [mainImage, setMainImage] = useState('')
+  const [selectedSku, setSelectedSku] = useState(null)
+
   useEffect(() => {
     fetchOrderId()
+    fetchProduct()
   }, [id])
 
+  // ✅ Chỉ còn 1 hàm fetchOrderId duy nhất
   const fetchOrderId = async () => {
     try {
       const res = await orderApi.getMyOrders()
-      const orders = res.data
+      console.log("RAW RESPONSE:", res.data)
 
-      console.log('ORDERS:', orders) // debug
+      const orders = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.data)
+        ? res.data.data
+        : []
 
       for (const order of orders) {
-        // ⚠️ CHỖ NÀY QUAN TRỌNG
-        const hasProduct = order.items?.some((item) => item.product_id == id)
-
+        console.log("ORDER ITEMS:", order.items)
+        const hasProduct = order.items?.some(
+          (item) => String(item.sku?.product?.id) === String(id)
+        )
         if (hasProduct) {
           setOrderId(order.id)
+          console.log("FOUND orderId:", order.id)
           return
         }
       }
 
       setOrderId(null)
+      console.log("Không tìm thấy order chứa product id:", id)
     } catch (err) {
       console.error(err)
     }
   }
 
-  const navigate = useNavigate()
-
-  const [product, setProduct] = useState(null)
-  const [mainImage, setMainImage] = useState('')
-
-  // STATE MỚI: Lưu lại SKU (Màu sắc/Kích thước) đang được chọn
-  const [selectedSku, setSelectedSku] = useState(null)
-
-  useEffect(() => {
-    fetchProduct()
-  }, [id])
-
   const fetchProduct = async () => {
     try {
       const res = await axiosClient.get(`/products/${id}`)
       const data = res.data
-
       setProduct(data)
 
       const thumbnail =

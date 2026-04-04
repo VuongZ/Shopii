@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Routes, Route, Link, useNavigate } from 'react-router-dom'
-import { ShoppingCart } from 'lucide-react'
+import { ShoppingCart, Menu, X, MessageCircle } from 'lucide-react'
 
 import userApi from './api/userApi'
+import chatApi from './api/chatApi'
 import UsersPage from './pages/UsersPage'
 import Home from './pages/HomePage'
 import Login from './pages/Login'
@@ -28,17 +29,27 @@ import AdminShopsPage from './pages/AdminShopsPage'
 import ShopPage from './pages/ShopPage'
 import SellerOrderManagementPage from './pages/SellerOrderManagementPage'
 import ChatPage from './pages/ChatPage'
-
+import AdminMembershipTiersPage from './pages/AdminMembershipTiersPage'
+import AdminCouponsPage from './pages/AdminCouponsPage'
+import AdminLayout from './components/AdminLayout'
 import './App.css'
 
 function App() {
   const navigate = useNavigate()
   const [cartCount, setCartCount] = useState(0)
   const [cartItems, setCartItems] = useState([])
+
+  // MỚI: State điều khiển Menu trượt trên Mobile
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  // Số tin nhắn chưa đọc
+  const [unreadChatCount, setUnreadChatCount] = useState(0)
+
   const [user, setUser] = useState(() => {
     const info = localStorage.getItem('USER_INFO')
     return info ? JSON.parse(info) : null
   })
+
   const loadCart = () => {
     const cart = JSON.parse(localStorage.getItem('CART')) || []
     setCartItems(cart)
@@ -48,20 +59,50 @@ function App() {
     window.addEventListener('storage', loadCart)
     window.addEventListener('cartUpdated', loadCart)
   }
+
+  // Fetch tổng số tin nhắn chưa đọc từ tất cả conversations
+  const loadUnreadChat = async (currentUser) => {
+    if (!currentUser) return
+    try {
+      const res = await chatApi.listConversations()
+      const convs = Array.isArray(res.data) ? res.data : []
+      const total = convs.reduce((sum, c) => sum + (c.unread_count || 0), 0)
+      setUnreadChatCount(total)
+    } catch {
+      // Bỏ qua lỗi, không ảnh hưởng UI
+    }
+  }
+
   useEffect(() => {
     loadCart()
 
     const handleUserUpdate = () => {
       const info = localStorage.getItem('USER_INFO')
-      setUser(info ? JSON.parse(info) : null)
+      const updatedUser = info ? JSON.parse(info) : null
+      setUser(updatedUser)
+      loadUnreadChat(updatedUser)
     }
     window.addEventListener('userUpdated', handleUserUpdate)
+
+    // Lắng nghe event reset badge khi user đang ở trang chat
+    const handleChatRead = () => setUnreadChatCount(0)
+    window.addEventListener('chatRead', handleChatRead)
+
     return () => {
       window.removeEventListener('userUpdated', handleUserUpdate)
       window.removeEventListener('storage', loadCart)
       window.removeEventListener('cartUpdated', loadCart)
+      window.removeEventListener('chatRead', handleChatRead)
     }
   }, [])
+
+  // Load unread khi user thay đổi (login/logout) + polling mỗi 30 giây
+  useEffect(() => {
+    loadUnreadChat(user)
+    if (!user) return
+    const interval = setInterval(() => loadUnreadChat(user), 30000)
+    return () => clearInterval(interval)
+  }, [user])
 
   const handleLogout = async () => {
     try {
@@ -72,27 +113,46 @@ function App() {
     localStorage.removeItem('ACCESS_TOKEN')
     localStorage.removeItem('USER_INFO')
     setUser(null)
+    setUnreadChatCount(0)
+    setIsMobileMenuOpen(false) // Đóng menu khi logout
     navigate('/')
+  }
+
+  // Hàm tiện ích: Đóng menu mobile sau khi click link
+  const closeMenu = () => setIsMobileMenuOpen(false)
+
+  // Khi click vào icon chat → reset badge
+  const handleChatClick = () => {
+    setUnreadChatCount(0)
+    closeMenu()
   }
 
   return (
     <div className="app-container">
       <header className="shopee-header">
         <div className="header-content">
-          <Link to="/" className="logo">
+          {/* MỚI: Nút Hamburger chỉ hiện trên Mobile */}
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
+          </button>
+
+          <Link to="/" className="logo" onClick={closeMenu}>
             Shopii
           </Link>
 
-          <nav className="nav-menu">
+          <nav className={`nav-menu ${isMobileMenuOpen ? 'open' : ''}`}>
             {user?.role !== 'seller' && (
               <>
-                <Link to="/" className="nav-link">
+                <Link to="/" className="nav-link" onClick={closeMenu}>
                   Trang chủ
                 </Link>
-                <Link to="/chat" className="nav-link">
+                <Link to="/chat" className="nav-link" onClick={closeMenu}>
                   Chat
                 </Link>
-                <Link to="/seller" className="nav-link">
+                <Link to="/seller" className="nav-link" onClick={closeMenu}>
                   Kênh người bán
                 </Link>
               </>
@@ -133,89 +193,155 @@ function App() {
               </div>
             </div>
 
+            {/* MENU ĐIỀU HƯỚNG (Sẽ biến thành Sidebar trượt trên Mobile)
+          <nav className={`nav-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+            <Link to="/" className="nav-link" onClick={closeMenu}>
+              Trang chủ
+            </Link>
+            <Link to="/orders" className="nav-link" onClick={closeMenu}>
+              Đơn mua
+            </Link> */}
+
             {/* ADMIN */}
             {user && (user.role === 'admin' || user.role === 1) && (
               <Link
-                to="/categories"
+                to="/admin/categories"
                 className="nav-link"
                 style={{ color: '#3b82f6', fontWeight: 'bold' }}
+                onClick={closeMenu}
               >
                 Categories
               </Link>
             )}
 
             {/* SELLER */}
-            {user && (user.role === 'seller' || user.role === 2) && (
-              <>
-                <Link
-                  to="/seller"
-                  className="nav-link"
-                  style={{ color: '#ee4d2d', fontWeight: 'bold' }}
-                >
-                  Cửa hàng của tôi
-                </Link>
-
-                <Link
-                  to="/seller-coupons"
-                  className="nav-link"
-                  style={{ color: 'green', fontWeight: 'bold' }}
-                >
-                  Coupons
-                </Link>
-
-                <Link
-                  to="/seller-orders"
-                  className="nav-link"
-                  style={{ color: '#3b82f6', fontWeight: 'bold' }}
-                >
-                  Quản lý đơn
-                </Link>
-              </>
+            {user && user.role === 'seller' && (
+              <Link
+                to="/seller"
+                className="nav-link"
+                style={{ color: '#ee4d2d', fontWeight: 'bold' }}
+                onClick={closeMenu}
+              >
+                Cửa hàng của tôi
+              </Link>
             )}
 
+            {/* TÀI KHOẢN (Nằm trong Menu trượt) */}
             {!user ? (
               <>
-                <Link to="/login" className="nav-link">
+                <Link to="/login" className="nav-link" onClick={closeMenu}>
                   Đăng nhập
                 </Link>
-                <Link to="/register" className="nav-link">
+                <Link to="/register" className="nav-link" onClick={closeMenu}>
                   Đăng ký
                 </Link>
               </>
             ) : (
-              <>
-                <div className="user-menu">
-                  <div className="user-trigger">
-                    <div className="avatar">
-                      {user.name?.charAt(0).toUpperCase()}
-                    </div>
-
-                    <span>{user.name}</span>
+              <div className="user-menu">
+                <div className="user-trigger">
+                  <div className="avatar">
+                    {user.name?.charAt(0).toUpperCase()}
                   </div>
-
-                  <div className="dropdown-menu">
-                    {user.role !== 'seller' && user.role !== 2 && (
+                  <span>{user.name}</span>
+                </div>
+                <div className="dropdown-menu">
+                  {user.role == 'seller' ||
+                    (user.role == 'user' && (
                       <>
-                        <Link to="/profile" className="dropdown-item">
+                        <Link
+                          to="/profile"
+                          className="dropdown-item"
+                          onClick={closeMenu}
+                        >
                           Tài khoản của tôi
                         </Link>
-                        <Link to="/orders" className="dropdown-item">
+                        <Link
+                          to="/orders"
+                          className="dropdown-item"
+                          onClick={closeMenu}
+                        >
                           Đơn mua
                         </Link>
                       </>
-                    )}
-
-                    <div
-                      className="dropdown-item logout"
-                      onClick={handleLogout}
-                    >
-                      Đăng xuất
-                    </div>
+                    ))}
+                  <div className="dropdown-item logout" onClick={handleLogout}>
+                    Đăng xuất
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </nav>
+
+          {/* TÁCH GIỎ HÀNG VÀ CHAT RA NGOÀI ĐỂ LUÔN NẰM GÓC PHẢI TRÊN CÙNG */}
+          <div
+            className="cart-wrapper"
+            style={{
+              marginLeft: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            {/* ICON CHAT - chỉ hiện khi đã đăng nhập */}
+            {user && user.role === 'user' && (
+              <>
+                <Link
+                  to="/chat"
+                  className="nav-link chat-icon"
+                  onClick={handleChatClick}
+                  style={{ position: 'relative' }}
+                >
+                  <MessageCircle size={24} />
+                  {unreadChatCount > 0 && (
+                    <span className="cart-badge">
+                      {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                    </span>
+                  )}
+                </Link>
+
+                <Link
+                  to="/cart"
+                  className="nav-link cart-icon"
+                  onClick={closeMenu}
+                >
+                  <ShoppingCart size={24} />
+                  {user && cartCount > 0 && (
+                    <span className="cart-badge">{cartCount}</span>
+                  )}
+                </Link>
+              </>
+            )}
+            <div className="cart-dropdown">
+              {cartItems.length === 0 ? (
+                <p className="empty-cart-mini">Chưa có sản phẩm</p>
+              ) : (
+                <>
+                  {cartItems.slice(0, 5).map((item) => (
+                    <div key={item.id} className="mini-item">
+                      <img
+                        src={
+                          item.image ||
+                          'https://placehold.co/50x50?text=No+Image'
+                        }
+                        alt={item.name}
+                      />
+                      <div>
+                        <p>{item.name}</p>
+                        <span>{item.price}đ</span>
+                      </div>
+                    </div>
+                  ))}
+                  <Link
+                    to="/cart"
+                    className="view-cart-btn"
+                    onClick={closeMenu}
+                  >
+                    Xem Giỏ Hàng
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </header>
 
@@ -242,22 +368,25 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />
-
           <Route path="/seller/register" element={<SellerRegister />} />
-
           <Route path="/profile" element={<ProfilePage />} />
-
-          <Route path="/categories" element={<CategoriesPage />} />
-
           <Route path="/reviews" element={<Reviews />} />
-
           <Route path="/admin/shops" element={<AdminShopsPage />} />
-
           <Route path="/seller" element={<ShopPage />} />
           <Route
             path="/seller/products/:id"
             element={<SellerProductDetail />}
           />
+          //admin
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="categories" element={<CategoriesPage />} />
+            <Route path="shops" element={<AdminShopsPage />} />
+            <Route
+              path="membership-tiers"
+              element={<AdminMembershipTiersPage />}
+            />
+            <Route path="coupons" element={<AdminCouponsPage />} />
+          </Route>
         </Routes>
       </main>
     </div>
