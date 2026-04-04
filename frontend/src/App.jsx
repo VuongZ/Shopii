@@ -84,31 +84,29 @@ function App() {
           </Link>
 
           <nav className="nav-menu">
-            <Link to="/" className="nav-link">
-              Trang chủ
-            </Link>
-            <Link to="/orders" className="nav-link">
-              Đơn mua
-            </Link>
-            {user && (
-              <Link to="/chat" className="nav-link">
-                Chat
-              </Link>
+            {user?.role !== 'seller' && (
+              <>
+                <Link to="/" className="nav-link">
+                  Trang chủ
+                </Link>
+                <Link to="/chat" className="nav-link">
+                  Chat
+                </Link>
+                <Link to="/seller" className="nav-link">
+                  Kênh người bán
+                </Link>
+              </>
             )}
-            {user && user.role !== 'seller' && user.role !== 2 && (
-              <Link to="/seller" className="nav-link">
-                Kênh người bán
-              </Link>
-            )}
-
             <div className="cart-wrapper">
-              <Link to="/cart" className="nav-link cart-icon">
-                <ShoppingCart size={22} />
+              {user && user.role === 'user' && (
+                <Link to="/cart" className="nav-link cart-icon">
+                  <ShoppingCart size={22} />
 
-                {user && user.cartCount > 0 && (
-                  <span className="cart-badge">{user.cartCount}</span>
-                )}
-              </Link>
+                  {user && user.cartCount > 0 && (
+                    <span className="cart-badge">{user.cartCount}</span>
+                  )}
+                </Link>
+              )}
 
               <div className="cart-dropdown">
                 {cartItems.length === 0 ? (
@@ -150,7 +148,7 @@ function App() {
             {user && (user.role === 'seller' || user.role === 2) && (
               <>
                 <Link
-                  to="/shop"
+                  to="/seller"
                   className="nav-link"
                   style={{ color: '#ee4d2d', fontWeight: 'bold' }}
                 >
@@ -254,8 +252,6 @@ function App() {
           <Route path="/reviews" element={<Reviews />} />
 
           <Route path="/admin/shops" element={<AdminShopsPage />} />
-
-          <Route path="/shop" element={<ShopPage />} />
 
           <Route path="/seller" element={<ShopPage />} />
           <Route
