@@ -64,23 +64,23 @@ class ProductController extends Controller
                 'base_price' => $request->base_price,
             ]);
 
-            // 2. XỬ LÝ LƯU ẢNH TỪ MÁY TÍNH (FILE UPLOAD)
-            if ($request->hasFile('images')) {
-                $files = $request->file('images');
-                foreach ($files as $index => $file) {
-                    // Cất file vào thư mục: storage/app/public/products
-                    $path = $file->store('products', 'public');
-
-                    $product->product_images()->create([
-                        'image_url' => $path, 
-                        'is_thumbnail' => $index === 0 ? 1 : 0 // Ảnh đầu tiên làm ảnh bìa
-                    ]);
+            // 2. LƯU NHIỀU LINK ẢNH (URL) CÙNG LÚC - ĐÃ FIX 
+            $imageUrls = $request->input('image_urls', []);
+            if (!empty($imageUrls)) {
+                foreach ($imageUrls as $index => $url) {
+                    if (!empty($url)) {
+                        $product->product_images()->create([
+                            'image_url' => $url, 
+                            'is_thumbnail' => $index === 0 ? 1 : 0 // Ảnh đầu tiên làm ảnh bìa
+                        ]);
+                    }
                 }
             } 
 
-            // 3. XỬ LÝ PHÂN LOẠI (Giải mã FormData)
+            // 3. XỬ LÝ PHÂN LOẠI
             $skusData = $request->input('skus');
-            // Vì gửi bằng FormData nên skus bị biến thành chuỗi, ta phải dịch nó ra lại mảng
+            
+            // Nếu data vô tình bị parse thành string thì dịch lại
             if (is_string($skusData)) {
                 $skusData = json_decode($skusData, true);
             }
@@ -181,22 +181,23 @@ class ProductController extends Controller
                 'description' => $request->description,
             ]);
 
-            // 2. Cập nhật ảnh từ MÁY TÍNH
-            if ($request->hasFile('images')) {
-                // Xóa toàn bộ ảnh cũ
+            // 2. CẬP NHẬT NHIỀU LINK ẢNH (URL) - ĐÃ FIX 
+            $imageUrls = $request->input('image_urls', []);
+            if (!empty($imageUrls)) {
+                // Xóa toàn bộ ảnh cũ để chép ảnh mới vào
                 $product->product_images()->delete(); 
-
-                $files = $request->file('images');
-                foreach ($files as $index => $file) {
-                    $path = $file->store('products', 'public');
-                    $product->product_images()->create([
-                        'image_url' => $path,
-                        'is_thumbnail' => $index === 0 ? 1 : 0
-                    ]);
+                
+                foreach ($imageUrls as $index => $url) {
+                    if (!empty($url)) {
+                        $product->product_images()->create([
+                            'image_url' => $url,
+                            'is_thumbnail' => $index === 0 ? 1 : 0
+                        ]);
+                    }
                 }
             }
 
-            // 3. XỬ LÝ SKU MỚI/CŨ (Giải mã FormData)
+            // 3. XỬ LÝ SKU MỚI/CŨ 
             $skusData = $request->input('skus');
             if (is_string($skusData)) {
                 $skusData = json_decode($skusData, true);
