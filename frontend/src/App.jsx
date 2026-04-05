@@ -144,19 +144,20 @@ function App() {
           </Link>
 
           <nav className={`nav-menu ${isMobileMenuOpen ? 'open' : ''}`}>
-            {user?.role !== 'seller' && (
-              <>
-                <Link to="/" className="nav-link" onClick={closeMenu}>
-                  Trang chủ
-                </Link>
-                <Link to="/chat" className="nav-link" onClick={closeMenu}>
-                  Chat
-                </Link>
-                <Link to="/seller" className="nav-link" onClick={closeMenu}>
-                  Kênh người bán
-                </Link>
-              </>
-            )}
+            {user?.role !== 'seller' ||
+              (user?.role !== 'admin' && (
+                <>
+                  <Link to="/" className="nav-link" onClick={closeMenu}>
+                    Trang chủ
+                  </Link>
+                  <Link to="/chat" className="nav-link" onClick={closeMenu}>
+                    Chat
+                  </Link>
+                  <Link to="/seller" className="nav-link" onClick={closeMenu}>
+                    Kênh người bán
+                  </Link>
+                </>
+              ))}
             <div className="cart-wrapper">
               {user && user.role === 'user' && (
                 <Link to="/cart" className="nav-link cart-icon">
