@@ -147,7 +147,12 @@ function ProfilePage() {
           },
         })
       }
-
+      const currentUser = JSON.parse(localStorage.getItem('USER_INFO'))
+      if (currentUser) {
+        const updatedUser = { ...currentUser, name: name }
+        localStorage.setItem('USER_INFO', JSON.stringify(updatedUser))
+      }
+      window.dispatchEvent(new Event('userUpdated')) // Gửi sự kiện để các tab khác cập nhật
       alert('Cập nhật thành công')
     } catch (err) {
       console.error(err)
