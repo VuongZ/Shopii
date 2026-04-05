@@ -443,7 +443,7 @@ export default function ShopPage() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-                  <button type="button" onClick={closeModal} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #ddd', cursor: 'pointer', background: 'white' }}>Hủy</button>
+                 <button type="button" onClick={closeModal} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #ddd', cursor: 'pointer', background: 'white', color: 'black', fontWeight: 'bold' }}>Hủy</button>
                   <button type="submit" disabled={isSubmitting} style={{ flex: 2, padding: '12px', borderRadius: '8px', border: 'none', background: '#6366f1', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>
                     {isSubmitting ? 'Đang xử lý...' : editingProductId ? 'Cập nhật ngay' : 'Đăng bán ngay'}
                   </button>
