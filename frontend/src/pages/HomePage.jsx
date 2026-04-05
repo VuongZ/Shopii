@@ -17,9 +17,32 @@ export default function HomePage() {
 
   const navigate = useNavigate();
 
+// ==========================================================
+  // HÀM XÁO TRỘN MẢNG (Thuật toán Fisher-Yates)
+  // ==========================================================
+  const shuffleArray = (array) => {
+    const newArray = [...array]; // Tạo một bản sao để không làm hỏng mảng gốc
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1)); // Chọn một vị trí ngẫu nhiên
+      // Hoán đổi vị trí
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  };
+
   useEffect(() => {
-    axiosClient.get("/products").then((res) => setProducts(res.data)).catch(console.log);
-    axiosClient.get("/categories").then((res) => setCategories(res.data)).catch(console.log);
+    // 1. Gọi API lấy Sản phẩm và Xáo trộn ngẫu nhiên
+    axiosClient.get("/products")
+      .then((res) => {
+        const randomProducts = shuffleArray(res.data); // Tráo bài!
+        setProducts(randomProducts); // Cập nhật state bằng mảng đã tráo
+      })
+      .catch(console.log);
+
+    // 2. Gọi API lấy Danh mục (Giữ nguyên không xáo trộn)
+    axiosClient.get("/categories")
+      .then((res) => setCategories(res.data))
+      .catch(console.log);
   }, []);
 
   useEffect(() => {
