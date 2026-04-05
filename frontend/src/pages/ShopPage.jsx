@@ -191,7 +191,7 @@ export default function ShopPage() {
     setIsSubmitting(true)
 
     if (hasVariations && skus.length === 0) {
-      alert("Bạn chưa tạo danh sách nhập giá! Vui lòng bấm nút ' TẠO DANH SÁCH NHẬP GIÁ' trước khi Lưu.");
+      alert("Bạn chưa tạo danh sách nhập giá! Vui lòng bấm nút '⚡ TẠO DANH SÁCH NHẬP GIÁ' trước khi Lưu.");
       setIsSubmitting(false);
       return;
     }
