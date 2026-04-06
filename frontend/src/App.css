@@ -775,9 +775,27 @@ body {
 /* ======================================================= */
 
 /* Ẩn nút Hamburger trên Laptop */
-.mobile-menu-btn {
-  display: none;
-}
+/* Thay thế cụm .mobile-menu-btn cũ bằng cụm này */
+  .mobile-menu-btn {
+    display: block;
+    background: transparent !important; /* Ép cứng nền trong suốt */
+    border: 1px solid transparent !important; /* Viền tàng hình để khung không bị giật */
+    color: var(--primary) !important;
+    cursor: pointer;
+    padding: 4px 6px !important; /* Thêm tí đệm để viền cách xa icon ra một chút */
+    margin-top: 0 !important; /* Ghi đè cái margin-top của button mặc định */
+    margin-right: 15px;
+    border-radius: 6px;
+    -webkit-tap-highlight-color: transparent; /* Tắt hiệu ứng chớp đen mặc định của điện thoại */
+  }
+
+  /* Khi để chuột vào (hover) hoặc bấm vào (active) -> CHỈ ĐỔI VIỀN */
+  .mobile-menu-btn:hover,
+  .mobile-menu-btn:active,
+  .mobile-menu-btn:focus {
+    background: transparent !important; 
+    border: 1px solid var(--primary) !important; /* Hiện viền màu xanh (primary) */
+  }
 
 @media (max-width: 768px) {
   .shopee-header {
