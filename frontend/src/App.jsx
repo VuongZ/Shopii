@@ -373,6 +373,7 @@ function App() {
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/seller/register" element={<SellerRegister />} />
+            <Route path="/seller" element={<ShopPage />} />
           </Route>
           //role seller
           <Route element={<ProtectedRoute allowedRoles={['seller']} />}>
@@ -384,7 +385,6 @@ function App() {
               path="/seller-coupons"
               element={<SellerCouponManagementPage />}
             />
-            <Route path="/seller" element={<ShopPage />} />
             <Route
               path="/seller/products/:id"
               element={<SellerProductDetail />}
