@@ -319,7 +319,7 @@ function ProfilePage() {
       alert('Cập nhật thành công!')
     } catch (err) {
       console.error(err)
-      alert('Lỗi cập nhật. Hãy kiểm tra lại Route PUT bên Laravel.')
+      alert('Lỗi cập nhật.')
     }
   }
   const deleteAddress = async (id) => {
@@ -328,7 +328,7 @@ function ProfilePage() {
       setAddresses(addresses.filter((addr) => addr.id !== id))
     } catch (err) {
       console.error(err)
-      alert('Lỗi xóa. Hãy kiểm tra lại Route DELETE bên Laravel.')
+      alert('Lỗi xóa.')
     }
   }
   const setDefaultAddress = async (id) => {
@@ -584,7 +584,7 @@ function ProfilePage() {
           </>
         )}
 
-        {/* CÁC PHẦN CODE BÊN DƯỚI (ĐỊA CHỈ, MẬT KHẨU) GIỮ NGUYÊN 100% */}
+        {/* CÁC PHẦN CODE BÊN DƯỚI (ĐỊA CHỈ, MẬT KHẨU) */}
         {tab === 'address' && (
           <>
             <div
