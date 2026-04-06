@@ -224,7 +224,7 @@ function App() {
             {/* SELLER */}
             {user && user.role === 'seller' && (
               <Link
-                to="/seller"
+                to="/shop"
                 className="nav-link"
                 style={{ color: '#ee4d2d', fontWeight: 'bold' }}
                 onClick={closeMenu}
@@ -389,6 +389,7 @@ function App() {
               path="/seller/products/:id"
               element={<SellerProductDetail />}
             />
+            <Route path="/shop" element={<ShopPage />} />
           </Route>
           //admin
           <Route element={<ProtectedRoute allowedRoles={['admin', 1]} />}>
