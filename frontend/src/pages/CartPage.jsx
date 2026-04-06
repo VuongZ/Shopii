@@ -8,7 +8,7 @@ const CartPage = () => {
   const [cartGroups, setCartGroups] = useState({})
   const [selectedItems, setSelectedItems] = useState([])
   const [loading, setLoading] = useState(true)
-  const [isUpdating, setIsUpdating] = useState(false) // Đề xuất: Trạng thái khi đang gọi API update
+  const [isUpdating, setIsUpdating] = useState(false)
   const navigate = useNavigate()
   const fetchCartData = useCallback(async () => {
     try {

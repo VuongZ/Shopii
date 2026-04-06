@@ -802,7 +802,7 @@ body {
     height: 60px;
     padding: 0;
   }
-  
+
   .header-content {
     justify-content: flex-start;
     padding: 0 15px;
@@ -837,14 +837,14 @@ body {
     align-items: flex-start;
     padding: 20px;
     gap: 20px;
-    box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease-in-out;
     z-index: 1000;
   }
 
   /* Khi State isMobileMenuOpen = true thì nó trượt vào */
   .nav-menu.open {
-    left: 0; 
+    left: 0;
   }
 
   .nav-menu a:not(:last-child) {
@@ -887,5 +887,110 @@ body {
   .cart-dropdown {
     right: -10px;
     width: 280px;
+  }
+  .seller-wrapper {
+    padding: 15px !important;
+    overflow-x: hidden !important;
+    display: block !important;
+  }
+
+  /* Ép khung trắng nhỏ lại, ghi đè class .big nếu có */
+  .seller-box,
+  .seller-box.big {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important; /* Xóa min-width cũ */
+    padding: 15px !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+  }
+
+  /* Ép tiêu đề tự động xuống dòng */
+  .seller-box h2 {
+    font-size: 20px !important;
+    white-space: normal !important; /* Bắt buộc rớt dòng */
+    word-break: break-word !important;
+    text-align: center;
+  }
+
+  /* Thanh tiến trình (Step bar) thường là thủ phạm làm phình layout */
+  .progress {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0 10px !important;
+  }
+
+  .progress .bar {
+    width: auto !important;
+    flex: 1 !important; /* Nếu bạn dùng flex cho step bar */
+  }
+
+  /* Các khung input và form bên trong */
+  .form,
+  .form input,
+  .form textarea,
+  .form select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Chuyển các cột grid thành 1 cột xếp dọc */
+  .grid-3 {
+    grid-template-columns: 1fr !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  /* Cụm nút bấm */
+  .btn-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .btn-group button {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+}
+@media (max-width: 480px) {
+  .seller-wrapper {
+    padding: 10px; /* Viền ngoài ôm sát màn hình đt */
+  }
+
+  .seller-box {
+    padding: 15px;
+    border-radius: 0; /* Có thể bỏ bo góc nếu muốn ôm trọn màn hình */
+  }
+
+  .seller-box h2 {
+    font-size: 20px; /* Thu nhỏ tiêu đề */
+  }
+
+  .grid-3 {
+    /* Chuyển 3 ô Tỉnh/Huyện/Xã thành xếp dọc (1 cột) */
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  /* Chỉnh lại 2 nút Hủy - Lưu / Quay lại - Tạo shop */
+  .btn-group {
+    display: flex;
+    flex-direction: column; /* Xếp nút dọc */
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .btn-group button {
+    width: 100%; /* Nút kéo dài 100% dễ bấm trên đt */
+    margin: 0;
+  }
+
+  /* Thanh tiến trình (Step bar) thu nhỏ lại cho đỡ chật */
+  .progress {
+    margin-bottom: 20px;
   }
 }
