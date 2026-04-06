@@ -19,6 +19,7 @@ import ResetPassword from './pages/ResetPassword'
 import ForgotPassword from './pages/ForgotPassword'
 import VerifyOTP from './pages/VerifyOTP'
 
+import ProtectedRoute from './components/ProtectRoute'
 import SellerRegister from './pages/SellerRegister'
 import ProfilePage from './pages/ProfilePage'
 
@@ -56,13 +57,17 @@ function App() {
 
     const total = cart.reduce((sum, item) => sum + item.quantity, 0)
     setCartCount(total)
-    window.addEventListener('storage', loadCart)
-    window.addEventListener('cartUpdated', loadCart)
   }
 
   // Fetch tổng số tin nhắn chưa đọc từ tất cả conversations
   const loadUnreadChat = async (currentUser) => {
-    if (!currentUser) return
+    if (
+      !currentUser ||
+      currentUser.role === 'admin' ||
+      currentUser.role === 1
+    ) {
+      return
+    }
     try {
       const res = await chatApi.listConversations()
       const convs = Array.isArray(res.data) ? res.data : []
@@ -82,11 +87,13 @@ function App() {
       setUser(updatedUser)
       loadUnreadChat(updatedUser)
     }
-    window.addEventListener('userUpdated', handleUserUpdate)
 
     // Lắng nghe event reset badge khi user đang ở trang chat
     const handleChatRead = () => setUnreadChatCount(0)
+    window.addEventListener('userUpdated', handleUserUpdate)
     window.addEventListener('chatRead', handleChatRead)
+    window.addEventListener('storage', loadCart)
+    window.addEventListener('cartUpdated', loadCart)
 
     return () => {
       window.removeEventListener('userUpdated', handleUserUpdate)
@@ -99,7 +106,7 @@ function App() {
   // Load unread khi user thay đổi (login/logout) + polling mỗi 30 giây
   useEffect(() => {
     loadUnreadChat(user)
-    if (!user) return
+    if (!user || user.role === 'admin' || user.role === 1) return
     const interval = setInterval(() => loadUnreadChat(user), 30000)
     return () => clearInterval(interval)
   }, [user])
@@ -144,20 +151,19 @@ function App() {
           </Link>
 
           <nav className={`nav-menu ${isMobileMenuOpen ? 'open' : ''}`}>
-            {user?.role !== 'seller' ||
-              (user?.role !== 'admin' && (
-                <>
-                  <Link to="/" className="nav-link" onClick={closeMenu}>
-                    Trang chủ
-                  </Link>
-                  <Link to="/chat" className="nav-link" onClick={closeMenu}>
-                    Chat
-                  </Link>
-                  <Link to="/seller" className="nav-link" onClick={closeMenu}>
-                    Kênh người bán
-                  </Link>
-                </>
-              ))}
+            {!['seller', 'admin'].includes(user?.role) && (
+              <>
+                <Link to="/" className="nav-link" onClick={closeMenu}>
+                  Trang chủ
+                </Link>
+                <Link to="/chat" className="nav-link" onClick={closeMenu}>
+                  Chat
+                </Link>
+                <Link to="/seller" className="nav-link" onClick={closeMenu}>
+                  Kênh người bán
+                </Link>
+              </>
+            )}
             <div className="cart-wrapper">
               {user && user.role === 'user' && (
                 <Link to="/cart" className="nav-link cart-icon">
@@ -348,45 +354,54 @@ function App() {
 
       <main className="main-content">
         <Routes>
+          //role chung
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/payment-result" element={<PaymentResult />} />
-          <Route path="/orders" element={<OrderHistoryPageV2 />} />
-          <Route path="/users" element={<UsersPage />} />
-          <Route path="/product/:id" element={<ProductDetailPage />} />
-          <Route
-            path="/seller-orders"
-            element={<SellerOrderManagementPage />}
-          />
-          <Route path="/chat" element={<ChatPage />} />
-          <Route
-            path="/seller-coupons"
-            element={<SellerCouponManagementPage />}
-          />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />
-          <Route path="/seller/register" element={<SellerRegister />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/reviews" element={<Reviews />} />
-          <Route path="/admin/shops" element={<AdminShopsPage />} />
-          <Route path="/seller" element={<ShopPage />} />
-          <Route
-            path="/seller/products/:id"
-            element={<SellerProductDetail />}
-          />
-          //admin
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route path="categories" element={<CategoriesPage />} />
-            <Route path="shops" element={<AdminShopsPage />} />
+          //role user
+          <Route element={<ProtectedRoute allowedRoles={['user']} />}>
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/payment-result" element={<PaymentResult />} />
+            <Route path="/orders" element={<OrderHistoryPageV2 />} />
+            <Route path="/users" element={<UsersPage />} />
+            <Route path="/product/:id" element={<ProductDetailPage />} />
+            <Route path="/reviews" element={<Reviews />} />
+            <Route path="/chat" element={<ChatPage />} />
+          </Route>
+          //role seller
+          <Route element={<ProtectedRoute allowedRoles={['seller']} />}>
             <Route
-              path="membership-tiers"
-              element={<AdminMembershipTiersPage />}
+              path="/seller-orders"
+              element={<SellerOrderManagementPage />}
             />
-            <Route path="coupons" element={<AdminCouponsPage />} />
+            <Route
+              path="/seller-coupons"
+              element={<SellerCouponManagementPage />}
+            />
+            <Route path="/seller/register" element={<SellerRegister />} />
+            <Route path="/seller" element={<ShopPage />} />
+            <Route
+              path="/seller/products/:id"
+              element={<SellerProductDetail />}
+            />
+          </Route>
+          //admin
+          <Route element={<ProtectedRoute allowedRoles={['admin', 1]} />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route path="categories" element={<CategoriesPage />} />
+              <Route path="shops" element={<AdminShopsPage />} />
+              <Route
+                path="membership-tiers"
+                element={<AdminMembershipTiersPage />}
+              />
+              <Route path="coupons" element={<AdminCouponsPage />} />
+            </Route>
+            <Route path="/admin/shops" element={<AdminShopsPage />} />
           </Route>
         </Routes>
       </main>

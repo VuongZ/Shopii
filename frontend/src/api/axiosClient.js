@@ -30,6 +30,7 @@ axiosClient.interceptors.response.use(
 
     if (response && response.status === 401) {
       localStorage.removeItem('ACCESS_TOKEN')
+      localStorage.removeItem('USER_INFO')
       window.location.href = '/login'
     }
 

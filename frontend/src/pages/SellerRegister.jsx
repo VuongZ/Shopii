@@ -149,10 +149,7 @@ function SellerRegister() {
   }
 
   return (
-    <div
-      className="seller-wrapper"
-      style={{ background: '#f5f5f5', padding: '30px 40px' }}
-    >
+    <div className="seller-wrapper">
       <div className="seller-box big">
         <div style={{ textAlign: 'center' }}>
           <h2>Đăng ký trở thành người bán</h2>
