@@ -120,6 +120,48 @@ export default function CategoriesPage() {
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         <li style={{ marginBottom: '10px' }}>
           <Link 
+            to="/categories" 
+            style={{ 
+              display: 'block',
+              padding: '12px 15px', 
+              background: '#3b82f6', 
+              color: 'white',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              textAlign: 'center',
+              transition: 'background 0.3s'
+            }}
+            onMouseEnter={(e) => e.target.style.background = '#2563eb'}
+            onMouseLeave={(e) => e.target.style.background = '#3b82f6'}
+          >
+                📁 Quản lý Category
+              </Link>
+            </li>
+        <li style={{ marginBottom: '10px' }}>
+          <Link 
+            to="/users" 
+            style={{ 
+              display: 'block',
+              padding: '12px 15px', 
+              background: '#8b5cf6', 
+              color: 'white',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              textAlign: 'center',
+              transition: 'background 0.3s'
+            }}
+            onMouseEnter={(e) => e.target.style.background = '#7c3aed'}
+            onMouseLeave={(e) => e.target.style.background = '#8b5cf6'}
+          >
+                👥 Quản lý User
+              </Link>
+            </li>
+        <li style={{ marginBottom: '10px' }}>
+          <Link 
             to="/admin/shops" 
             style={{ 
               display: 'block',
@@ -175,60 +217,82 @@ export default function CategoriesPage() {
               <p style={{ textAlign: 'center', color: '#6b7280' }}>Đang tải dữ liệu...</p>
             ) : statistics ? (
               <div>
-                {/* Dữ liệu chữ số */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-                  <div style={{ background: 'white', padding: '20px', borderRadius: '8px', textAlign: 'center', border: '1px solid #e5e7eb' }}>
-                    <p style={{ color: '#6b7280', margin: '0 0 10px 0', fontSize: '14px' }}>Tổng Doanh Thu</p>
-                    <h2 style={{ margin: 0, color: '#059669', fontSize: '28px' }}>
-                      {(statistics.total_revenue || 0).toLocaleString()} VNĐ
-                    </h2>
+                {/* ===== 3 KHUNG CHÍNH ===== */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+                  
+                  {/* ===== KHUNG 1: SELLER CÓ NHIỀU ĐƠN NHẤT ===== */}
+                  <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '25px', borderRadius: '12px', textAlign: 'center', color: 'white', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                    <p style={{ color: '#e0e7ff', margin: '0 0 15px 0', fontSize: '14px', fontWeight: 'bold' }}>👑 SELLER CÓ NHIỀU ĐƠN NHẤT</p>
+                    {statistics.top_seller ? (
+                      <div>
+                        <h2 style={{ margin: '0 0 10px 0', fontSize: '24px', fontWeight: 'bold' }}>
+                          {statistics.top_seller.name}
+                        </h2>
+                        <p style={{ color: '#e0e7ff', margin: '8px 0', fontSize: '13px' }}>
+                          📧 {statistics.top_seller.email}
+                        </p>
+                        <h3 style={{ margin: '15px 0 0 0', color: '#ffd700', fontSize: '32px', fontWeight: 'bold' }}>
+                          {statistics.top_seller.total_orders} đơn
+                        </h3>
+                      </div>
+                    ) : (
+                      <p style={{ color: '#e0e7ff' }}>Chưa có seller nào</p>
+                    )}
                   </div>
-                  <div style={{ background: 'white', padding: '20px', borderRadius: '8px', textAlign: 'center', border: '1px solid #e5e7eb' }}>
-                    <p style={{ color: '#6b7280', margin: '0 0 10px 0', fontSize: '14px' }}>Tổng Số Đơn Hàng</p>
-                    <h2 style={{ margin: 0, color: '#0891b2', fontSize: '28px' }}>
-                      {statistics.total_orders || 0} đơn
-                    </h2>
+
+                  {/* ===== KHUNG 2: SẢN PHẨM BÁN CHẠY ===== */}
+                  <div style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', padding: '25px', borderRadius: '12px', textAlign: 'center', color: 'white', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                    <p style={{ color: '#fff0f5', margin: '0 0 15px 0', fontSize: '14px', fontWeight: 'bold' }}>🔥 SẢN PHẨM BÁN CHẠY TOP 1</p>
+                    {statistics.best_sellers && statistics.best_sellers.length > 0 ? (
+                      <div>
+                        <h2 style={{ margin: '0 0 10px 0', fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>
+                          {statistics.best_sellers[0].name}
+                        </h2>
+                        <h3 style={{ margin: '15px 0 0 0', color: '#ffe0f0', fontSize: '32px', fontWeight: 'bold' }}>
+                          {statistics.best_sellers[0].total_sold} cái
+                        </h3>
+                      </div>
+                    ) : (
+                      <p style={{ color: '#fff0f5' }}>Chưa có dữ liệu</p>
+                    )}
                   </div>
+
+                  {/* ===== KHUNG 3: TỔNG ĐƠN HÀNG ===== */}
+                  <div style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', padding: '25px', borderRadius: '12px', textAlign: 'center', color: 'white', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                    <p style={{ color: '#e0f7ff', margin: '0 0 15px 0', fontSize: '14px', fontWeight: 'bold' }}>📦 TỔNG ĐƠN HÀNG</p>
+                    <h2 style={{ margin: 0, fontSize: '24px' }}>
+                      Tổng Doanh Thu
+                    </h2>
+                    <h3 style={{ margin: '15px 0 0 0', color: '#fff', fontSize: '32px', fontWeight: 'bold' }}>
+                      {(statistics.total_orders || 0)} đơn
+                    </h3>
+                    <p style={{ color: '#e0f7ff', margin: '10px 0 0 0', fontSize: '13px' }}>
+                      💰 {(statistics.total_revenue || 0).toLocaleString()} VNĐ
+                    </p>
+                  </div>
+
                 </div>
 
-                {/* Biểu đồ cột */}
-                <div style={{ background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                  <h4 style={{ marginTop: 0, color: '#1f2937' }}>Biểu Đồ Thống Kê</h4>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={[
-                      {
-                        name: 'Thống Kê',
-                        'Doanh thu (Triệu)': Math.round((statistics.total_revenue || 0) / 1000000),
-                        'Số đơn hàng': statistics.total_orders || 0,
-                      }
-                    ]}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => value.toLocaleString()} />
-                      <Legend />
-                      <Bar dataKey="Doanh thu (Triệu)" fill="#059669" />
-                      <Bar dataKey="Số đơn hàng" fill="#0891b2" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* Sản phẩm bán chạy */}
+                {/* ===== DANH SÁCH SẢN PHẨM BÁN CHẠY ===== */}
                 {statistics.best_sellers && statistics.best_sellers.length > 0 && (
                   <div style={{ background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e5e7eb', marginTop: '20px' }}>
-                    <h4 style={{ marginTop: 0, color: '#1f2937' }}>🔥 Sản Phẩm Bán Chạy</h4>
+                    <h4 style={{ marginTop: 0, color: '#1f2937' }}>🏆 TOP 5 SẢN PHẨM BÁN CHẠY</h4>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <thead>
-                        <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
-                          <th style={{ padding: '10px', textAlign: 'left' }}>Tên Sản Phẩm</th>
-                          <th style={{ padding: '10px', textAlign: 'right' }}>Số Lượng Bán</th>
+                        <tr style={{ borderBottom: '2px solid #e5e7eb', background: '#f3f4f6' }}>
+                          <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Xếp Hạng</th>
+                          <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Tên Sản Phẩm</th>
+                          <th style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>Số Lượng Bán</th>
                         </tr>
                       </thead>
                       <tbody>
                         {statistics.best_sellers.map((item, idx) => (
-                          <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                            <td style={{ padding: '10px' }}>{item.name}</td>
-                            <td style={{ padding: '10px', textAlign: 'right', fontWeight: 'bold', color: '#059669' }}>
+                          <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb', background: idx % 2 === 0 ? '#fafafa' : 'white' }}>
+                            <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: idx === 0 ? '#d97706' : '#6b7280' }}>
+                              {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
+                            </td>
+                            <td style={{ padding: '12px' }}>{item.name}</td>
+                            <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold', color: '#059669' }}>
                               {item.total_sold} cái
                             </td>
                           </tr>

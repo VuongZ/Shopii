@@ -28,7 +28,7 @@ export default function Login() {
       if (userRole === 'seller' || userRole === 2) {
         navigate('/shop')
       } else if (userRole === 'admin' || userRole === 1) {
-        navigate('/categories')
+        navigate('/admin/shops')
       } else {
         navigate('/')
       }

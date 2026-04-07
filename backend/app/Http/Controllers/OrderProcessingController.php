@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderHistory;
 use App\Models\Shop;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -98,6 +99,22 @@ class OrderProcessingController extends Controller
             ]);
 
             DB::commit();
+
+            // Tạo thông báo cho khách hàng khi order status thay đổi
+            $statusMessages = [
+                'confirmed' => '✅ Đơn hàng #' . $order->id . ' đã được xác nhận',
+                'shipping' => '📦 Đơn hàng #' . $order->id . ' đang được giao đến bạn',
+                'completed' => '🎉 Đơn hàng #' . $order->id . ' đã hoàn thành',
+                'cancelled' => '❌ Đơn hàng #' . $order->id . ' đã bị hủy',
+            ];
+
+            Notification::create([
+                'user_id' => $order->user_id,
+                'title' => $statusMessages[$toStatus] ?? 'Cập nhật trạng thái đơn hàng',
+                'type' => 'order_status',
+                'related_id' => $order->id,
+                'is_read' => false,
+            ]);
 
             return response()->json([
                 'message' => 'Cập nhật trạng thái đơn hàng thành công',

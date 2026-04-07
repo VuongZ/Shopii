@@ -28,9 +28,12 @@ function UsersPage() {
 
       const name = nameInput ? nameInput.value : ''
       const email = emailInput ? emailInput.value : ''
+      
+      const roleCell = row.children[3]
+      const role = roleCell ? roleCell.innerText.trim() : 'user'
 
       if (id) {
-        list.push({ id, name, email })
+        list.push({ id, name, email, role })
       }
     }
 
@@ -82,6 +85,21 @@ function UsersPage() {
     loadUsers()
   }
 
+  // FORMAT ROLE
+  const formatRole = (role) => {
+    if (!role) return 'User'
+    
+    const roles = role.split(',').map(r => r.trim())
+    const formattedRoles = roles.map(r => {
+      if (r.toLowerCase() === 'admin') return 'Admin'
+      if (r.toLowerCase() === 'seller') return 'Seller'
+      if (r.toLowerCase() === 'user') return 'User'
+      return r
+    })
+    
+    return formattedRoles.join(', ')
+  }
+
   return (
     <div style={{ padding: 40 }}>
       <h1>Users CRUD</h1>
@@ -116,6 +134,7 @@ function UsersPage() {
             <th>ID</th>
             <th>Name</th>
             <th>Email</th>
+            <th>Role</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -132,6 +151,8 @@ function UsersPage() {
               <td>
                 <input defaultValue={u.email} id={'email' + u.id} />
               </td>
+
+              <td>{formatRole(u.role)}</td>
 
               <td>
                 <button onClick={() => updateUser(u.id)}>Update</button>

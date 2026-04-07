@@ -871,3 +871,75 @@ body {
     width: 280px;
   }
 }
+/* Container thông báo */
+.notification-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Dropdown thông báo */
+.notification-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 320px;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  display: none; /* Ẩn mặc định */
+  z-index: 1000;
+  border: 1px solid #ddd;
+}
+
+/* Hiện khi hover vào icon hoặc dropdown */
+.notification-wrapper:hover .notification-dropdown {
+  display: block;
+}
+
+.noti-header {
+  padding: 12px;
+  font-weight: 500;
+  color: #888;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.noti-item {
+  padding: 12px;
+  border-bottom: 1px solid #f9f9f9;
+  cursor: pointer;
+}
+
+.noti-item:hover {
+  background-color: #f8f8f8;
+}
+
+.noti-item.unread {
+  background-color: #fff4f2; /* Màu cam nhạt cho thông báo chưa đọc */
+}
+
+.noti-text {
+  font-size: 14px;
+  margin: 0;
+  color: #333;
+}
+
+.noti-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.view-all-noti {
+  display: block;
+  text-align: center;
+  padding: 12px;
+  color: #ee4d2d;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.empty-noti {
+  padding: 20px;
+  text-align: center;
+  color: #999;
+}

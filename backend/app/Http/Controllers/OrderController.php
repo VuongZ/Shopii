@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use App\Models\ShippingMethod;
 use App\Models\PaymentMethod;
+use App\Models\Shop;
 
 class OrderController extends Controller
 {
@@ -30,6 +31,7 @@ class OrderController extends Controller
         $methods = PaymentMethod::where('is_active', 1)->get();
         return response()->json($methods);
     }
+
     public function checkout(Request $request) {
         // 1. Validate dữ liệu
         $request->validate([
@@ -169,9 +171,7 @@ class OrderController extends Controller
 
                 $grandTotal += $finalTotal;
 
-                // ========================================================
                 // KIỂM TRA SHOP CÓ BẬT AUTO DUYỆT KHÔNG BẰNG CACHE
-                // ========================================================
                 $isAutoConfirm = Cache::get('shop_auto_confirm_' . $shopId, false);
                 $initialStatus = $isAutoConfirm ? 'confirmed' : 'pending';
 
@@ -186,7 +186,7 @@ class OrderController extends Controller
                     'user_address_id' => $request->address_id,
                     'payment_method_id' => $request->payment_method_id,
                     'shipping_method_id' => $request->shipping_method_id ?? 1, 
-                    'status' => $initialStatus, // <--- Gán trạng thái đã check
+                    'status' => $initialStatus,
                     'payment_status' => 'unpaid' 
                 ]);
 
@@ -200,7 +200,6 @@ class OrderController extends Controller
                         'note' => 'Hệ thống tự động duyệt đơn'
                     ]);
                 }
-                // ========================================================
 
                 // 5. Lưu Order Items và Trừ kho
                 foreach ($shopItems as $item) {
@@ -220,7 +219,6 @@ class OrderController extends Controller
             if ($couponWillBeApplied && $coupon) {
                 $coupon->decrement('usage_limit');
             }
-            // -----------------------------
 
             DB::commit();
 
@@ -261,10 +259,6 @@ class OrderController extends Controller
         return response()->json($order);
     }
 
-    // =========================================================
-    // KHU VỰC API DÀNH CHO SELLER (QUẢN LÝ ĐƠN HÀNG CỦA SHOP)
-    // =========================================================
-
     // 1. Lấy danh sách đơn hàng mà Shop nhận được
     public function getSellerOrders(Request $request)
     {
@@ -285,7 +279,7 @@ class OrderController extends Controller
         return response()->json($orders);
     }
 
-    // 2. Chủ shop cập nhật trạng thái đơn hàng (Duyệt, Hủy, Giao hàng...)
+    // 2. Chủ shop cập nhật trạng thái đơn hàng
     public function updateOrderStatus(Request $request, $id)
     {
         $request->validate([
@@ -316,10 +310,6 @@ class OrderController extends Controller
         return response()->json(['message' => 'Cập nhật trạng thái đơn hàng thành công', 'order' => $order]);
     }
 
-    // =========================================================
-    // KHU VỰC CẤU HÌNH AUTO CONFIRM (DÙNG CACHE)
-    // =========================================================
-
     // Lấy trạng thái Auto Confirm hiện tại của Shop
     public function getAutoConfirmSetting()
     {
@@ -336,9 +326,7 @@ class OrderController extends Controller
         $shop = \App\Models\Shop::where('user_id', Auth::id())->first();
         if (!$shop) return response()->json(['message' => 'Lỗi'], 403);
 
-        $isAuto = $request->auto_confirm; // true hoặc false
-        
-        // Dùng Cache::forever để lưu cấu hình này vô thời hạn
+        $isAuto = $request->auto_confirm; 
         Cache::forever('shop_auto_confirm_' . $shop->id, $isAuto);
 
         return response()->json([
@@ -346,11 +334,11 @@ class OrderController extends Controller
             'auto_confirm' => $isAuto
         ]);
     }
+
     public function confirmReceipt($id)
     {
         $user = Auth::user();
         
-        // Tìm đơn hàng của user này đang ở trạng thái đang giao
         $order = Order::where('id', $id)
                       ->where('user_id', $user->id)
                       ->where('status', 'shipping')
@@ -360,12 +348,10 @@ class OrderController extends Controller
             return response()->json(['message' => 'Không thể cập nhật đơn hàng này'], 400);
         }
 
-        // Chuyển sang hoàn thành và đánh dấu đã trả tiền (dù là COD hay MoMo)
         $order->status = 'completed';
         $order->payment_status = 'paid';
         $order->save();
 
-        // Ghi lại lịch sử
         \App\Models\OrderHistory::create([
             'order_id' => $order->id,
             'status' => 'completed',

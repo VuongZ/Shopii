@@ -24,6 +24,7 @@ use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\ChatController;
 
 use App\Http\Controllers\StatisticsController;
+use App\Http\Controllers\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -80,6 +81,13 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::put('/user/update', [UserController::class, 'updateProfile']);
     Route::post('/user/update-avatar', [UserController::class, 'updateAvatar']);
+    
+    /* ----------------------- THÔNG BÁO ----------------------- */
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount']);
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::put('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+    
     /* ----------------------- GIỎ HÀNG ----------------------- */
     Route::get('/cart', [CartController::class, 'getCart']);
     Route::post('/cart/add', [CartController::class, 'addToCart']);
@@ -156,25 +164,25 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
         Route::post('/reviews', [ReviewController::class, 'store']);
-        /*
-
-    |--------------------------------------------------------------------------
-    | 3. ADMIN ROUTES
-    |--------------------------------------------------------------------------
-    */
-    Route::middleware('admin')->group(function () {
-        // Admin quản lý Categories
-        Route::post('/categories', [CategoryController::class, 'store']);
-        Route::put('/categories/{id}', [CategoryController::class, 'update']);
-        Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
-
-        // Shop approve
-        Route::get('/admin/shops', [AdminShopController::class, 'index']);
-        Route::put('/admin/shops/{id}/approve', [AdminShopController::class, 'approve']);
-
-        // Statistics
-        Route::get('/admin/statistics', [StatisticsController::class, 'adminDashboard']);
-    });
-
     
+});
+
+/*
+|--------------------------------------------------------------------------
+| 3. ADMIN ROUTES (with auth + admin middleware)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    // Admin quản lý Categories
+    Route::post('/categories', [CategoryController::class, 'store']);
+    Route::put('/categories/{id}', [CategoryController::class, 'update']);
+    Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+
+    // Shop approve
+    Route::get('/admin/shops', [AdminShopController::class, 'index']);
+    Route::put('/admin/shops/{id}/approve', [AdminShopController::class, 'approve']);
+    Route::put('/admin/shops/{id}/reject', [AdminShopController::class, 'reject']);
+
+    // Statistics
+    Route::get('/admin/statistics', [StatisticsController::class, 'adminDashboard']);
 });

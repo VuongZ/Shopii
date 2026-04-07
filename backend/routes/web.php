@@ -76,6 +76,10 @@ Route::match(['get','post'],'/users', function(Request $request){
         <input type='text' name='email' value='$user->email'>
         </td>
 
+        <td data-role='$user->role'>
+        $user->role
+        </td>
+
         <td>
 
         <button class='update'>Update</button>
@@ -179,6 +183,7 @@ Note: Điền thông tin mới vào từng dòng trong table và bấm <b>Update
 <th>ID</th>
 <th>Name</th>
 <th>Email</th>
+<th>Role</th>
 <th>Actions</th>
 </tr>
 
