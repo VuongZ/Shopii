@@ -103,7 +103,7 @@ class ShopController extends Controller
         $shop = Shop::where('user_id', $user->id)
             ->with([
                 'products.product_images',
-                'products.skus',
+                'products.skus.attributeValues.attribute', // 🚀 ĐIỂM NÂNG CẤP LÀ Ở ĐÂY!
                 'products.category'
             ])
             ->first();

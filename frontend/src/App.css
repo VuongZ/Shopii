@@ -87,6 +87,7 @@ body {
   display: flex;
   flex-direction: column;
 }
+
 .home-title {
   font-size: 32px;
   font-weight: bold;
@@ -94,6 +95,7 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
 /* ================= HEADER ================= */
 .shopee-header {
   background: white;
@@ -113,7 +115,6 @@ body {
   width: 100%;
   margin: 0 auto;
   padding: 0 20px;
-
   display: flex;
   align-items: center;
 }
@@ -131,9 +132,11 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
 .logo img {
   height: 100px;
 }
+
 /* MENU */
 .nav-menu {
   display: flex;
@@ -213,25 +216,11 @@ body {
   align-items: center;
 }
 
-.col-product {
-  width: 45%;
-}
-.col-price {
-  width: 15%;
-  text-align: center;
-}
-.col-qty {
-  width: 15%;
-  text-align: center;
-}
-.col-total {
-  width: 15%;
-  text-align: center;
-}
-.col-action {
-  width: 10%;
-  text-align: center;
-}
+.col-product { width: 45%; }
+.col-price { width: 15%; text-align: center; }
+.col-qty { width: 15%; text-align: center; }
+.col-total { width: 15%; text-align: center; }
+.col-action { width: 10%; text-align: center; }
 
 .shop-group-card {
   background: white;
@@ -256,6 +245,7 @@ body {
   padding: 20px;
   border-bottom: 1px solid var(--border);
 }
+
 .cart-item-row:last-child {
   border-bottom: none;
 }
@@ -313,6 +303,7 @@ body {
   background: white;
   cursor: pointer;
 }
+
 .qty-control button:hover {
   background: #f1f5f9;
 }
@@ -339,6 +330,7 @@ body {
   color: #666;
   cursor: pointer;
 }
+
 .btn-delete:hover {
   color: var(--secondary);
 }
@@ -394,8 +386,8 @@ body {
   border: 1px solid var(--border);
   color: #666;
 }
-/* ================= PRODUCT DETAIL ================= */
 
+/* ================= PRODUCT DETAIL ================= */
 .product-detail-card {
   background: white;
   border: 1px solid var(--border);
@@ -448,9 +440,7 @@ body {
   margin-bottom: 15px;
 }
 
-.product-meta {
-  margin-bottom: 8px;
-}
+.product-meta { margin-bottom: 8px; }
 
 .product-description {
   margin-top: 15px;
@@ -527,7 +517,6 @@ body {
   background: white;
   border-radius: 8px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
-
   opacity: 0;
   visibility: hidden;
   transform: translateY(10px);
@@ -553,9 +542,7 @@ body {
   background: #f5f5f5;
 }
 
-.logout {
-  color: red;
-}
+.logout { color: red; }
 
 .seller-box.big {
   width: 600px;
@@ -598,12 +585,6 @@ body {
   margin: 6px 0 14px;
   border: 1px solid #ddd;
   border-radius: 6px;
-}
-
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
 }
 
 .form {
@@ -653,28 +634,19 @@ body {
 
 .grid-3 {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
+
 .address-display {
   background: #f5f5f5;
   padding: 15px;
   border-radius: 6px;
 }
 
-.address-display .required {
-  color: red;
-}
-
-.address-display .sub {
-  color: #555;
-  margin: 2px 0;
-}
-
-.address-display .edit {
-  color: #1677ff;
-  cursor: pointer;
-}
+.address-display .required { color: red; }
+.address-display .sub { color: #555; margin: 2px 0; }
+.address-display .edit { color: #1677ff; cursor: pointer; }
 
 .btn-group {
   display: flex;
@@ -682,14 +654,10 @@ body {
   gap: 10px;
   margin-top: 20px;
 }
-/* ===== CART HEADER ===== */
-.cart-wrapper {
-  position: relative;
-}
 
-.cart-icon {
-  position: relative;
-}
+/* ===== CART HEADER ===== */
+.cart-wrapper { position: relative; }
+.cart-icon { position: relative; }
 
 /* BADGE */
 .cart-badge {
@@ -719,10 +687,7 @@ body {
   z-index: 999;
 }
 
-/* SHOW ON HOVER */
-.cart-wrapper:hover .cart-dropdown {
-  display: block;
-}
+.cart-wrapper:hover .cart-dropdown { display: block; }
 
 /* MINI ITEM */
 .mini-item {
@@ -738,15 +703,8 @@ body {
   object-fit: cover;
 }
 
-.mini-item p {
-  font-size: 13px;
-  margin: 0;
-}
-
-.mini-item span {
-  color: var(--primary);
-  font-size: 12px;
-}
+.mini-item p { font-size: 13px; margin: 0; }
+.mini-item span { color: var(--primary); font-size: 12px; }
 
 /* EMPTY */
 .empty-cart-mini {
@@ -755,7 +713,7 @@ body {
   padding: 10px;
 }
 
-/* BUTTON */
+/* VIEW CART BUTTON */
 .view-cart-btn {
   display: block;
   text-align: center;
@@ -767,39 +725,101 @@ body {
   text-decoration: none;
 }
 
-.view-cart-btn:hover {
-  background: #1d4ed8;
-}
-/* ======================================================= */
-/* 📱 GIAO DIỆN MOBILE CHUẨN APP (App.css)                 */
-/* ======================================================= */
+.view-cart-btn:hover { background: #1d4ed8; }
 
-/* Ẩn nút Hamburger trên Laptop */
+/* Notification wrapper */
+.notification-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 320px;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  display: none;
+  z-index: 1000;
+  border: 1px solid #ddd;
+}
+
+.notification-wrapper:hover .notification-dropdown { display: block; }
+
+.noti-header {
+  padding: 12px;
+  font-weight: 500;
+  color: #888;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.noti-item {
+  padding: 12px;
+  border-bottom: 1px solid #f9f9f9;
+  cursor: pointer;
+}
+
+.noti-item:hover { background-color: #f8f8f8; }
+.noti-item.unread { background-color: #fff4f2; }
+.noti-text { font-size: 14px; margin: 0; color: #333; }
+.noti-time { font-size: 12px; color: #999; }
+
+.view-all-noti {
+  display: block;
+  text-align: center;
+  padding: 12px;
+  color: #ee4d2d;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.empty-noti {
+  padding: 20px;
+  text-align: center;
+  color: #999;
+}
+
+/* Hamburger Button */
 .mobile-menu-btn {
   display: none;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--primary) !important;
+  cursor: pointer;
+  padding: 4px 6px !important;
+  margin-top: 0 !important;
+  margin-right: 15px;
+  border-radius: 6px;
+  -webkit-tap-highlight-color: transparent;
 }
 
+.mobile-menu-btn:hover,
+.mobile-menu-btn:active,
+.mobile-menu-btn:focus {
+  background: transparent !important;
+  border: 1px solid var(--primary) !important;
+}
+
+/* ======================================================= */
+/* 📱 MOBILE RESPONSIVE                                    */
+/* ======================================================= */
 @media (max-width: 768px) {
   .shopee-header {
     height: 60px;
     padding: 0;
   }
-  
+
   .header-content {
     justify-content: flex-start;
     padding: 0 15px;
     position: relative;
   }
 
-  /* Hiện nút Hamburger */
   .mobile-menu-btn {
     display: block;
-    background: none;
-    border: none;
-    color: var(--primary);
-    cursor: pointer;
-    padding: 0;
-    margin-right: 15px;
   }
 
   .logo {
@@ -807,11 +827,10 @@ body {
     margin: 0;
   }
 
-  /* BIẾN MENU THÀNH SIDEBAR TRƯỢT TỪ TRÁI SANG */
   .nav-menu {
     position: fixed;
-    top: 60px; /* Nằm dưới header */
-    left: -100%; /* Giấu đi ngoài màn hình bên trái */
+    top: 60px;
+    left: -100%;
     width: 250px;
     height: calc(100vh - 60px);
     background: white;
@@ -819,14 +838,13 @@ body {
     align-items: flex-start;
     padding: 20px;
     gap: 20px;
-    box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease-in-out;
     z-index: 1000;
   }
 
-  /* Khi State isMobileMenuOpen = true thì nó trượt vào */
   .nav-menu.open {
-    left: 0; 
+    left: 0;
   }
 
   .nav-menu a:not(:last-child) {
@@ -843,13 +861,13 @@ body {
     width: 100%;
   }
 
-  /* Chỉnh lại User Menu thả xuống bên trong Sidebar */
   .user-menu {
     width: 100%;
     margin-top: 10px;
   }
+
   .dropdown-menu {
-    position: static; /* Không làm popup nữa mà thả xuống liền */
+    position: static;
     box-shadow: none;
     border-left: 2px solid var(--primary);
     border-radius: 0;
@@ -861,85 +879,77 @@ body {
     width: 100%;
     display: none;
   }
+
   .user-menu:hover .dropdown-menu {
     display: block;
   }
 
-  /* Bảng giỏ hàng thả xuống chỉnh cho khỏi bị tràn màn hình */
   .cart-dropdown {
     right: -10px;
     width: 280px;
   }
-}
-/* Container thông báo */
-.notification-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
+
+  /* Seller Section Mobile */
+  .seller-wrapper {
+    padding: 15px !important;
+    overflow-x: hidden !important;
+    display: block !important;
+  }
+
+  .seller-box,
+  .seller-box.big {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 15px !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+  }
+
+  .seller-box h2 {
+    font-size: 20px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    text-align: center;
+  }
+
+  .progress {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0 10px !important;
+  }
+
+  .grid-3 {
+    grid-template-columns: 1fr !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .btn-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .btn-group button {
+    width: 100% !important;
+    margin: 0 !important;
+  }
 }
 
-/* Dropdown thông báo */
-.notification-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  width: 320px;
-  background: white;
-  border-radius: 4px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  display: none; /* Ẩn mặc định */
-  z-index: 1000;
-  border: 1px solid #ddd;
-}
+@media (max-width: 480px) {
+  .seller-wrapper {
+    padding: 10px;
+  }
 
-/* Hiện khi hover vào icon hoặc dropdown */
-.notification-wrapper:hover .notification-dropdown {
-  display: block;
-}
+  .seller-box {
+    padding: 15px;
+    border-radius: 0;
+  }
 
-.noti-header {
-  padding: 12px;
-  font-weight: 500;
-  color: #888;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.noti-item {
-  padding: 12px;
-  border-bottom: 1px solid #f9f9f9;
-  cursor: pointer;
-}
-
-.noti-item:hover {
-  background-color: #f8f8f8;
-}
-
-.noti-item.unread {
-  background-color: #fff4f2; /* Màu cam nhạt cho thông báo chưa đọc */
-}
-
-.noti-text {
-  font-size: 14px;
-  margin: 0;
-  color: #333;
-}
-
-.noti-time {
-  font-size: 12px;
-  color: #999;
-}
-
-.view-all-noti {
-  display: block;
-  text-align: center;
-  padding: 12px;
-  color: #ee4d2d;
-  font-size: 14px;
-  text-decoration: none;
-}
-
-.empty-noti {
-  padding: 20px;
-  text-align: center;
-  color: #999;
+  .seller-box h2 {
+    font-size: 20px;
+  }
 }

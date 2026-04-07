@@ -24,7 +24,10 @@ use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\ChatController;
 
 use App\Http\Controllers\StatisticsController;
+
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\MembershipTierController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -51,22 +54,19 @@ Route::get('/health', function () {
     ]);
 });
 
-    
-// SHOP(REGISTER   SELLER)
+// SHOP(REGISTER SELLER)
 Route::get('/provinces', function () {
     return Http::get("https://provinces.open-api.vn/api/p")->json();
 });   
 Route::get('/provinces/{code}', function ($code) {
     return Http::get("https://provinces.open-api.vn/api/p/$code?depth=2")->json();
 });
-
 Route::get('/districts/{code}', function ($code) {
     return Http::get("https://provinces.open-api.vn/api/d/$code?depth=2")->json();
 });
 
-    /* ----------------------- Review (USER) ----------------------- */
-
-    Route::get('/reviews', [ReviewController::class, 'index']);
+/* ----------------------- Review (USER) ----------------------- */
+Route::get('/reviews', [ReviewController::class, 'index']);
 
 /*
 |--------------------------------------------------------------------------
@@ -75,12 +75,21 @@ Route::get('/districts/{code}', function ($code) {
 */
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Lấy thông tin user
+    // --- Lấy thông tin user & Hạng (Cả User và Admin đều dùng chung cái này) ---
     Route::get('/user', function (Request $request) {
-        return $request->user();
+        $user = $request->user()->load('membership.tier');
+        return response()->json($user);
     });
+
+    // FIX LỖI 403: Chuyển route xem danh sách hạng ra ngoài nhóm Admin
+    Route::get('/membership-tiers', [MembershipTierController::class, 'index']);
+
+    // FIX LỖI 404 LOGOUT: Thêm route logout ở đây
+    Route::post('/logout', [AuthController::class, 'logout']);
+
     Route::put('/user/update', [UserController::class, 'updateProfile']);
     Route::post('/user/update-avatar', [UserController::class, 'updateAvatar']);
+
     
     /* ----------------------- THÔNG BÁO ----------------------- */
     Route::get('/notifications', [NotificationController::class, 'index']);
@@ -101,7 +110,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::put('/orders/{id}/complete', [OrderController::class, 'confirmReceipt']);
-
+    Route::get('/vouchers/checkout', [CouponController::class, 'getAvailableVouchers']);
     /* ----------------------- ORDER HISTORIES (User) ----------------------- */
     Route::middleware('user')->group(function () {
         Route::get('/order-histories', [OrderProcessingController::class, 'userIndex']);
@@ -142,9 +151,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/coupons/apply', [CouponController::class, 'apply']);
     Route::post('/coupons', [CouponController::class, 'store']);
     Route::delete('/coupons/{id}', [CouponController::class, 'destroy']);
+
     /* ----------------------- THANH TOÁN ----------------------- */
     Route::post('/payment/vnpay', [PaymentController::class, 'createPayment']);
-    
 
     /* ----------------------- SHOP (SELLER) ----------------------- */
     Route::post('/shops', [ShopController::class, 'store']);
@@ -157,8 +166,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/seller/statistics', [StatisticsController::class, 'sellerDashboard']);
     Route::get('/seller/settings/auto-confirm', [OrderController::class, 'getAutoConfirmSetting']);
     Route::post('/seller/settings/auto-confirm', [OrderController::class, 'toggleAutoConfirm']);
-    // của AI văn Nhân 
     Route::get('/seller/products/{id}/forecast', [StatisticsController::class, 'getProductForecast']);
+
     
         /* ----------------------- Review (USER) ----------------------- */
 
@@ -185,4 +194,36 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     // Statistics
     Route::get('/admin/statistics', [StatisticsController::class, 'adminDashboard']);
+
+    Route::post('/reviews', [ReviewController::class, 'store']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | 3. ADMIN ROUTES
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware('admin')->group(function () {
+        // Admin quản lý Categories
+        Route::post('/categories', [CategoryController::class, 'store']);
+        Route::put('/categories/{id}', [CategoryController::class, 'update']);
+        Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+
+        // Shop approve
+        Route::get('/admin/shops', [AdminShopController::class, 'index']);
+        Route::put('/admin/shops/{id}/approve', [AdminShopController::class, 'approve']);
+
+        // Statistics & Membership Tiers (Quản lý)
+        Route::get('/admin/statistics', [StatisticsController::class, 'adminDashboard']);
+        
+        // Chỉ để lại các route Thêm/Sửa/Xóa hạng cho Admin
+        Route::get('/admin/membership-tiers', [MembershipTierController::class, 'index']);
+        Route::post('/admin/membership-tiers', [MembershipTierController::class, 'store']);
+        Route::put('/admin/membership-tiers/{id}', [MembershipTierController::class, 'update']);
+        Route::delete('/admin/membership-tiers/{id}', [MembershipTierController::class, 'destroy']);
+        
+        // Quản lý Coupon toàn sàn
+        Route::get('/admin/coupons', [CouponController::class, 'adminIndex']);
+        Route::post('/admin/coupons', [CouponController::class, 'adminStore']);
+        Route::delete('/admin/coupons/{id}', [CouponController::class, 'adminDestroy']);      
+    });
 });

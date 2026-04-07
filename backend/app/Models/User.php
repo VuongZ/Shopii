@@ -52,4 +52,22 @@ class User extends Authenticatable
     {
         return $this->hasMany(ProductReview::class, 'user_id');
     }
+    public function membership()
+    {
+        return $this->hasOne(UserMembership::class);
+    }
+ public function currentTier()
+{
+    return optional($this->membership)->tier;
+    
+}
+
+public function getDiscountRate()
+{
+    if ($this->membership && $this->membership->tier) {
+        return $this->membership->tier->discount_percent;
+    }
+    
+    return 0;
+}
 }

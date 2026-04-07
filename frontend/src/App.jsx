@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Routes, Route, Link, useNavigate } from 'react-router-dom'
-// MỚI: Import thêm icon Bell (Thông báo)
-import { ShoppingCart, Menu, X, Bell } from 'lucide-react'
+import { ShoppingCart, Menu, X, Bell, MessageCircle } from 'lucide-react'
 
 import userApi from './api/userApi'
+import chatApi from './api/chatApi'
 import UsersPage from './pages/UsersPage'
 import Home from './pages/HomePage'
 import Login from './pages/Login'
@@ -19,6 +19,7 @@ import ResetPassword from './pages/ResetPassword'
 import ForgotPassword from './pages/ForgotPassword'
 import VerifyOTP from './pages/VerifyOTP'
 
+import ProtectedRoute from './components/ProtectRoute'
 import SellerRegister from './pages/SellerRegister'
 import ProfilePage from './pages/ProfilePage'
 
@@ -29,7 +30,9 @@ import AdminShopsPage from './pages/AdminShopsPage'
 import ShopPage from './pages/ShopPage'
 import SellerOrderManagementPage from './pages/SellerOrderManagementPage'
 import ChatPage from './pages/ChatPage'
-
+import AdminMembershipTiersPage from './pages/AdminMembershipTiersPage'
+import AdminCouponsPage from './pages/AdminCouponsPage'
+import AdminLayout from './components/AdminLayout'
 import './App.css'
 
 function App() {
@@ -37,16 +40,19 @@ function App() {
   const [cartCount, setCartCount] = useState(0)
   const [cartItems, setCartItems] = useState([])
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-
-  // MỚI: State lưu danh sách thông báo
+  
+  // State từ cả 2 version
   const [notifications, setNotifications] = useState([])
+  const [unreadChatCount, setUnreadChatCount] = useState(0)
 
   const [user, setUser] = useState(() => {
     const info = localStorage.getItem('USER_INFO')
     return info ? JSON.parse(info) : null
   })
 
-  // MỚI: Giả lập dữ liệu thông báo theo Role (Sau này bạn sẽ gọi API ở đây)
+  const isAdmin = user && (user.role === 'admin' || user.role === 1)
+
+  // Giả lập dữ liệu thông báo theo Role
   useEffect(() => {
     if (user) {
       if (user.role === 'seller' || user.role === 2) {
@@ -70,24 +76,49 @@ function App() {
     setCartCount(total)
   }
 
+  const loadUnreadChat = async (currentUser) => {
+    if (!currentUser || isAdmin) return
+    try {
+      const res = await chatApi.listConversations()
+      const convs = Array.isArray(res.data) ? res.data : []
+      const total = convs.reduce((sum, c) => sum + (c.unread_count || 0), 0)
+      setUnreadChatCount(total)
+    } catch {
+      // Bỏ qua lỗi
+    }
+  }
+
   useEffect(() => {
     loadCart()
     const handleCartUpdate = () => loadCart()
     const handleUserUpdate = () => {
       const info = localStorage.getItem('USER_INFO')
-      setUser(info ? JSON.parse(info) : null)
+      const updatedUser = info ? JSON.parse(info) : null
+      setUser(updatedUser)
+      loadUnreadChat(updatedUser)
     }
+
+    const handleChatRead = () => setUnreadChatCount(0)
 
     window.addEventListener('storage', handleCartUpdate)
     window.addEventListener('cartUpdated', handleCartUpdate)
     window.addEventListener('userUpdated', handleUserUpdate)
+    window.addEventListener('chatRead', handleChatRead)
 
     return () => {
       window.removeEventListener('userUpdated', handleUserUpdate)
       window.removeEventListener('storage', handleCartUpdate)
       window.removeEventListener('cartUpdated', handleCartUpdate)
+      window.removeEventListener('chatRead', handleChatRead)
     }
   }, [])
+
+  useEffect(() => {
+    loadUnreadChat(user)
+    if (!user || isAdmin) return
+    const interval = setInterval(() => loadUnreadChat(user), 30000)
+    return () => clearInterval(interval)
+  }, [user])
 
   const handleLogout = async () => {
     try {
@@ -98,12 +129,17 @@ function App() {
     localStorage.removeItem('ACCESS_TOKEN')
     localStorage.removeItem('USER_INFO')
     setUser(null)
+    setUnreadChatCount(0)
     setIsMobileMenuOpen(false)
     navigate('/')
   }
 
   const closeMenu = () => setIsMobileMenuOpen(false)
-  const isAdmin = user && (user.role === 'admin' || user.role === 1)
+
+  const handleChatClick = () => {
+    setUnreadChatCount(0)
+    closeMenu()
+  }
 
   return (
     <div className="app-container">
@@ -117,8 +153,6 @@ function App() {
 
           <nav className={`nav-menu ${isMobileMenuOpen ? 'open' : ''}`}>
             {!isAdmin && <Link to="/" className="nav-link" onClick={closeMenu}>Trang chủ</Link>}
-            {!isAdmin && <Link to="/orders" className="nav-link" onClick={closeMenu}>Đơn mua</Link>}
-            {user && !isAdmin && <Link to="/chat" className="nav-link" onClick={closeMenu}>Chat</Link>}
             
             {isAdmin && (
               <Link to="/admin/shops" className="nav-link" style={{ color: '#3b82f6', fontWeight: 'bold' }} onClick={closeMenu}>
@@ -146,7 +180,7 @@ function App() {
 
           <div className="header-right-actions" style={{ display: 'flex', alignItems: 'center', gap: '15px', marginLeft: 'auto' }}>
             
-            {/* MỚI: NÚT THÔNG BÁO (Ẩn cho Admin) */}
+            {/* THÔNG BÁO */}
             {user && !isAdmin && (
               <div className="notification-wrapper">
                 <div className="nav-link notification-icon-btn">
@@ -178,12 +212,24 @@ function App() {
               </div>
             )}
 
-            {/* GIỎ HÀNG (Ẩn cho Admin) */}
+            {/* CHAT */}
+            {user && !isAdmin && (
+              <Link to="/chat" className="nav-link chat-icon" onClick={handleChatClick} style={{ position: 'relative' }}>
+                <MessageCircle size={24} />
+                {unreadChatCount > 0 && (
+                  <span className="cart-badge">
+                    {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                  </span>
+                )}
+              </Link>
+            )}
+
+            {/* GIỎ HÀNG */}
             {!isAdmin && (
               <div className="cart-wrapper">
                 <Link to="/cart" className="nav-link cart-icon" onClick={closeMenu}>
                   <ShoppingCart size={24} />
-                  {user && cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+                  {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
                 </Link>
                 <div className="cart-dropdown">
                   {cartItems.length === 0 ? (
@@ -229,26 +275,43 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/payment-result" element={<PaymentResult />} />
-          <Route path="/orders" element={<OrderHistoryPageV2 />} />
-          <Route path="/users" element={<UsersPage />} />
-          <Route path="/product/:id" element={<ProductDetailPage />} />
-          <Route path="/seller-orders" element={<SellerOrderManagementPage />} />
-          <Route path="/chat" element={<ChatPage />} />
-          <Route path="/seller-coupons" element={<SellerCouponManagementPage />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />
-          <Route path="/seller/register" element={<SellerRegister />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/categories" element={<CategoriesPage />} />
-          <Route path="/reviews" element={<Reviews />} />
-          <Route path="/admin/shops" element={<AdminShopsPage />} />
-          <Route path="/shop" element={<ShopPage />} />
-          <Route path="/seller" element={<ShopPage />} />
-          <Route path="/seller/products/:id" element={<SellerProductDetail />} />
+
+          {/* Role User */}
+          <Route element={<ProtectedRoute allowedRoles={['user', 'customer']} />}>
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/payment-result" element={<PaymentResult />} />
+            <Route path="/orders" element={<OrderHistoryPageV2 />} />
+            <Route path="/product/:id" element={<ProductDetailPage />} />
+            <Route path="/reviews" element={<Reviews />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/seller/register" element={<SellerRegister />} />
+          </Route>
+
+          {/* Role Seller */}
+          <Route element={<ProtectedRoute allowedRoles={['seller', 2]} />}>
+            <Route path="/shop" element={<ShopPage />} />
+            <Route path="/seller" element={<ShopPage />} />
+            <Route path="/seller-orders" element={<SellerOrderManagementPage />} />
+            <Route path="/seller-coupons" element={<SellerCouponManagementPage />} />
+            <Route path="/seller/products/:id" element={<SellerProductDetail />} />
+          </Route>
+
+          {/* Admin */}
+          <Route element={<ProtectedRoute allowedRoles={['admin', 1]} />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route path="categories" element={<CategoriesPage />} />
+              <Route path="shops" element={<AdminShopsPage />} />
+              <Route path="membership-tiers" element={<AdminMembershipTiersPage />} />
+              <Route path="coupons" element={<AdminCouponsPage />} />
+            </Route>
+            <Route path="/admin/shops" element={<AdminShopsPage />} />
+            <Route path="/users" element={<UsersPage />} />
+          </Route>
         </Routes>
       </main>
     </div>

@@ -59,7 +59,7 @@ function AdminShopsPage() {
     setTimeout(() => setMessage(""), 4000);
   };
 
-  // Gom nhóm logic xử lý Duyệt/Từ chối
+  // Logic xử lý Duyệt/Từ chối chung
   const handleShopAction = (id, action) => {
     const actionText = action === "approve" ? "duyệt" : "từ chối";
     if (!window.confirm(`Bạn có chắc muốn ${actionText} shop này?`)) return;
@@ -67,8 +67,8 @@ function AdminShopsPage() {
     axiosClient
       .put(`/admin/shops/${id}/${action}`)
       .then(() => {
-        showTemporaryMessage(`✅ ${actionText.charAt(0).toUpperCase() + actionText.slice(1)} shop thành công!`);
-        fetchShops();
+        showTemporaryMessage(`✅ ${actionText === "approve" ? "Duyệt" : "Từ chối"} shop thành công!`);
+        fetchShops(); // Tải lại danh sách
       })
       .catch((err) => {
         const errorMsg = err.response?.data?.message || err.message;
@@ -116,7 +116,6 @@ function AdminShopsPage() {
               background: message.includes("✅") ? "#d1fae5" : "#fee2e2",
               color: message.includes("✅") ? "#065f46" : "#991b1b",
               border: `1px solid ${message.includes("✅") ? "#a7f3d0" : "#fecaca"}`,
-              transition: "all 0.5s ease"
             }}>
               {message}
             </div>
@@ -137,7 +136,7 @@ function AdminShopsPage() {
   );
 }
 
-// Tách riêng Card của từng Shop để quản lý state hover dễ hơn
+// Tách riêng Card của từng Shop
 const ShopCard = ({ shop, onAction }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -185,7 +184,7 @@ const ShopCard = ({ shop, onAction }) => {
         borderTop: "1px solid #f3f4f6"
       }}>
         <div style={{ fontSize: "13px", color: "#9ca3af" }}>
-          📅 Ngày đăng ký: {new Date(shop.created_at).toLocaleDateString("vi-VN")}
+          📅 Ngày đăng ký: {shop.created_at ? new Date(shop.created_at).toLocaleDateString("vi-VN") : "N/A"}
         </div>
         <div style={{ display: "flex", gap: "10px" }}>
           <button
