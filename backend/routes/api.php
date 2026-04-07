@@ -195,7 +195,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     // Statistics
     Route::get('/admin/statistics', [StatisticsController::class, 'adminDashboard']);
 
-    Route::post('/reviews', [ReviewController::class, 'store']);
+    
 
     /*
     |--------------------------------------------------------------------------
