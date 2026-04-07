@@ -278,7 +278,7 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />
-
+          <Route path="/chat" element={<ChatPage />} />
           {/* Role User */}
           <Route element={<ProtectedRoute allowedRoles={['user', 'customer']} />}>
             <Route path="/profile" element={<ProfilePage />} />
@@ -288,7 +288,7 @@ function App() {
             <Route path="/orders" element={<OrderHistoryPageV2 />} />
             <Route path="/product/:id" element={<ProductDetailPage />} />
             <Route path="/reviews" element={<Reviews />} />
-            <Route path="/chat" element={<ChatPage />} />
+            
             <Route path="/seller/register" element={<SellerRegister />} />
           </Route>
 
