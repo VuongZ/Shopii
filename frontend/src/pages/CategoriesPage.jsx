@@ -108,26 +108,7 @@ export default function CategoriesPage() {
 
   return (
     <div className="container" style={{ display: 'flex' }}>
-      {/* ===== SIDEBAR (TRÁI) ===== */}
-      <div style={{ width: '250px', background: '#f3f4f6', padding: '20px', minHeight: '100vh', borderRight: '1px solid #e5e7eb' }}>
-        <h3 style={{ marginBottom: '20px', fontSize: '18px', color: '#374151' }}>Menu Admin</h3>
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          <li style={{ marginBottom: '10px' }}>
-            <Link to="/categories" style={sidebarLinkStyle}>📁 Quản lý Category</Link>
-          </li>
-          <li style={{ marginBottom: '10px' }}>
-            <Link to="/users" style={{ ...sidebarLinkStyle, background: '#8b5cf6' }}>👥 Quản lý User</Link>
-          </li>
-          <li style={{ marginBottom: '10px' }}>
-            <Link to="/admin/shops" style={sidebarLinkStyle}>🏪 Duyệt Gian Hàng</Link>
-          </li>
-          <li>
-            <button onClick={handleReportClick} style={{ ...sidebarLinkStyle, width: '100%', border: 'none', background: showReport ? '#10b981' : '#6b7280' }}>
-              📊 {showReport ? 'Ẩn Báo Cáo' : 'Xem Báo Cáo'}
-            </button>
-          </li>
-        </ul>
-      </div>
+      
 
       {/* ===== MAIN CONTENT (PHẢI) ===== */}
       <div style={{ flex: 1, padding: '40px' }}>

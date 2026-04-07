@@ -308,9 +308,10 @@ function App() {
               <Route path="shops" element={<AdminShopsPage />} />
               <Route path="membership-tiers" element={<AdminMembershipTiersPage />} />
               <Route path="coupons" element={<AdminCouponsPage />} />
+              <Route path="users" element={<UsersPage />} />
             </Route>
             <Route path="/admin/shops" element={<AdminShopsPage />} />
-            <Route path="/users" element={<UsersPage />} />
+            
           </Route>
         </Routes>
       </main>

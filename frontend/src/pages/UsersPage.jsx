@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-
 const API = 'https://shopii-backend-latest.onrender.com'
 
 function UsersPage() {
@@ -101,6 +100,7 @@ function UsersPage() {
   }
 
   return (
+    
     <div style={{ padding: 40 }}>
       <h1>Users CRUD</h1>
       <p style={{ color: '#555', marginBottom: 20 }}>
@@ -165,6 +165,7 @@ function UsersPage() {
       </table>
     </div>
   )
+  
 }
 
 export default UsersPage

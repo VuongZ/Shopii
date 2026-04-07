@@ -81,28 +81,7 @@ function AdminShopsPage() {
       <div style={{ display: "flex" }}>
         
         {/* ===== SIDEBAR MENU ===== */}
-        <div style={{
-          width: "250px",
-          background: "#1e293b",
-          color: "white",
-          padding: "20px",
-          height: "100vh",
-          position: "sticky",
-          top: 0,
-        }}>
-          <h2 style={{
-            fontSize: "22px",
-            paddingBottom: "20px",
-            borderBottom: "1px solid #475569",
-            marginBottom: "30px"
-          }}>🏢 Admin Panel</h2>
-
-          <ul style={{ listStyle: "none", padding: 0 }}>
-            <SidebarLink to="/categories" label="Quản lý Category" icon="📁" bgColor="#3b82f6" hoverColor="#2563eb" />
-            <SidebarLink to="/users" label="Quản lý User" icon="👥" bgColor="#8b5cf6" hoverColor="#7c3aed" />
-            <SidebarLink to="/admin/shops" label="Duyệt Gian Hàng" icon="🏪" bgColor="#10b981" hoverColor="#059669" />
-          </ul>
-        </div>
+        
 
         {/* ===== MAIN CONTENT ===== */}
         <div style={{ flex: 1, padding: "40px" }}>

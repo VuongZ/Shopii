@@ -43,6 +43,11 @@ export default function AdminLayout() {
               🎟️ Coupon Toàn Sàn
             </Link>
           </li>
+          <li style={{ marginBottom: '10px' }}>
+            <Link to="/admin/users" style={sidebarBtnStyle('#10b981')}>
+              👥 Quản Lý User
+            </Link>
+          </li>
         </ul>
       </div>
 
