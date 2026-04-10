@@ -734,6 +734,13 @@ body {
   align-items: center;
 }
 
+/* Notification wrapper (Code của Team) */
+.notification-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .notification-dropdown {
   position: absolute;
   top: 100%;
@@ -782,7 +789,7 @@ body {
   color: #999;
 }
 
-/* Hamburger Button */
+/* Hamburger Button (Code của bạn) */
 .mobile-menu-btn {
   display: none;
   background: transparent !important;
@@ -803,6 +810,107 @@ body {
   border: 1px solid var(--primary) !important;
 }
 
+/* ======================================================= */
+/* FOOTER SHOPII (Cập nhật: Logo lớn hơn, không nền trắng) */
+/* ======================================================= */
+.shoppi-footer {
+  background-color: white;
+  border-top: 4px solid var(--primary); /* Tạo đường kẻ màu xanh chủ đạo */
+  padding: 60px 0 30px 0; /* Tăng padding để thoáng hơn */
+  margin-top: 50px;
+  color: #4a4a4a;
+  width: 100%;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* Giữ lưới 4 cột */
+  gap: 30px; /* Tăng gap giữa các cột */
+  padding: 0 20px;
+}
+
+.footer-section h3 {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--dark-text);
+  margin-bottom: 20px; /* Tăng khoảng cách dưới tiêu đề */
+  text-transform: uppercase;
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-section ul li {
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.footer-section ul li a {
+  text-decoration: none;
+  color: #666;
+  transition: color 0.2s;
+}
+
+.footer-section ul li a:hover {
+  color: var(--primary);
+}
+
+/* Khu vực Icon thanh toán và vận chuyển (Đã cập nhật) */
+.payment-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px; /* Tăng khoảng cách giữa các logo */
+}
+
+/* SỬA ĐỔI: Tăng kích thước, xóa viền và nền trắng */
+.pay-box {
+  width: 100px; /* Tăng chiều rộng gấp đôi */
+  height: 50px; /* Tăng chiều cao gấp đôi */
+  background: none; /* Bỏ nền trắng */
+  border: none; /* Bỏ viền xám */
+  box-shadow: none; /* Đảm bảo không có box-shadow */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px; /* Tăng padding một chút */
+}
+
+/* SỬA ĐỔI: Ảnh tự động lớn theo container */
+.pay-box img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; /* Duy trì tỷ lệ khung hình */
+}
+
+/* Responsive cho Mobile */
+@media (max-width: 768px) {
+  .shoppi-footer {
+    padding: 30px 0;
+    text-align: center;
+  }
+  
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .payment-grid {
+    justify-content: center;
+  }
+}
+
+.footer-bottom {
+  text-align: center;
+  border-top: 1px solid #eee;
+  margin-top: 40px;
+  padding: 20px;
+  font-size: 12px;
+  color: #888;
+}
 /* ======================================================= */
 /* 📱 MOBILE RESPONSIVE                                    */
 /* ======================================================= */

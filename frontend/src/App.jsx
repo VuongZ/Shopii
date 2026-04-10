@@ -315,8 +315,64 @@ function App() {
           </Route>
         </Routes>
       </main>
+      {/* FOOTER DÁN THẲNG VÀO ĐÂY */}
+      <footer className="shoppi-footer">
+        <div className="footer-container">
+          <div className="footer-section">
+            <h3>CHĂM SÓC KHÁCH HÀNG</h3>
+            <ul>
+              <li> <a href ="#">Trung Tâm Trợ Giúp </a></li>
+              <li> <a href ="#">Hướng Dẫn Mua Hàng </a></li>
+              <li> <a href ="#">Trả Hàng & Hoàn Tiền </a></li>
+            </ul>
+          </div>
+          <div className="footer-section">
+            <h3>VỀ SHOPII</h3>
+            <ul>
+              <li> <a href ="#">Giới thiệu về Shopii </a></li>
+              <li> <a href ="#">Tuyển dụng </a></li>
+              <li> <a href ="#">Điều khoản Shopii </a></li>
+            </ul>
+          </div>
+        <div className="footer-section">
+            <h3>THANH TOÁN</h3>
+            <div className="payment-grid">
+              {/* Logo MoMo (Link xịn không bị chặn) */}
+              <div className="pay-box">
+               <a href ="#"><img src="https://developers.momo.vn/v3/assets/images/square-8c08a00f550e40a2efafea4a005b1232.png" alt="MoMo" style={{ objectFit: 'contain', width: '100%', height: '100%' }} /> </a> 
+              </div>
+              
+              {/* Logo VNPay (Nó đang lên hình nên mình giữ nguyên cho bạn) */}
+              <div className="pay-box">
+               <a href ="#"><img src="https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-VNPAY-QR-1.png" alt="VNPay" style={{ objectFit: 'contain', width: '100%', height: '100%' }} /> </a>  
+              </div>
+            </div>
+
+            <h3 style={{marginTop: '15px'}}>VẬN CHUYỂN</h3>
+            <div className="payment-grid">
+               {/* Logo GHTK (Đã đổi sang server xịn y như VNPay) */}
+               <div className="pay-box">
+                 <a href ="#"><img src="https://cdn.haitrieu.com/wp-content/uploads/2022/05/Logo-GHTK-Green.png" alt="ghtk" style={{ objectFit: 'contain', width: '100%', height: '100%' }} /> </a> 
+               </div>
+            </div>
+          </div>
+          <div className="footer-section">
+            <h3>THEO DÕI CHÚNG TÔI</h3>
+            <ul>
+              <li> <a href ="#">Facebook </a> </li>
+              <li> <a href ="#">Instagram </a></li>
+              <li> <a href ="#">Youtube </a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <p>© 2026 Shopii</p>
+          <p>Địa chỉ: 180 Cao Lỗ, Phường 4, Quận 8, TP. Hồ Chí Minh</p>
+        </div>
+      </footer>
     </div>
   )
 }
 
 export default App
+
