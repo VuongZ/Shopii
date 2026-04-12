@@ -40,7 +40,7 @@ function App() {
   const [cartCount, setCartCount] = useState(0)
   const [cartItems, setCartItems] = useState([])
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  
+
   // State từ cả 2 version
   const [notifications, setNotifications] = useState([])
   const [unreadChatCount, setUnreadChatCount] = useState(0)
@@ -51,6 +51,8 @@ function App() {
   })
 
   const isAdmin = user && (user.role === 'admin' || user.role === 1)
+  //Show Add
+  const [showAd, setShowAd] = useState(false)
 
   // Giả lập dữ liệu thông báo theo Role
   useEffect(() => {
@@ -140,6 +142,15 @@ function App() {
     setUnreadChatCount(0)
     closeMenu()
   }
+  useEffect(() => {
+    // Chỉ hiện quảng cáo nếu user chưa đăng nhập hoặc là user bình thường (không làm phiền admin)
+    if (!isAdmin) {
+      const timer = setTimeout(() => {
+        setShowAd(true)
+      }, 1000) // Đợi 1 giây rồi mới popup lên
+      return () => clearTimeout(timer)
+    }
+  }, [isAdmin])
 
   return (
     <div className="app-container">
@@ -153,7 +164,7 @@ function App() {
 
           <nav className={`nav-menu ${isMobileMenuOpen ? 'open' : ''}`}>
             {!isAdmin && <Link to="/" className="nav-link" onClick={closeMenu}>Trang chủ</Link>}
-            
+
             {isAdmin && (
               <Link to="/admin/shops" className="nav-link" style={{ color: '#3b82f6', fontWeight: 'bold' }} onClick={closeMenu}>
                 Quản lý hệ thống
@@ -179,7 +190,7 @@ function App() {
           </nav>
 
           <div className="header-right-actions" style={{ display: 'flex', alignItems: 'center', gap: '15px', marginLeft: 'auto' }}>
-            
+
             {/* THÔNG BÁO */}
             {user && !isAdmin && (
               <div className="notification-wrapper">
@@ -288,7 +299,7 @@ function App() {
             <Route path="/orders" element={<OrderHistoryPageV2 />} />
             <Route path="/product/:id" element={<ProductDetailPage />} />
             <Route path="/reviews" element={<Reviews />} />
-            
+
             <Route path="/seller/register" element={<SellerRegister />} />
           </Route>
 
@@ -311,57 +322,85 @@ function App() {
               <Route path="users" element={<UsersPage />} />
             </Route>
             <Route path="/admin/shops" element={<AdminShopsPage />} />
-            
+
           </Route>
         </Routes>
       </main>
+
+      {/* ================= MODAL QUẢNG CÁO ================= */}
+      {showAd && (
+        <div className="ad-modal-overlay">
+          <div className="ad-modal-content">
+            {/* Nút tắt quảng cáo */}
+          <button className="ad-close-btn" onClick={() => setShowAd(false)}>
+              <X size={20} strokeWidth={3} style={{ stroke: '#555', minWidth: '20px', minHeight: '20px' }} />
+            </button>
+
+            {/* Link và Hình ảnh quảng cáo */}
+            <a href="#" onClick={(e) => { e.preventDefault(); setShowAd(false); /* Chuyển trang sale ở đây */ }}>
+              {/* Mình để tạm một hình banner mẫu, bạn có thể tải hình shopee về rồi đổi link (src) nhé */}
+              {/* Link và Hình ảnh quảng cáo */}
+              <a href="#" onClick={(e) => { e.preventDefault(); setShowAd(false); /* Chuyển trang sale ở đây */ }}>
+
+                {/* DÁN LINK ẢNH TỪ TRÊN MẠNG VÀO THUỘC TÍNH src */}
+                <img
+                  src="/banner-sale.png"
+                  alt="Siêu Sale"
+                  className="ad-image"
+                />
+
+              </a>
+            </a>
+          </div>
+        </div>
+      )}
       {/* FOOTER DÁN THẲNG VÀO ĐÂY */}
       <footer className="shoppi-footer">
         <div className="footer-container">
           <div className="footer-section">
             <h3>CHĂM SÓC KHÁCH HÀNG</h3>
             <ul>
-              <li> <a href ="#">Trung Tâm Trợ Giúp </a></li>
-              <li> <a href ="#">Hướng Dẫn Mua Hàng </a></li>
-              <li> <a href ="#">Trả Hàng & Hoàn Tiền </a></li>
+              <li> <a href="#">Trung Tâm Trợ Giúp </a></li>
+              <li> <a href="#">Hướng Dẫn Mua Hàng </a></li>
+              <li> <a href="#">Trả Hàng & Hoàn Tiền </a></li>
             </ul>
           </div>
           <div className="footer-section">
             <h3>VỀ SHOPII</h3>
             <ul>
-              <li> <a href ="#">Giới thiệu về Shopii </a></li>
-              <li> <a href ="#">Tuyển dụng </a></li>
-              <li> <a href ="#">Điều khoản Shopii </a></li>
+              <li> <a href="#">Giới thiệu về Shopii </a></li>
+              <li> <a href="#">Tuyển dụng </a></li>
+              <li> <a href="#">Điều khoản Shopii </a></li>
             </ul>
           </div>
-        <div className="footer-section">
+          <div className="footer-section">
             <h3>THANH TOÁN</h3>
             <div className="payment-grid">
               {/* Logo MoMo (Link xịn không bị chặn) */}
               <div className="pay-box">
-               <a href ="#"><img src="https://developers.momo.vn/v3/assets/images/square-8c08a00f550e40a2efafea4a005b1232.png" alt="MoMo" style={{ objectFit: 'contain', width: '100%', height: '100%' }} /> </a> 
+                <a href="#"><img src="https://developers.momo.vn/v3/assets/images/square-8c08a00f550e40a2efafea4a005b1232.png" alt="MoMo" style={{ objectFit: 'contain', width: '100%', height: '100%' }} /> </a>
               </div>
-              
+
               {/* Logo VNPay (Nó đang lên hình nên mình giữ nguyên cho bạn) */}
               <div className="pay-box">
-               <a href ="#"><img src="https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-VNPAY-QR-1.png" alt="VNPay" style={{ objectFit: 'contain', width: '100%', height: '100%' }} /> </a>  
+                <a href="#"><img src="https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-VNPAY-QR-1.png" alt="VNPay" style={{ objectFit: 'contain', width: '100%', height: '100%' }} /> </a>
               </div>
             </div>
 
-            <h3 style={{marginTop: '15px'}}>VẬN CHUYỂN</h3>
+            <h3 style={{ marginTop: '15px' }}>VẬN CHUYỂN</h3>
             <div className="payment-grid">
-               {/* Logo GHTK (Đã đổi sang server xịn y như VNPay) */}
-               <div className="pay-box">
-                 <a href ="#"><img src="https://cdn.haitrieu.com/wp-content/uploads/2022/05/Logo-GHTK-Green.png" alt="ghtk" style={{ objectFit: 'contain', width: '100%', height: '100%' }} /> </a> 
-               </div>
+              {/* Logo GHTK (Đã đổi sang server xịn y như VNPay) */}
+              <div className="pay-box">
+                <a href="#"><img src="https://cdn.haitrieu.com/wp-content/uploads/2022/05/Logo-GHTK-Green.png" alt="ghtk" style={{ objectFit: 'contain', width: '100%', height: '100%' }} /> </a>
+              </div>
             </div>
           </div>
           <div className="footer-section">
             <h3>THEO DÕI CHÚNG TÔI</h3>
             <ul>
-              <li> <a href ="#">Facebook </a> </li>
-              <li> <a href ="#">Instagram </a></li>
-              <li> <a href ="#">Youtube </a></li>
+              <li> <a href="#">Facebook </a> </li>
+              <li> <a href="#">Instagram </a></li>
+              <li> <a href="#">Youtube </a></li>
             </ul>
           </div>
         </div>
